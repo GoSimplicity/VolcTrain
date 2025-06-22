@@ -29,45 +29,53 @@ export const useAuthStore = defineStore('auth', () => {
     params: Recordable<any>,
     onSuccess?: () => Promise<void> | void,
   ) {
-    // 异步处理用户登录操作并获取 accessToken
+    // 测试模式：模拟登录流程，不请求API
     let userInfo: null | UserInfo = null;
     try {
       loginLoading.value = true;
-      const { accessToken } = await loginApi(params);
 
-      // 如果成功获取到 accessToken
-      if (accessToken) {
-        accessStore.setAccessToken(accessToken);
+      // 模拟登录成功，设置测试用的accessToken
+      const accessToken = 'test-access-token';
+      accessStore.setAccessToken(accessToken);
 
-        // 获取用户信息并存储到 accessStore 中
-        const [fetchUserInfoResult, accessCodes] = await Promise.all([
-          fetchUserInfo(),
-          getAccessCodesApi(),
-        ]);
+      // 模拟用户信息
+      userInfo = {
+        userId: '1',
+        username: 'test_user',
+        realName: '测试用户',
+        avatar: '',
+        desc: '测试账号',
+        homePath: '/workspace/list',
+        token: 'test-token',
+      };
 
-        userInfo = fetchUserInfoResult;
+      // 模拟权限码
+      const accessCodes = [
+        'admin',
+        'user',
+        'workspace:view',
+        'training:view',
+        'model:view',
+      ];
 
-        userStore.setUserInfo(userInfo);
-        accessStore.setAccessCodes(accessCodes);
+      userStore.setUserInfo(userInfo);
+      accessStore.setAccessCodes(accessCodes);
 
-        if (accessStore.loginExpired) {
-          accessStore.setLoginExpired(false);
-        } else {
-          onSuccess
-            ? await onSuccess?.()
-            : await router.push(
-                userInfo.homePath || preferences.app.defaultHomePath,
-              );
-        }
-
-        if (userInfo?.realName) {
-          notification.success({
-            description: `${$t('authentication.loginSuccessDesc')}:${userInfo?.realName}`,
-            duration: 3,
-            message: $t('authentication.loginSuccess'),
-          });
-        }
+      if (accessStore.loginExpired) {
+        accessStore.setLoginExpired(false);
+      } else {
+        onSuccess
+          ? await onSuccess?.()
+          : await router.push(
+              userInfo.homePath || preferences.app.defaultHomePath,
+            );
       }
+
+      notification.success({
+        description: `${$t('authentication.loginSuccessDesc')}:${userInfo.realName}`,
+        duration: 3,
+        message: $t('authentication.loginSuccess'),
+      });
     } finally {
       loginLoading.value = false;
     }
@@ -99,7 +107,17 @@ export const useAuthStore = defineStore('auth', () => {
 
   async function fetchUserInfo() {
     let userInfo: null | UserInfo = null;
-    userInfo = await getUserInfoApi();
+    // 测试模式下使用模拟数据，不请求API
+    userInfo = {
+      userId: '1',
+      username: 'admin',
+      realName: '测试用户',
+      avatar: '',
+      desc: '系统管理员',
+      token: 'fakeToken',
+      homePath: '/',
+    };
+    // userInfo = await getUserInfoApi();
     userStore.setUserInfo(userInfo);
     return userInfo;
   }

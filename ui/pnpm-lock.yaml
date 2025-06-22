@@ -27,9 +27,6 @@ catalogs:
     '@eslint/js':
       specifier: ^9.26.0
       version: 9.26.0
-    '@faker-js/faker':
-      specifier: ^9.7.0
-      version: 9.7.0
     '@iconify/json':
       specifier: ^2.2.334
       version: 2.2.334
@@ -51,9 +48,6 @@ catalogs:
     '@manypkg/get-packages':
       specifier: ^3.0.0
       version: 3.0.0
-    '@nolebase/vitepress-plugin-git-changelog':
-      specifier: ^2.17.0
-      version: 2.17.0
     '@playwright/test':
       specifier: ^1.52.0
       version: 1.52.0
@@ -69,9 +63,6 @@ catalogs:
     '@tailwindcss/typography':
       specifier: ^0.5.16
       version: 0.5.16
-    '@tanstack/vue-query':
-      specifier: ^5.75.1
-      version: 5.75.1
     '@tanstack/vue-store':
       specifier: ^0.7.0
       version: 0.7.0
@@ -84,12 +75,6 @@ catalogs:
     '@types/html-minifier-terser':
       specifier: ^7.0.2
       version: 7.0.2
-    '@types/json-bigint':
-      specifier: ^1.0.4
-      version: 1.0.4
-    '@types/jsonwebtoken':
-      specifier: ^9.0.9
-      version: 9.0.9
     '@types/lodash.clonedeep':
       specifier: ^4.5.9
       version: 4.5.9
@@ -129,9 +114,6 @@ catalogs:
     '@vee-validate/zod':
       specifier: ^4.15.0
       version: 4.15.0
-    '@vite-pwa/vitepress':
-      specifier: ^1.0.0
-      version: 1.0.0
     '@vitejs/plugin-vue':
       specifier: ^5.2.3
       version: 5.2.3
@@ -219,9 +201,6 @@ catalogs:
     echarts:
       specifier: ^5.6.0
       version: 5.6.0
-    element-plus:
-      specifier: ^2.9.9
-      version: 2.9.9
     eslint:
       specifier: ^9.26.0
       version: 9.26.0
@@ -282,9 +261,6 @@ catalogs:
     globals:
       specifier: ^16.0.0
       version: 16.0.0
-    h3:
-      specifier: ^1.15.3
-      version: 1.15.3
     happy-dom:
       specifier: ^17.4.6
       version: 17.4.6
@@ -294,15 +270,9 @@ catalogs:
     is-ci:
       specifier: ^4.1.0
       version: 4.1.0
-    json-bigint:
-      specifier: ^1.0.0
-      version: 1.0.0
     jsonc-eslint-parser:
       specifier: ^2.4.0
       version: 2.4.0
-    jsonwebtoken:
-      specifier: ^9.0.2
-      version: 9.0.2
     lefthook:
       specifier: ^1.11.12
       version: 1.11.12
@@ -321,12 +291,6 @@ catalogs:
     lucide-vue-next:
       specifier: ^0.507.0
       version: 0.507.0
-    medium-zoom:
-      specifier: ^1.1.0
-      version: 1.1.0
-    naive-ui:
-      specifier: ^2.41.0
-      version: 2.41.0
     nitropack:
       specifier: ^2.11.11
       version: 2.11.11
@@ -453,9 +417,6 @@ catalogs:
     unbuild:
       specifier: ^3.5.0
       version: 3.5.0
-    unplugin-element-plus:
-      specifier: ^0.10.0
-      version: 0.10.0
     vee-validate:
       specifier: ^4.15.0
       version: 4.15.0
@@ -480,12 +441,6 @@ catalogs:
     vite-plugin-vue-devtools:
       specifier: ^7.7.6
       version: 7.7.6
-    vitepress:
-      specifier: ^1.6.3
-      version: 1.6.3
-    vitepress-plugin-group-icons:
-      specifier: ^1.5.2
-      version: 1.5.2
     vitest:
       specifier: ^3.1.2
       version: 3.1.2
@@ -653,6 +608,9 @@ importers:
 
   apps/web-antd:
     dependencies:
+      '@ant-design/icons-vue':
+        specifier: ^7.0.1
+        version: 7.0.1(vue@3.5.13(typescript@5.8.3))
       '@vben/access':
         specifier: workspace:*
         version: link:../../packages/effects/access
