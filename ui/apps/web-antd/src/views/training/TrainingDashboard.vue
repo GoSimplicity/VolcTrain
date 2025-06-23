@@ -1,18 +1,16 @@
 <template>
-  <div class="job-queue-container">
+  <div class="training-container">
     <!-- 页面头部 -->
     <div class="page-header">
       <div class="header-content">
         <div class="title-section">
           <h1 class="page-title">
-            <ThunderboltOutlined class="title-icon" />
-            <span class="title-text">训练任务队列</span>
+            <RocketOutlined class="title-icon" />
+            <span class="title-text">训练任务管理</span>
             <div class="title-glow"></div>
           </h1>
           <p class="page-description">
-            <span class="description-text">
-              管理和监控基于 Volcano 的 AI 训练任务
-            </span>
+            <span class="description-text">管理和监控您的AI模型训练任务</span>
           </p>
         </div>
         <div class="action-section">
@@ -31,11 +29,11 @@
 
     <!-- 统计卡片 -->
     <div class="stats-section">
-      <a-row :gutter="16">
-        <a-col :xs="12" :sm="6" :md="6" :lg="6">
+      <a-row :gutter="24">
+        <a-col :xs="12" :sm="6" :lg="6">
           <a-card class="stat-card glass-card" :bordered="false">
             <div class="stat-content">
-              <div class="stat-icon running-icon">
+              <div class="stat-icon running">
                 <PlayCircleOutlined />
               </div>
               <div class="stat-info">
@@ -45,23 +43,23 @@
             </div>
           </a-card>
         </a-col>
-        <a-col :xs="12" :sm="6" :md="6" :lg="6">
+        <a-col :xs="12" :sm="6" :lg="6">
           <a-card class="stat-card glass-card" :bordered="false">
             <div class="stat-content">
-              <div class="stat-icon pending-icon">
+              <div class="stat-icon pending">
                 <ClockCircleOutlined />
               </div>
               <div class="stat-info">
                 <div class="stat-number">{{ pendingCount }}</div>
-                <div class="stat-label">排队中</div>
+                <div class="stat-label">等待中</div>
               </div>
             </div>
           </a-card>
         </a-col>
-        <a-col :xs="12" :sm="6" :md="6" :lg="6">
+        <a-col :xs="12" :sm="6" :lg="6">
           <a-card class="stat-card glass-card" :bordered="false">
             <div class="stat-content">
-              <div class="stat-icon completed-icon">
+              <div class="stat-icon completed">
                 <CheckCircleOutlined />
               </div>
               <div class="stat-info">
@@ -71,10 +69,10 @@
             </div>
           </a-card>
         </a-col>
-        <a-col :xs="12" :sm="6" :md="6" :lg="6">
+        <a-col :xs="12" :sm="6" :lg="6">
           <a-card class="stat-card glass-card" :bordered="false">
             <div class="stat-content">
-              <div class="stat-icon failed-icon">
+              <div class="stat-icon failed">
                 <CloseCircleOutlined />
               </div>
               <div class="stat-info">
@@ -102,7 +100,7 @@
             >
               <a-select-option value="">全部状态</a-select-option>
               <a-select-option value="running">运行中</a-select-option>
-              <a-select-option value="pending">排队中</a-select-option>
+              <a-select-option value="pending">等待中</a-select-option>
               <a-select-option value="completed">已完成</a-select-option>
               <a-select-option value="failed">失败</a-select-option>
               <a-select-option value="cancelled">已取消</a-select-option>
@@ -110,20 +108,20 @@
           </a-col>
           <a-col :xs="24" :sm="12" :md="6" :lg="6">
             <a-select
-              v-model:value="filterQueue"
-              placeholder="选择队列"
+              v-model:value="filterFramework"
+              placeholder="选择框架"
               allow-clear
               style="width: 100%"
               @change="handleFilterChange"
               class="filter-select"
             >
-              <a-select-option value="">全部队列</a-select-option>
-              <a-select-option value="default">default</a-select-option>
-              <a-select-option value="high-priority"
-                >high-priority</a-select-option
+              <a-select-option value="">全部框架</a-select-option>
+              <a-select-option value="tensorflow">TensorFlow</a-select-option>
+              <a-select-option value="pytorch">PyTorch</a-select-option>
+              <a-select-option value="mindspore">MindSpore</a-select-option>
+              <a-select-option value="paddlepaddle"
+                >PaddlePaddle</a-select-option
               >
-              <a-select-option value="gpu-queue">gpu-queue</a-select-option>
-              <a-select-option value="cpu-queue">cpu-queue</a-select-option>
             </a-select>
           </a-col>
           <a-col :xs="24" :sm="16" :md="8" :lg="8">
@@ -155,23 +153,14 @@
       <a-card class="table-card glass-card" :bordered="false">
         <a-table
           :columns="columns"
-          :data-source="filteredJobs"
+          :data-source="filteredTrainingJobs"
           :loading="loading"
           :pagination="paginationConfig"
           row-key="id"
           size="middle"
           :scroll="{ x: 'max-content' }"
           class="sci-fi-table"
-          :row-class-name="getRowClassName"
         >
-          <!-- 任务名称列 -->
-          <template #name="{ record }">
-            <div class="job-name-wrapper">
-              <div class="job-name">{{ record.name }}</div>
-              <div class="job-id">ID: {{ record.id }}</div>
-            </div>
-          </template>
-
           <!-- 状态列 -->
           <template #status="{ record }">
             <div class="status-wrapper">
@@ -189,14 +178,17 @@
             </div>
           </template>
 
-          <!-- 优先级列 -->
-          <template #priority="{ record }">
-            <a-tag
-              :color="getPriorityColor(record.priority)"
-              class="priority-tag"
-            >
-              {{ getPriorityText(record.priority) }}
-            </a-tag>
+          <!-- 训练框架列 -->
+          <template #framework="{ record }">
+            <div class="framework-wrapper">
+              <component
+                :is="getFrameworkIcon(record.framework)"
+                class="framework-icon"
+              />
+              <span class="framework-text">{{
+                getFrameworkText(record.framework)
+              }}</span>
+            </div>
           </template>
 
           <!-- 资源配置列 -->
@@ -230,9 +222,19 @@
                 :status="getProgressStatus(record.status)"
                 size="small"
                 :show-info="false"
-                class="job-progress"
+                class="progress-bar"
               />
               <span class="progress-text">{{ record.progress }}%</span>
+            </div>
+          </template>
+
+          <!-- 运行时间列 -->
+          <template #duration="{ record }">
+            <div class="duration-wrapper">
+              <ClockCircleOutlined class="duration-icon" />
+              <span class="duration-text">{{
+                formatDuration(record.duration)
+              }}</span>
             </div>
           </template>
 
@@ -245,25 +247,9 @@
             </a-tooltip>
           </template>
 
-          <!-- 运行时间列 -->
-          <template #duration="{ record }">
-            <span class="duration-text">{{
-              formatDuration(record.duration)
-            }}</span>
-          </template>
-
           <!-- 操作列 -->
           <template #action="{ record }">
             <a-space class="action-buttons">
-              <a-button
-                type="link"
-                size="small"
-                @click="viewDetails(record)"
-                class="action-btn"
-              >
-                <EyeOutlined />
-                详情
-              </a-button>
               <a-button
                 type="link"
                 size="small"
@@ -272,6 +258,15 @@
               >
                 <FileTextOutlined />
                 日志
+              </a-button>
+              <a-button
+                type="link"
+                size="small"
+                @click="viewDetails(record)"
+                class="action-btn"
+              >
+                <EyeOutlined />
+                详情
               </a-button>
               <a-dropdown>
                 <a-button type="link" size="small" class="action-btn">
@@ -299,9 +294,7 @@
                     <a-menu-item
                       key="stop"
                       :disabled="
-                        !['running', 'pending', 'paused'].includes(
-                          record.status,
-                        )
+                        !['running', 'pending'].includes(record.status)
                       "
                     >
                       <StopOutlined />
@@ -342,145 +335,97 @@
         layout="vertical"
         class="create-form"
       >
-        <a-row :gutter="16">
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="任务名称" name="name">
+        <a-tabs v-model:activeKey="activeTab" type="card" class="create-tabs">
+          <a-tab-pane key="basic" tab="基础配置">
+            <a-row :gutter="16">
+              <a-col :xs="24" :sm="12">
+                <a-form-item label="任务名称" name="name">
+                  <a-input
+                    v-model:value="createForm.name"
+                    placeholder="请输入任务名称"
+                    class="form-input"
+                  />
+                </a-form-item>
+              </a-col>
+              <a-col :xs="24" :sm="12">
+                <a-form-item label="命名空间" name="namespace">
+                  <a-select
+                    v-model:value="createForm.namespace"
+                    placeholder="选择命名空间"
+                    class="form-select"
+                  >
+                    <a-select-option value="default">default</a-select-option>
+                    <a-select-option value="ai-training"
+                      >ai-training</a-select-option
+                    >
+                    <a-select-option value="research">research</a-select-option>
+                  </a-select>
+                </a-form-item>
+              </a-col>
+            </a-row>
+
+            <a-row :gutter="16">
+              <a-col :xs="24" :sm="12">
+                <a-form-item label="训练框架" name="framework">
+                  <a-select
+                    v-model:value="createForm.framework"
+                    placeholder="选择训练框架"
+                    class="form-select"
+                  >
+                    <a-select-option value="tensorflow"
+                      >TensorFlow</a-select-option
+                    >
+                    <a-select-option value="pytorch">PyTorch</a-select-option>
+                    <a-select-option value="mindspore"
+                      >MindSpore</a-select-option
+                    >
+                    <a-select-option value="paddlepaddle"
+                      >PaddlePaddle</a-select-option
+                    >
+                  </a-select>
+                </a-form-item>
+              </a-col>
+              <a-col :xs="24" :sm="12">
+                <a-form-item label="任务类型" name="jobType">
+                  <a-select
+                    v-model:value="createForm.jobType"
+                    placeholder="选择任务类型"
+                    class="form-select"
+                  >
+                    <a-select-option value="single">单机训练</a-select-option>
+                    <a-select-option value="distributed"
+                      >分布式训练</a-select-option
+                    >
+                    <a-select-option value="horovod"
+                      >Horovod训练</a-select-option
+                    >
+                  </a-select>
+                </a-form-item>
+              </a-col>
+            </a-row>
+
+            <a-form-item label="镜像" name="image">
               <a-input
-                v-model:value="createForm.name"
-                placeholder="请输入任务名称"
+                v-model:value="createForm.image"
+                placeholder="请输入镜像地址"
                 class="form-input"
               />
             </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="命名空间" name="namespace">
-              <a-select
-                v-model:value="createForm.namespace"
-                placeholder="选择命名空间"
-                class="form-select"
-              >
-                <a-select-option value="default">default</a-select-option>
-                <a-select-option value="ai-training"
-                  >ai-training</a-select-option
-                >
-                <a-select-option value="research">research</a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-        </a-row>
 
-        <a-row :gutter="16">
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="队列" name="queue">
-              <a-select
-                v-model:value="createForm.queue"
-                placeholder="选择队列"
-                class="form-select"
-              >
-                <a-select-option value="default">default</a-select-option>
-                <a-select-option value="high-priority"
-                  >high-priority</a-select-option
-                >
-                <a-select-option value="gpu-queue">gpu-queue</a-select-option>
-                <a-select-option value="cpu-queue">cpu-queue</a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="优先级" name="priority">
-              <a-select
-                v-model:value="createForm.priority"
-                placeholder="选择优先级"
-                class="form-select"
-              >
-                <a-select-option value="low">低</a-select-option>
-                <a-select-option value="medium">中</a-select-option>
-                <a-select-option value="high">高</a-select-option>
-                <a-select-option value="urgent">紧急</a-select-option>
-              </a-select>
-            </a-form-item>
-          </a-col>
-        </a-row>
-
-        <a-form-item label="训练镜像" name="image">
-          <a-select
-            v-model:value="createForm.image"
-            placeholder="选择训练镜像"
-            class="form-select"
-          >
-            <a-select-option
-              value="pytorch/pytorch:1.12.0-cuda11.3-cudnn8-runtime"
-            >
-              PyTorch 1.12.0
-            </a-select-option>
-            <a-select-option value="tensorflow/tensorflow:2.9.0-gpu">
-              TensorFlow 2.9.0
-            </a-select-option>
-            <a-select-option value="nvcr.io/nvidia/pytorch:22.05-py3">
-              NVIDIA PyTorch 22.05
-            </a-select-option>
-            <a-select-option value="custom">自定义镜像</a-select-option>
-          </a-select>
-        </a-form-item>
-
-        <a-form-item
-          v-if="createForm.image === 'custom'"
-          label="自定义镜像地址"
-          name="customImage"
-        >
-          <a-input
-            v-model:value="createForm.customImage"
-            placeholder="请输入镜像地址"
-            class="form-input"
-          />
-        </a-form-item>
-
-        <a-divider class="form-divider">资源配置</a-divider>
-
-        <a-row :gutter="16">
-          <a-col :xs="24" :sm="8">
-            <a-form-item label="CPU 核数" name="cpu">
-              <a-input-number
-                v-model:value="createForm.cpu"
-                :min="1"
-                :max="64"
-                style="width: 100%"
-                addon-after="核"
-                class="form-input-number"
+            <a-form-item label="训练脚本" name="script">
+              <a-textarea
+                v-model:value="createForm.script"
+                placeholder="请输入训练脚本路径或命令"
+                :rows="3"
+                class="form-textarea"
               />
             </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="8">
-            <a-form-item label="内存" name="memory">
-              <a-input-number
-                v-model:value="createForm.memory"
-                :min="2"
-                :max="512"
-                style="width: 100%"
-                addon-after="GB"
-                class="form-input-number"
-              />
-            </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="8">
-            <a-form-item label="GPU 卡数" name="gpu">
-              <a-input-number
-                v-model:value="createForm.gpu"
-                :min="0"
-                :max="8"
-                style="width: 100%"
-                addon-after="卡"
-                class="form-input-number"
-              />
-            </a-form-item>
-          </a-col>
-        </a-row>
+          </a-tab-pane>
 
-        <a-row :gutter="16">
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="副本数" name="replicas">
+          <a-tab-pane key="resources" tab="资源配置">
+            <a-form-item label="工作节点数量" name="workers">
               <a-input-number
-                v-model:value="createForm.replicas"
+                v-model:value="createForm.workers"
                 :min="1"
                 :max="10"
                 style="width: 100%"
@@ -488,103 +433,134 @@
                 class="form-input-number"
               />
             </a-form-item>
-          </a-col>
-          <a-col :xs="24" :sm="12">
-            <a-form-item label="最大重试次数" name="maxRetries">
+
+            <a-divider class="form-divider">单节点资源配置</a-divider>
+
+            <a-row :gutter="16">
+              <a-col :xs="24" :sm="8">
+                <a-form-item label="CPU 核数" name="cpu">
+                  <a-input-number
+                    v-model:value="createForm.cpu"
+                    :min="1"
+                    :max="64"
+                    style="width: 100%"
+                    addon-after="核"
+                    class="form-input-number"
+                  />
+                </a-form-item>
+              </a-col>
+              <a-col :xs="24" :sm="8">
+                <a-form-item label="内存" name="memory">
+                  <a-input-number
+                    v-model:value="createForm.memory"
+                    :min="4"
+                    :max="512"
+                    style="width: 100%"
+                    addon-after="GB"
+                    class="form-input-number"
+                  />
+                </a-form-item>
+              </a-col>
+              <a-col :xs="24" :sm="8">
+                <a-form-item label="GPU 卡数" name="gpu">
+                  <a-input-number
+                    v-model:value="createForm.gpu"
+                    :min="0"
+                    :max="8"
+                    style="width: 100%"
+                    addon-after="卡"
+                    class="form-input-number"
+                  />
+                </a-form-item>
+              </a-col>
+            </a-row>
+
+            <a-form-item label="存储卷" name="storage">
               <a-input-number
-                v-model:value="createForm.maxRetries"
-                :min="0"
-                :max="10"
+                v-model:value="createForm.storage"
+                :min="50"
+                :max="2000"
                 style="width: 100%"
-                addon-after="次"
+                addon-after="GB"
                 class="form-input-number"
               />
             </a-form-item>
-          </a-col>
-        </a-row>
+          </a-tab-pane>
 
-        <a-divider class="form-divider">训练配置</a-divider>
+          <a-tab-pane key="advanced" tab="高级配置">
+            <a-form-item label="环境变量" name="envVars">
+              <div class="env-vars-container">
+                <div
+                  v-for="(env, index) in createForm.envVars"
+                  :key="index"
+                  class="env-var-item"
+                >
+                  <a-input
+                    v-model:value="env.key"
+                    placeholder="变量名"
+                    class="env-key-input"
+                  />
+                  <a-input
+                    v-model:value="env.value"
+                    placeholder="变量值"
+                    class="env-value-input"
+                  />
+                  <a-button
+                    type="text"
+                    danger
+                    @click="removeEnvVar(index)"
+                    class="env-remove-btn"
+                  >
+                    <DeleteOutlined />
+                  </a-button>
+                </div>
+                <a-button type="dashed" @click="addEnvVar" class="add-env-btn">
+                  <PlusOutlined />
+                  添加环境变量
+                </a-button>
+              </div>
+            </a-form-item>
 
-        <a-form-item label="训练脚本" name="script">
-          <a-textarea
-            v-model:value="createForm.script"
-            placeholder="请输入训练脚本或命令"
-            :rows="4"
-            class="form-textarea"
-          />
-        </a-form-item>
-
-        <a-form-item label="环境变量" name="envVars">
-          <div class="env-vars-container">
-            <div
-              v-for="(env, index) in createForm.envVars"
-              :key="index"
-              class="env-var-item"
-            >
+            <a-form-item label="数据集路径" name="dataPath">
               <a-input
-                v-model:value="env.key"
-                placeholder="变量名"
-                class="env-key"
+                v-model:value="createForm.dataPath"
+                placeholder="请输入数据集路径"
+                class="form-input"
               />
+            </a-form-item>
+
+            <a-form-item label="输出路径" name="outputPath">
               <a-input
-                v-model:value="env.value"
-                placeholder="变量值"
-                class="env-value"
+                v-model:value="createForm.outputPath"
+                placeholder="请输入模型输出路径"
+                class="form-input"
               />
-              <a-button
-                type="text"
-                danger
-                @click="removeEnvVar(index)"
-                class="env-remove-btn"
-              >
-                <DeleteOutlined />
-              </a-button>
-            </div>
-            <a-button type="dashed" @click="addEnvVar" class="add-env-btn">
-              <PlusOutlined />
-              添加环境变量
-            </a-button>
-          </div>
-        </a-form-item>
+            </a-form-item>
 
-        <a-form-item label="数据集挂载路径" name="dataPath">
-          <a-input
-            v-model:value="createForm.dataPath"
-            placeholder="例如: /data/dataset"
-            class="form-input"
-          />
-        </a-form-item>
-
-        <a-form-item label="模型输出路径" name="outputPath">
-          <a-input
-            v-model:value="createForm.outputPath"
-            placeholder="例如: /output/models"
-            class="form-input"
-          />
-        </a-form-item>
-
-        <a-form-item label="描述" name="description">
-          <a-textarea
-            v-model:value="createForm.description"
-            placeholder="请输入任务描述"
-            :rows="3"
-            class="form-textarea"
-          />
-        </a-form-item>
+            <a-form-item label="描述" name="description">
+              <a-textarea
+                v-model:value="createForm.description"
+                placeholder="请输入任务描述"
+                :rows="4"
+                class="form-textarea"
+              />
+            </a-form-item>
+          </a-tab-pane>
+        </a-tabs>
       </a-form>
     </a-modal>
 
-    <!-- 任务详情模态框 -->
+    <!-- 详情模态框 -->
     <a-modal
       v-model:open="detailModalVisible"
-      title="任务详情"
+      title="训练任务详情"
       width="1000px"
       :footer="null"
       class="sci-fi-modal detail-modal"
     >
       <div v-if="selectedJob" class="detail-content">
-        <a-tabs default-active-key="overview" class="detail-tabs">
-          <a-tab-pane key="overview" tab="概览">
+        <a-tabs type="card" class="detail-tabs">
+          <a-tab-pane key="info" tab="基本信息">
             <a-descriptions
               :column="{ xs: 1, sm: 2 }"
               bordered
@@ -602,16 +578,17 @@
                   {{ getStatusText(selectedJob.status) }}
                 </a-tag>
               </a-descriptions-item>
-              <a-descriptions-item label="队列">
-                {{ selectedJob.queue }}
+              <a-descriptions-item label="训练框架">
+                <div class="framework-wrapper">
+                  <component
+                    :is="getFrameworkIcon(selectedJob.framework)"
+                    class="framework-icon"
+                  />
+                  <span>{{ getFrameworkText(selectedJob.framework) }}</span>
+                </div>
               </a-descriptions-item>
-              <a-descriptions-item label="优先级">
-                <a-tag
-                  :color="getPriorityColor(selectedJob.priority)"
-                  class="priority-tag"
-                >
-                  {{ getPriorityText(selectedJob.priority) }}
-                </a-tag>
+              <a-descriptions-item label="任务类型">
+                {{ getJobTypeText(selectedJob.jobType) }}
               </a-descriptions-item>
               <a-descriptions-item label="命名空间">
                 {{ selectedJob.namespace }}
@@ -625,17 +602,8 @@
               <a-descriptions-item label="创建时间">
                 {{ selectedJob.createTime }}
               </a-descriptions-item>
-              <a-descriptions-item label="CPU">
-                {{ selectedJob.resources.cpu }} 核
-              </a-descriptions-item>
-              <a-descriptions-item label="内存">
-                {{ selectedJob.resources.memory }} GB
-              </a-descriptions-item>
-              <a-descriptions-item label="GPU" v-if="selectedJob.resources.gpu">
-                {{ selectedJob.resources.gpu }} 卡
-              </a-descriptions-item>
-              <a-descriptions-item label="副本数">
-                {{ selectedJob.replicas }}
+              <a-descriptions-item label="工作节点">
+                {{ selectedJob.workers }} 个
               </a-descriptions-item>
               <a-descriptions-item label="运行时间">
                 {{ formatDuration(selectedJob.duration) }}
@@ -647,107 +615,111 @@
                   size="small"
                 />
               </a-descriptions-item>
+              <a-descriptions-item label="数据集路径" :span="2">
+                {{ selectedJob.dataPath || '未设置' }}
+              </a-descriptions-item>
+              <a-descriptions-item label="输出路径" :span="2">
+                {{ selectedJob.outputPath || '未设置' }}
+              </a-descriptions-item>
               <a-descriptions-item label="描述" :span="2">
                 {{ selectedJob.description || '暂无描述' }}
               </a-descriptions-item>
             </a-descriptions>
           </a-tab-pane>
 
-          <a-tab-pane key="pods" tab="Pod 状态">
-            <a-table
-              :columns="podColumns"
-              :data-source="mockPods"
-              :pagination="false"
-              size="small"
-              class="pod-table"
-            >
-              <template #podStatus="{ record }">
-                <a-tag
-                  :color="getPodStatusColor(record.status)"
-                  class="status-tag"
-                >
-                  {{ record.status }}
-                </a-tag>
-              </template>
-              <template #resources="{ record }">
-                <div class="pod-resources">
-                  <div>CPU: {{ record.cpu }}</div>
-                  <div>内存: {{ record.memory }}</div>
-                  <div v-if="record.gpu">GPU: {{ record.gpu }}</div>
-                </div>
-              </template>
-            </a-table>
+          <a-tab-pane key="resources" tab="资源使用">
+            <div class="resource-details">
+              <a-row :gutter="24">
+                <a-col :xs="24" :sm="8">
+                  <a-card class="resource-card" :bordered="false">
+                    <div class="resource-header">
+                      <DatabaseOutlined class="resource-card-icon cpu" />
+                      <span class="resource-title">CPU 使用率</span>
+                    </div>
+                    <div class="resource-value">
+                      {{ selectedJob.resources.cpu }} 核
+                    </div>
+                    <a-progress :percent="75" size="small" :show-info="false" />
+                  </a-card>
+                </a-col>
+                <a-col :xs="24" :sm="8">
+                  <a-card class="resource-card" :bordered="false">
+                    <div class="resource-header">
+                      <ThunderboltOutlined class="resource-card-icon memory" />
+                      <span class="resource-title">内存使用</span>
+                    </div>
+                    <div class="resource-value">
+                      {{ selectedJob.resources.memory }} GB
+                    </div>
+                    <a-progress :percent="68" size="small" :show-info="false" />
+                  </a-card>
+                </a-col>
+                <a-col :xs="24" :sm="8" v-if="selectedJob.resources.gpu">
+                  <a-card class="resource-card" :bordered="false">
+                    <div class="resource-header">
+                      <BugOutlined class="resource-card-icon gpu" />
+                      <span class="resource-title">GPU 使用率</span>
+                    </div>
+                    <div class="resource-value">
+                      {{ selectedJob.resources.gpu }} 卡
+                    </div>
+                    <a-progress :percent="92" size="small" :show-info="false" />
+                  </a-card>
+                </a-col>
+              </a-row>
+            </div>
           </a-tab-pane>
 
-          <a-tab-pane key="events" tab="事件">
-            <a-timeline class="event-timeline">
-              <a-timeline-item
-                v-for="event in mockEvents"
-                :key="event.id"
-                :color="getEventColor(event.type)"
-              >
-                <div class="event-item">
-                  <div class="event-header">
-                    <span class="event-type">{{ event.type }}</span>
-                    <span class="event-time">{{ event.time }}</span>
-                  </div>
-                  <div class="event-message">{{ event.message }}</div>
-                </div>
-              </a-timeline-item>
-            </a-timeline>
+          <a-tab-pane key="logs" tab="运行日志">
+            <div class="log-container">
+              <div class="log-header">
+                <span class="log-title">训练日志</span>
+                <a-space>
+                  <a-select
+                    v-model:value="selectedPod"
+                    placeholder="选择Pod"
+                    style="width: 200px"
+                    class="pod-select"
+                  >
+                    <a-select-option value="worker-0">worker-0</a-select-option>
+                    <a-select-option value="worker-1">worker-1</a-select-option>
+                    <a-select-option value="parameter-server"
+                      >parameter-server</a-select-option
+                    >
+                  </a-select>
+                  <a-button
+                    size="small"
+                    @click="refreshLogs"
+                    class="log-refresh-btn"
+                  >
+                    <ReloadOutlined />
+                    刷新
+                  </a-button>
+                  <a-button
+                    size="small"
+                    @click="downloadLogs"
+                    class="log-download-btn"
+                  >
+                    <DownloadOutlined />
+                    下载
+                  </a-button>
+                </a-space>
+              </div>
+              <div class="log-content">
+                <pre
+                  v-for="(log, index) in trainingLogs"
+                  :key="index"
+                  class="log-line"
+                  >{{ log }}</pre
+                >
+              </div>
+            </div>
           </a-tab-pane>
         </a-tabs>
       </div>
     </a-modal>
 
-    <!-- 日志查看模态框 -->
-    <a-modal
-      v-model:open="logModalVisible"
-      title="任务日志"
-      width="1000px"
-      :footer="null"
-      class="sci-fi-modal log-modal"
-    >
-      <div class="log-container">
-        <div class="log-header">
-          <a-space>
-            <a-select
-              v-model:value="selectedPod"
-              placeholder="选择 Pod"
-              style="width: 200px"
-              class="pod-select"
-            >
-              <a-select-option
-                v-for="pod in mockPods"
-                :key="pod.name"
-                :value="pod.name"
-              >
-                {{ pod.name }}
-              </a-select-option>
-            </a-select>
-            <a-button @click="refreshLogs" class="log-refresh-btn">
-              <ReloadOutlined />
-              刷新
-            </a-button>
-            <a-button @click="downloadLogs" class="log-download-btn">
-              <DownloadOutlined />
-              下载
-            </a-button>
-          </a-space>
-        </div>
-        <div class="log-content">
-          <pre
-            v-for="(log, index) in logs"
-            :key="index"
-            class="log-line"
-            :class="getLogLineClass(log)"
-            >{{ log }}</pre
-          >
-        </div>
-      </div>
-    </a-modal>
-
-    <!-- 克隆任务模态框 -->
+    <!-- 克隆模态框 -->
     <a-modal
       v-model:open="cloneModalVisible"
       title="克隆训练任务"
@@ -770,30 +742,15 @@
             class="form-input"
           />
         </a-form-item>
-        <a-form-item label="队列" name="queue">
+        <a-form-item label="命名空间" name="namespace">
           <a-select
-            v-model:value="cloneForm.queue"
-            placeholder="选择队列"
+            v-model:value="cloneForm.namespace"
+            placeholder="选择命名空间"
             class="form-select"
           >
             <a-select-option value="default">default</a-select-option>
-            <a-select-option value="high-priority"
-              >high-priority</a-select-option
-            >
-            <a-select-option value="gpu-queue">gpu-queue</a-select-option>
-            <a-select-option value="cpu-queue">cpu-queue</a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item label="优先级" name="priority">
-          <a-select
-            v-model:value="cloneForm.priority"
-            placeholder="选择优先级"
-            class="form-select"
-          >
-            <a-select-option value="low">低</a-select-option>
-            <a-select-option value="medium">中</a-select-option>
-            <a-select-option value="high">高</a-select-option>
-            <a-select-option value="urgent">紧急</a-select-option>
+            <a-select-option value="ai-training">ai-training</a-select-option>
+            <a-select-option value="research">research</a-select-option>
           </a-select>
         </a-form-item>
       </a-form>
@@ -806,27 +763,32 @@ import { ref, reactive, computed, onMounted } from 'vue';
 import { message } from 'ant-design-vue';
 import type { FormInstance, TableColumnsType } from 'ant-design-vue';
 import {
-  ThunderboltOutlined,
+  RocketOutlined,
   PlusOutlined,
   ReloadOutlined,
   DatabaseOutlined,
+  ThunderboltOutlined,
   BugOutlined,
   EyeOutlined,
   MoreOutlined,
   PlayCircleOutlined,
   PauseCircleOutlined,
-  StopOutlined,
   CopyOutlined,
   DeleteOutlined,
   CheckCircleOutlined,
   ClockCircleOutlined,
+  StopOutlined,
   CloseCircleOutlined,
   FileTextOutlined,
   DownloadOutlined,
+  ApiOutlined,
+  CodeOutlined,
+  CloudOutlined,
+  RobotOutlined,
 } from '@ant-design/icons-vue';
 
 // ===== 类型定义 =====
-interface JobResources {
+interface TrainingJobResources {
   cpu: number;
   memory: number;
   gpu?: number;
@@ -841,7 +803,6 @@ interface TrainingJob {
   id: string;
   name: string;
   namespace: string;
-  queue: string;
   status:
     | 'running'
     | 'pending'
@@ -849,15 +810,15 @@ interface TrainingJob {
     | 'failed'
     | 'cancelled'
     | 'paused';
-  priority: 'low' | 'medium' | 'high' | 'urgent';
+  framework: 'tensorflow' | 'pytorch' | 'mindspore' | 'paddlepaddle';
+  jobType: 'single' | 'distributed' | 'horovod';
   creator: string;
   image: string;
   createTime: string;
-  duration: number; // 秒
+  resources: TrainingJobResources;
+  workers: number;
   progress: number;
-  resources: JobResources;
-  replicas: number;
-  maxRetries: number;
+  duration: number; // 运行时间（分钟）
   script: string;
   dataPath?: string;
   outputPath?: string;
@@ -867,16 +828,15 @@ interface TrainingJob {
 interface CreateForm {
   name: string;
   namespace: string;
-  queue: string;
-  priority: string;
+  framework: string;
+  jobType: string;
   image: string;
-  customImage: string;
+  script: string;
+  workers: number;
   cpu: number;
   memory: number;
   gpu: number;
-  replicas: number;
-  maxRetries: number;
-  script: string;
+  storage: number;
   envVars: EnvVar[];
   dataPath: string;
   outputPath: string;
@@ -885,42 +845,34 @@ interface CreateForm {
 
 interface CloneForm {
   name: string;
-  queue: string;
-  priority: string;
-}
-
-interface PodInfo {
-  name: string;
-  status: string;
-  cpu: string;
-  memory: string;
-  gpu?: string;
-  node: string;
-  startTime: string;
-}
-
-interface EventInfo {
-  id: string;
-  type: string;
-  time: string;
-  message: string;
+  namespace: string;
 }
 
 // ===== 响应式数据 =====
 const loading = ref<boolean>(false);
 const createModalVisible = ref<boolean>(false);
 const detailModalVisible = ref<boolean>(false);
-const logModalVisible = ref<boolean>(false);
 const cloneModalVisible = ref<boolean>(false);
 const createLoading = ref<boolean>(false);
 const cloneLoading = ref<boolean>(false);
 
 const filterStatus = ref<string>('');
-const filterQueue = ref<string>('');
+const filterFramework = ref<string>('');
 const searchKeyword = ref<string>('');
-const selectedPod = ref<string>('');
+const activeTab = ref<string>('basic');
+const selectedPod = ref<string>('worker-0');
 
 const selectedJob = ref<TrainingJob | null>(null);
+
+const trainingLogs = ref<string[]>([
+  '2024-06-23 10:30:15 INFO: Starting training job...',
+  '2024-06-23 10:30:16 INFO: Loading dataset from /data/train',
+  '2024-06-23 10:30:17 INFO: Model architecture initialized',
+  '2024-06-23 10:30:18 INFO: Starting epoch 1/100',
+  '2024-06-23 10:30:20 INFO: Epoch 1 - loss: 0.8567, accuracy: 0.7234',
+  '2024-06-23 10:31:15 INFO: Epoch 2 - loss: 0.7234, accuracy: 0.7856',
+  '2024-06-23 10:32:10 INFO: Epoch 3 - loss: 0.6789, accuracy: 0.8123',
+]);
 
 // ===== 表单引用 =====
 const createFormRef = ref<FormInstance>();
@@ -930,206 +882,147 @@ const cloneFormRef = ref<FormInstance>();
 const createForm = reactive<CreateForm>({
   name: '',
   namespace: 'default',
-  queue: 'default',
-  priority: 'medium',
-  image: 'pytorch/pytorch:1.12.0-cuda11.3-cudnn8-runtime',
-  customImage: '',
+  framework: 'tensorflow',
+  jobType: 'single',
+  image: 'tensorflow/tensorflow:2.13.0-gpu',
+  script: 'python train.py',
+  workers: 1,
   cpu: 4,
   memory: 8,
   gpu: 1,
-  replicas: 1,
-  maxRetries: 3,
-  script: '',
-  envVars: [],
-  dataPath: '',
-  outputPath: '',
+  storage: 100,
+  envVars: [{ key: '', value: '' }],
+  dataPath: '/data/train',
+  outputPath: '/data/output',
   description: '',
 });
 
 const cloneForm = reactive<CloneForm>({
   name: '',
-  queue: 'default',
-  priority: 'medium',
+  namespace: 'default',
 });
 
 // ===== 配置数据 =====
 const STATUS_CONFIG = {
-  running: { color: 'success', text: '运行中', icon: PlayCircleOutlined },
-  pending: { color: 'processing', text: '排队中', icon: ClockCircleOutlined },
+  running: { color: 'processing', text: '运行中', icon: PlayCircleOutlined },
+  pending: { color: 'default', text: '等待中', icon: ClockCircleOutlined },
   completed: { color: 'success', text: '已完成', icon: CheckCircleOutlined },
   failed: { color: 'error', text: '失败', icon: CloseCircleOutlined },
-  cancelled: { color: 'default', text: '已取消', icon: StopOutlined },
-  paused: { color: 'warning', text: '已暂停', icon: PauseCircleOutlined },
+  cancelled: { color: 'warning', text: '已取消', icon: StopOutlined },
+  paused: { color: 'processing', text: '已暂停', icon: PauseCircleOutlined },
 } as const;
 
-const PRIORITY_CONFIG = {
-  low: { color: 'default', text: '低' },
-  medium: { color: 'processing', text: '中' },
-  high: { color: 'warning', text: '高' },
-  urgent: { color: 'error', text: '紧急' },
+const FRAMEWORK_CONFIG = {
+  tensorflow: { text: 'TensorFlow', icon: ApiOutlined },
+  pytorch: { text: 'PyTorch', icon: RobotOutlined },
+  mindspore: { text: 'MindSpore', icon: CloudOutlined },
+  paddlepaddle: { text: 'PaddlePaddle', icon: CodeOutlined },
+} as const;
+
+const JOB_TYPE_CONFIG = {
+  single: '单机训练',
+  distributed: '分布式训练',
+  horovod: 'Horovod训练',
 } as const;
 
 // ===== 模拟数据 =====
-const jobs = ref<TrainingJob[]>([
+const trainingJobs = ref<TrainingJob[]>([
   {
     id: 'job-001',
-    name: 'bert-training-task',
+    name: 'resnet50-imagenet',
     namespace: 'ai-training',
-    queue: 'gpu-queue',
     status: 'running',
-    priority: 'high',
+    framework: 'tensorflow',
+    jobType: 'distributed',
     creator: 'admin',
-    image: 'pytorch/pytorch:1.12.0-cuda11.3-cudnn8-runtime',
-    createTime: '2024-06-23 09:30:00',
-    duration: 3600,
+    image: 'tensorflow/tensorflow:2.13.0-gpu',
+    createTime: '2024-06-23 09:00:00',
+    resources: { cpu: 8, memory: 16, gpu: 2 },
+    workers: 4,
     progress: 65,
-    resources: { cpu: 8, memory: 32, gpu: 4 },
-    replicas: 2,
-    maxRetries: 3,
-    script: 'python train.py --model bert --epochs 100',
-    dataPath: '/data/nlp-dataset',
-    outputPath: '/output/bert-model',
-    description: 'BERT 模型训练任务',
+    duration: 180,
+    script: 'python train_resnet.py --epochs 100 --batch-size 64',
+    dataPath: '/data/imagenet',
+    outputPath: '/data/models/resnet50',
+    description: 'ResNet-50 在 ImageNet 数据集上的训练',
   },
   {
     id: 'job-002',
-    name: 'resnet-image-classification',
+    name: 'bert-fine-tuning',
     namespace: 'research',
-    queue: 'default',
-    status: 'pending',
-    priority: 'medium',
+    status: 'completed',
+    framework: 'pytorch',
+    jobType: 'single',
     creator: 'researcher',
-    image: 'tensorflow/tensorflow:2.9.0-gpu',
-    createTime: '2024-06-23 10:15:00',
-    duration: 0,
-    progress: 0,
-    resources: { cpu: 4, memory: 16, gpu: 2 },
-    replicas: 1,
-    maxRetries: 5,
-    script: 'python train_resnet.py --dataset imagenet',
-    dataPath: '/data/imagenet',
-    outputPath: '/output/resnet',
-    description: 'ResNet 图像分类模型训练',
+    image: 'pytorch/pytorch:2.0.1-cuda11.7-cudnn8-devel',
+    createTime: '2024-06-23 08:30:00',
+    resources: { cpu: 4, memory: 8, gpu: 1 },
+    workers: 1,
+    progress: 100,
+    duration: 120,
+    script: 'python fine_tune_bert.py --model bert-base-uncased',
+    dataPath: '/data/nlp/sentiment',
+    outputPath: '/data/models/bert-sentiment',
+    description: 'BERT 情感分析模型微调',
   },
   {
     id: 'job-003',
-    name: 'llama-fine-tuning',
+    name: 'yolo-object-detection',
     namespace: 'ai-training',
-    queue: 'high-priority',
-    status: 'completed',
-    priority: 'urgent',
-    creator: 'ml-engineer',
-    image: 'nvcr.io/nvidia/pytorch:22.05-py3',
-    createTime: '2024-06-22 14:20:00',
-    duration: 7200,
-    progress: 100,
-    resources: { cpu: 16, memory: 64, gpu: 8 },
-    replicas: 4,
-    maxRetries: 2,
-    script: 'python finetune_llama.py --model llama-7b',
-    dataPath: '/data/text-corpus',
-    outputPath: '/output/llama-ft',
-    description: 'LLaMA 大模型微调任务',
+    status: 'pending',
+    framework: 'pytorch',
+    jobType: 'single',
+    creator: 'developer',
+    image: 'ultralytics/yolov8:latest',
+    createTime: '2024-06-23 10:15:00',
+    resources: { cpu: 6, memory: 12, gpu: 1 },
+    workers: 1,
+    progress: 0,
+    duration: 0,
+    script:
+      'python train.py --data coco.yaml --epochs 100 --weights yolov8n.pt',
+    dataPath: '/data/coco',
+    outputPath: '/data/models/yolo',
+    description: 'YOLOv8 目标检测模型训练',
   },
   {
     id: 'job-004',
-    name: 'yolo-object-detection',
-    namespace: 'default',
-    queue: 'cpu-queue',
+    name: 'gan-face-generation',
+    namespace: 'research',
     status: 'failed',
-    priority: 'low',
-    creator: 'developer',
-    image: 'pytorch/pytorch:1.12.0-cuda11.3-cudnn8-runtime',
-    createTime: '2024-06-23 08:45:00',
-    duration: 1800,
-    progress: 25,
+    framework: 'tensorflow',
+    jobType: 'single',
+    creator: 'researcher',
+    image: 'tensorflow/tensorflow:2.13.0-gpu',
+    createTime: '2024-06-23 07:45:00',
     resources: { cpu: 8, memory: 16, gpu: 2 },
-    replicas: 1,
-    maxRetries: 3,
-    script: 'python train_yolo.py --config yolo_config.yaml',
-    dataPath: '/data/coco-dataset',
-    outputPath: '/output/yolo',
-    description: 'YOLO 目标检测模型训练',
+    workers: 1,
+    progress: 23,
+    duration: 45,
+    script: 'python train_gan.py --dataset faces --epochs 500',
+    dataPath: '/data/faces',
+    outputPath: '/data/models/gan',
+    description: 'GAN 人脸生成模型训练',
   },
   {
     id: 'job-005',
     name: 'transformer-translation',
-    namespace: 'research',
-    queue: 'gpu-queue',
-    status: 'paused',
-    priority: 'medium',
-    creator: 'researcher',
-    image: 'tensorflow/tensorflow:2.9.0-gpu',
-    createTime: '2024-06-23 07:30:00',
-    duration: 2700,
-    progress: 45,
-    resources: { cpu: 6, memory: 24, gpu: 3 },
-    replicas: 2,
-    maxRetries: 4,
-    script: 'python train_transformer.py --task translation',
-    dataPath: '/data/translation-corpus',
-    outputPath: '/output/transformer',
-    description: 'Transformer 机器翻译模型训练',
+    namespace: 'ai-training',
+    status: 'running',
+    framework: 'pytorch',
+    jobType: 'distributed',
+    creator: 'admin',
+    image: 'pytorch/pytorch:2.0.1-cuda11.7-cudnn8-devel',
+    createTime: '2024-06-23 09:30:00',
+    resources: { cpu: 16, memory: 32, gpu: 4 },
+    workers: 2,
+    progress: 35,
+    duration: 90,
+    script: 'python train_transformer.py --src-lang en --tgt-lang zh',
+    dataPath: '/data/translation',
+    outputPath: '/data/models/transformer',
+    description: 'Transformer 英中翻译模型训练',
   },
-]);
-
-const mockPods: PodInfo[] = [
-  {
-    name: 'bert-training-task-worker-0',
-    status: 'Running',
-    cpu: '4 cores',
-    memory: '16 GB',
-    gpu: '2 cards',
-    node: 'gpu-node-01',
-    startTime: '2024-06-23 09:31:00',
-  },
-  {
-    name: 'bert-training-task-worker-1',
-    status: 'Running',
-    cpu: '4 cores',
-    memory: '16 GB',
-    gpu: '2 cards',
-    node: 'gpu-node-02',
-    startTime: '2024-06-23 09:31:00',
-  },
-];
-
-const mockEvents: EventInfo[] = [
-  {
-    id: 'event-1',
-    type: 'Normal',
-    time: '2024-06-23 09:30:00',
-    message: '任务已创建',
-  },
-  {
-    id: 'event-2',
-    type: 'Normal',
-    time: '2024-06-23 09:30:15',
-    message: '任务已加入队列',
-  },
-  {
-    id: 'event-3',
-    type: 'Normal',
-    time: '2024-06-23 09:31:00',
-    message: 'Pod 开始调度',
-  },
-  {
-    id: 'event-4',
-    type: 'Normal',
-    time: '2024-06-23 09:31:30',
-    message: '训练开始执行',
-  },
-];
-
-const logs = ref<string[]>([
-  '2024-06-23 09:31:00 INFO: 初始化训练环境...',
-  '2024-06-23 09:31:05 INFO: 加载数据集...',
-  '2024-06-23 09:31:10 INFO: 模型初始化完成',
-  '2024-06-23 09:31:15 INFO: 开始训练 Epoch 1/100',
-  '2024-06-23 09:32:00 INFO: Epoch 1 完成，损失: 0.85',
-  '2024-06-23 09:32:05 INFO: 开始训练 Epoch 2/100',
-  '2024-06-23 09:33:00 INFO: Epoch 2 完成，损失: 0.78',
-  '2024-06-23 09:33:05 INFO: 开始训练 Epoch 3/100',
 ]);
 
 // ===== 表单验证规则 =====
@@ -1144,16 +1037,14 @@ const createFormRules = {
     },
   ],
   namespace: [{ required: true, message: '请选择命名空间', trigger: 'change' }],
-  queue: [{ required: true, message: '请选择队列', trigger: 'change' }],
-  priority: [{ required: true, message: '请选择优先级', trigger: 'change' }],
-  image: [{ required: true, message: '请选择镜像', trigger: 'change' }],
-  customImage: [
-    { required: true, message: '请输入自定义镜像地址', trigger: 'blur' },
-  ],
+  framework: [{ required: true, message: '请选择训练框架', trigger: 'change' }],
+  jobType: [{ required: true, message: '请选择任务类型', trigger: 'change' }],
+  image: [{ required: true, message: '请输入镜像地址', trigger: 'blur' }],
+  script: [{ required: true, message: '请输入训练脚本', trigger: 'blur' }],
+  workers: [{ required: true, message: '请输入工作节点数量', trigger: 'blur' }],
   cpu: [{ required: true, message: '请输入 CPU 核数', trigger: 'blur' }],
   memory: [{ required: true, message: '请输入内存大小', trigger: 'blur' }],
-  replicas: [{ required: true, message: '请输入副本数', trigger: 'blur' }],
-  script: [{ required: true, message: '请输入训练脚本', trigger: 'blur' }],
+  storage: [{ required: true, message: '请输入存储大小', trigger: 'blur' }],
 };
 
 const cloneFormRules = {
@@ -1166,24 +1057,17 @@ const cloneFormRules = {
       trigger: 'blur',
     },
   ],
-  queue: [{ required: true, message: '请选择队列', trigger: 'change' }],
-  priority: [{ required: true, message: '请选择优先级', trigger: 'change' }],
+  namespace: [{ required: true, message: '请选择命名空间', trigger: 'change' }],
 };
 
 // ===== 表格列配置 =====
 const columns: TableColumnsType<TrainingJob> = [
   {
     title: '任务名称',
+    dataIndex: 'name',
     key: 'name',
     width: 200,
     ellipsis: true,
-    slots: { customRender: 'name' },
-  },
-  {
-    title: '队列',
-    dataIndex: 'queue',
-    key: 'queue',
-    width: 120,
   },
   {
     title: '状态',
@@ -1192,10 +1076,10 @@ const columns: TableColumnsType<TrainingJob> = [
     slots: { customRender: 'status' },
   },
   {
-    title: '优先级',
-    key: 'priority',
-    width: 100,
-    slots: { customRender: 'priority' },
+    title: '训练框架',
+    key: 'framework',
+    width: 120,
+    slots: { customRender: 'framework' },
   },
   {
     title: '创建者',
@@ -1206,7 +1090,7 @@ const columns: TableColumnsType<TrainingJob> = [
   {
     title: '资源配置',
     key: 'resources',
-    width: 180,
+    width: 200,
     slots: { customRender: 'resources' },
   },
   {
@@ -1216,62 +1100,29 @@ const columns: TableColumnsType<TrainingJob> = [
     slots: { customRender: 'progress' },
   },
   {
-    title: '创建时间',
-    key: 'createTime',
-    width: 150,
-    slots: { customRender: 'createTime' },
-  },
-  {
     title: '运行时间',
     key: 'duration',
     width: 120,
     slots: { customRender: 'duration' },
   },
   {
+    title: '创建时间',
+    key: 'createTime',
+    width: 150,
+    slots: { customRender: 'createTime' },
+  },
+  {
     title: '操作',
     key: 'action',
-    width: 200,
+    width: 180,
     fixed: 'right',
     slots: { customRender: 'action' },
   },
 ];
 
-const podColumns: TableColumnsType<PodInfo> = [
-  {
-    title: 'Pod 名称',
-    dataIndex: 'name',
-    key: 'name',
-    width: 200,
-  },
-  {
-    title: '状态',
-    key: 'podStatus',
-    width: 100,
-    slots: { customRender: 'podStatus' },
-  },
-  {
-    title: '资源',
-    key: 'resources',
-    width: 150,
-    slots: { customRender: 'resources' },
-  },
-  {
-    title: '节点',
-    dataIndex: 'node',
-    key: 'node',
-    width: 120,
-  },
-  {
-    title: '启动时间',
-    dataIndex: 'startTime',
-    key: 'startTime',
-    width: 150,
-  },
-];
-
 // ===== 分页配置 =====
 const paginationConfig = {
-  total: computed(() => filteredJobs.value.length),
+  total: computed(() => filteredTrainingJobs.value.length),
   pageSize: 10,
   showSizeChanger: true,
   showQuickJumper: true,
@@ -1280,15 +1131,15 @@ const paginationConfig = {
 };
 
 // ===== 计算属性 =====
-const filteredJobs = computed(() => {
-  let result = jobs.value;
+const filteredTrainingJobs = computed(() => {
+  let result = trainingJobs.value;
 
   if (filterStatus.value) {
     result = result.filter((item) => item.status === filterStatus.value);
   }
 
-  if (filterQueue.value) {
-    result = result.filter((item) => item.queue === filterQueue.value);
+  if (filterFramework.value) {
+    result = result.filter((item) => item.framework === filterFramework.value);
   }
 
   if (searchKeyword.value) {
@@ -1304,19 +1155,19 @@ const filteredJobs = computed(() => {
 });
 
 const runningCount = computed(
-  () => jobs.value.filter((job) => job.status === 'running').length,
+  () => trainingJobs.value.filter((job) => job.status === 'running').length,
 );
 
 const pendingCount = computed(
-  () => jobs.value.filter((job) => job.status === 'pending').length,
+  () => trainingJobs.value.filter((job) => job.status === 'pending').length,
 );
 
 const completedCount = computed(
-  () => jobs.value.filter((job) => job.status === 'completed').length,
+  () => trainingJobs.value.filter((job) => job.status === 'completed').length,
 );
 
 const failedCount = computed(
-  () => jobs.value.filter((job) => job.status === 'failed').length,
+  () => trainingJobs.value.filter((job) => job.status === 'failed').length,
 );
 
 // ===== 工具函数 =====
@@ -1337,53 +1188,45 @@ const getStatusText = (status: string): string => {
   return STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.text || status;
 };
 
-const getPriorityColor = (priority: string): string => {
+const getFrameworkIcon = (framework: string) => {
   return (
-    PRIORITY_CONFIG[priority as keyof typeof PRIORITY_CONFIG]?.color ||
-    'default'
+    FRAMEWORK_CONFIG[framework as keyof typeof FRAMEWORK_CONFIG]?.icon ||
+    ApiOutlined
   );
 };
 
-const getPriorityText = (priority: string): string => {
+const getFrameworkText = (framework: string): string => {
   return (
-    PRIORITY_CONFIG[priority as keyof typeof PRIORITY_CONFIG]?.text || priority
+    FRAMEWORK_CONFIG[framework as keyof typeof FRAMEWORK_CONFIG]?.text ||
+    framework
   );
 };
 
-const getProgressStatus = (status: string): string => {
-  if (status === 'failed') return 'exception';
+const getJobTypeText = (jobType: string): string => {
+  return JOB_TYPE_CONFIG[jobType as keyof typeof JOB_TYPE_CONFIG] || jobType;
+};
+
+const getProgressStatus = (
+  status: string,
+): 'success' | 'exception' | 'normal' => {
   if (status === 'completed') return 'success';
+  if (status === 'failed') return 'exception';
   return 'normal';
 };
 
-const getPodStatusColor = (status: string): string => {
-  const colorMap: Record<string, string> = {
-    Running: 'success',
-    Pending: 'processing',
-    Failed: 'error',
-    Succeeded: 'success',
-  };
-  return colorMap[status] || 'default';
-};
+const formatDuration = (minutes: number): string => {
+  if (minutes === 0) return '0分钟';
 
-const getEventColor = (type: string): string => {
-  const colorMap: Record<string, string> = {
-    Normal: 'blue',
-    Warning: 'orange',
-    Error: 'red',
-  };
-  return colorMap[type] || 'blue';
-};
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
 
-const getLogLineClass = (log: string): string => {
-  if (log.includes('ERROR')) return 'log-error';
-  if (log.includes('WARNING')) return 'log-warning';
-  if (log.includes('INFO')) return 'log-info';
-  return '';
-};
-
-const getRowClassName = (record: TrainingJob): string => {
-  return `row-${record.status}`;
+  if (hours === 0) {
+    return `${remainingMinutes}分钟`;
+  } else if (remainingMinutes === 0) {
+    return `${hours}小时`;
+  } else {
+    return `${hours}小时${remainingMinutes}分钟`;
+  }
 };
 
 const formatRelativeTime = (time: string): string => {
@@ -1403,34 +1246,10 @@ const formatRelativeTime = (time: string): string => {
   }
 };
 
-const formatDuration = (seconds: number): string => {
-  if (seconds === 0) return '0秒';
-
-  const hours = Math.floor(seconds / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
-  const secs = seconds % 60;
-
-  if (hours > 0) {
-    return `${hours}小时${minutes}分钟`;
-  } else if (minutes > 0) {
-    return `${minutes}分钟${secs}秒`;
-  } else {
-    return `${secs}秒`;
-  }
-};
-
-// ===== 环境变量管理 =====
-const addEnvVar = (): void => {
-  createForm.envVars.push({ key: '', value: '' });
-};
-
-const removeEnvVar = (index: number): void => {
-  createForm.envVars.splice(index, 1);
-};
-
 // ===== 事件处理函数 =====
 const showCreateModal = (): void => {
   createModalVisible.value = true;
+  activeTab.value = 'basic';
 };
 
 const handleCreateSubmit = async (): Promise<void> => {
@@ -1438,42 +1257,40 @@ const handleCreateSubmit = async (): Promise<void> => {
     await createFormRef.value?.validate();
     createLoading.value = true;
 
+    // 模拟 API 调用
     await new Promise((resolve) => setTimeout(resolve, 2000));
 
     const newJob: TrainingJob = {
       id: `job-${Date.now()}`,
       name: createForm.name,
       namespace: createForm.namespace,
-      queue: createForm.queue,
       status: 'pending',
-      priority: createForm.priority as 'low' | 'medium' | 'high' | 'urgent',
+      framework: createForm.framework as any,
+      jobType: createForm.jobType as any,
       creator: 'current-user',
-      image:
-        createForm.image === 'custom'
-          ? createForm.customImage
-          : createForm.image,
+      image: createForm.image,
       createTime: new Date().toLocaleString(),
-      duration: 0,
-      progress: 0,
       resources: {
         cpu: createForm.cpu,
         memory: createForm.memory,
         ...(createForm.gpu > 0 && { gpu: createForm.gpu }),
       },
-      replicas: createForm.replicas,
-      maxRetries: createForm.maxRetries,
+      workers: createForm.workers,
+      progress: 0,
+      duration: 0,
       script: createForm.script,
       dataPath: createForm.dataPath,
       outputPath: createForm.outputPath,
       description: createForm.description,
     };
 
-    jobs.value.unshift(newJob);
+    trainingJobs.value.unshift(newJob);
     createModalVisible.value = false;
     message.success('训练任务创建成功');
 
+    // 重置表单
     createFormRef.value?.resetFields();
-    createForm.envVars = [];
+    createForm.envVars = [{ key: '', value: '' }];
   } catch (error) {
     message.error('表单验证失败');
   } finally {
@@ -1484,20 +1301,34 @@ const handleCreateSubmit = async (): Promise<void> => {
 const handleCreateCancel = (): void => {
   createModalVisible.value = false;
   createFormRef.value?.resetFields();
-  createForm.envVars = [];
+  createForm.envVars = [{ key: '', value: '' }];
+};
+
+const addEnvVar = (): void => {
+  createForm.envVars.push({ key: '', value: '' });
+};
+
+const removeEnvVar = (index: number): void => {
+  createForm.envVars.splice(index, 1);
+};
+
+const viewLogs = (record: TrainingJob): void => {
+  selectedJob.value = record;
+  detailModalVisible.value = true;
+  // 在详情模态框中切换到日志tab
+  setTimeout(() => {
+    const tabElement = document.querySelector(
+      '[data-node-key="logs"]',
+    ) as HTMLElement;
+    if (tabElement) {
+      tabElement.click();
+    }
+  }, 100);
 };
 
 const viewDetails = (record: TrainingJob): void => {
   selectedJob.value = record;
   detailModalVisible.value = true;
-};
-
-const viewLogs = (record: TrainingJob): void => {
-  selectedJob.value = record;
-  if (mockPods.length > 0) {
-    selectedPod.value = mockPods[0]!.name;
-  }
-  logModalVisible.value = true;
 };
 
 const handleMenuAction = (key: string, record: TrainingJob): void => {
@@ -1519,11 +1350,11 @@ const handlePause = async (record: TrainingJob): Promise<void> => {
   loading.value = true;
   try {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    const index = jobs.value.findIndex((item) => item.id === record.id);
+    const index = trainingJobs.value.findIndex((item) => item.id === record.id);
     if (index !== -1) {
-      jobs.value[index]!.status = 'paused';
+      trainingJobs.value[index]!.status = 'paused';
     }
-    message.success('任务暂停成功');
+    message.success('训练任务暂停成功');
   } catch (error) {
     message.error('暂停失败');
   } finally {
@@ -1535,11 +1366,11 @@ const handleResume = async (record: TrainingJob): Promise<void> => {
   loading.value = true;
   try {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    const index = jobs.value.findIndex((item) => item.id === record.id);
+    const index = trainingJobs.value.findIndex((item) => item.id === record.id);
     if (index !== -1) {
-      jobs.value[index]!.status = 'running';
+      trainingJobs.value[index]!.status = 'running';
     }
-    message.success('任务恢复成功');
+    message.success('训练任务恢复成功');
   } catch (error) {
     message.error('恢复失败');
   } finally {
@@ -1551,11 +1382,11 @@ const handleStop = async (record: TrainingJob): Promise<void> => {
   loading.value = true;
   try {
     await new Promise((resolve) => setTimeout(resolve, 1000));
-    const index = jobs.value.findIndex((item) => item.id === record.id);
+    const index = trainingJobs.value.findIndex((item) => item.id === record.id);
     if (index !== -1) {
-      jobs.value[index]!.status = 'cancelled';
+      trainingJobs.value[index]!.status = 'cancelled';
     }
-    message.success('任务停止成功');
+    message.success('训练任务停止成功');
   } catch (error) {
     message.error('停止失败');
   } finally {
@@ -1565,8 +1396,7 @@ const handleStop = async (record: TrainingJob): Promise<void> => {
 
 const handleClone = (record: TrainingJob): void => {
   cloneForm.name = `${record.name}-copy`;
-  cloneForm.queue = record.queue;
-  cloneForm.priority = record.priority;
+  cloneForm.namespace = record.namespace;
   selectedJob.value = record;
   cloneModalVisible.value = true;
 };
@@ -1583,17 +1413,16 @@ const handleCloneSubmit = async (): Promise<void> => {
         ...selectedJob.value,
         id: `job-${Date.now()}`,
         name: cloneForm.name,
-        queue: cloneForm.queue,
-        priority: cloneForm.priority as 'low' | 'medium' | 'high' | 'urgent',
+        namespace: cloneForm.namespace,
         status: 'pending',
         createTime: new Date().toLocaleString(),
-        duration: 0,
         progress: 0,
+        duration: 0,
       };
 
-      jobs.value.unshift(clonedJob);
+      trainingJobs.value.unshift(clonedJob);
       cloneModalVisible.value = false;
-      message.success('任务克隆成功');
+      message.success('训练任务克隆成功');
     }
   } catch (error) {
     message.error('表单验证失败');
@@ -1609,10 +1438,10 @@ const handleCloneCancel = (): void => {
 
 const handleDelete = (record: TrainingJob): void => {
   const deleteConfirm = () => {
-    const index = jobs.value.findIndex((item) => item.id === record.id);
+    const index = trainingJobs.value.findIndex((item) => item.id === record.id);
     if (index !== -1) {
-      jobs.value.splice(index, 1);
-      message.success('任务删除成功');
+      trainingJobs.value.splice(index, 1);
+      message.success('训练任务删除成功');
     }
   };
 
@@ -1642,22 +1471,20 @@ const refreshData = async (): Promise<void> => {
 
 const refreshLogs = async (): Promise<void> => {
   const newLogs = [
-    ...logs.value,
-    `${new Date().toLocaleString()} INFO: 日志已刷新`,
+    ...trainingLogs.value,
+    `${new Date().toLocaleString()} INFO: Log refreshed for ${selectedPod.value}`,
   ];
-  logs.value = newLogs.slice(-100);
+  trainingLogs.value = newLogs.slice(-50);
 };
 
 const downloadLogs = (): void => {
-  const logContent = logs.value.join('\n');
+  const logContent = trainingLogs.value.join('\n');
   const blob = new Blob([logContent], { type: 'text/plain' });
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
   a.href = url;
-  a.download = `${selectedJob.value?.name || 'job'}-logs.txt`;
-  document.body.appendChild(a);
+  a.download = `training-logs-${selectedPod.value}-${Date.now()}.txt`;
   a.click();
-  document.body.removeChild(a);
   URL.revokeObjectURL(url);
   message.success('日志下载成功');
 };
@@ -1682,7 +1509,7 @@ onMounted(() => {
 
 <style scoped>
 /* ===== 基础样式 ===== */
-.job-queue-container {
+.training-container {
   padding: 24px;
   min-height: 100vh;
 }
@@ -1727,7 +1554,7 @@ onMounted(() => {
   margin: 0;
 }
 
-/* ===== 统计卡片 ===== */
+/* ===== 统计卡片样式 ===== */
 .stats-section {
   margin-bottom: 24px;
 }
@@ -1735,6 +1562,7 @@ onMounted(() => {
 .stat-card {
   border-radius: 8px !important;
   transition: all 0.3s ease;
+  cursor: pointer;
 }
 
 .stat-card:hover {
@@ -1758,20 +1586,20 @@ onMounted(() => {
   color: white;
 }
 
-.running-icon {
-  background: linear-gradient(135deg, #52c41a, #73d13d);
+.stat-icon.running {
+  background: linear-gradient(135deg, #52c41a, #389e0d);
 }
 
-.pending-icon {
-  background: linear-gradient(135deg, #1890ff, #40a9ff);
+.stat-icon.pending {
+  background: linear-gradient(135deg, #1890ff, #096dd9);
 }
 
-.completed-icon {
-  background: linear-gradient(135deg, #52c41a, #73d13d);
+.stat-icon.completed {
+  background: linear-gradient(135deg, #13c2c2, #08979c);
 }
 
-.failed-icon {
-  background: linear-gradient(135deg, #ff4d4f, #ff7875);
+.stat-icon.failed {
+  background: linear-gradient(135deg, #ff4d4f, #cf1322);
 }
 
 .stat-info {
@@ -1779,14 +1607,14 @@ onMounted(() => {
 }
 
 .stat-number {
-  font-size: 28px;
+  font-size: 24px;
   font-weight: 600;
   margin-bottom: 4px;
 }
 
 .stat-label {
   font-size: 14px;
-  opacity: 0.8;
+  opacity: 0.65;
 }
 
 /* ===== 按钮样式 ===== */
@@ -1839,36 +1667,6 @@ onMounted(() => {
   font-weight: 600 !important;
 }
 
-/* ===== 表格行样式 ===== */
-.sci-fi-table :deep(.row-running) {
-  background: rgba(82, 196, 26, 0.05) !important;
-}
-
-.sci-fi-table :deep(.row-failed) {
-  background: rgba(255, 77, 79, 0.05) !important;
-}
-
-.sci-fi-table :deep(.row-completed) {
-  background: rgba(82, 196, 26, 0.05) !important;
-}
-
-/* ===== 任务名称 ===== */
-.job-name-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
-
-.job-name {
-  font-weight: 500;
-  font-size: 14px;
-}
-
-.job-id {
-  font-size: 12px;
-  opacity: 0.6;
-}
-
 /* ===== 状态标签 ===== */
 .status-wrapper {
   display: flex;
@@ -1904,7 +1702,7 @@ onMounted(() => {
 }
 
 .indicator-completed {
-  background: #52c41a;
+  background: #13c2c2;
 }
 
 .indicator-failed {
@@ -1912,18 +1710,27 @@ onMounted(() => {
 }
 
 .indicator-cancelled {
-  background: #8c8c8c;
-}
-
-.indicator-paused {
   background: #faad14;
 }
 
-/* ===== 优先级标签 ===== */
-.priority-tag {
-  border-radius: 6px !important;
-  font-weight: 500 !important;
-  padding: 4px 8px !important;
+.indicator-paused {
+  background: #722ed1;
+}
+
+/* ===== 框架显示 ===== */
+.framework-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.framework-icon {
+  font-size: 16px;
+  color: #1890ff;
+}
+
+.framework-text {
+  font-weight: 500;
 }
 
 /* ===== 资源信息 ===== */
@@ -1967,7 +1774,7 @@ onMounted(() => {
   gap: 8px;
 }
 
-.job-progress {
+.progress-bar {
   flex: 1;
 }
 
@@ -1977,9 +1784,25 @@ onMounted(() => {
   min-width: 35px;
 }
 
-/* ===== 时间显示 ===== */
-.time-text,
+/* ===== 运行时间 ===== */
+.duration-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.duration-icon {
+  font-size: 12px;
+  color: #1890ff;
+}
+
 .duration-text {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+/* ===== 时间显示 ===== */
+.time-text {
   font-size: 12px;
 }
 
@@ -2061,125 +1884,125 @@ onMounted(() => {
   font-weight: 500 !important;
 }
 
-/* ===== 环境变量 ===== */
+.create-tabs :deep(.ant-tabs-tab) {
+  border-radius: 6px 6px 0 0 !important;
+}
+
+/* ===== 环境变量样式 ===== */
 .env-vars-container {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  border: 1px solid #d9d9d9;
+  border-radius: 6px;
+  padding: 16px;
 }
 
 .env-var-item {
   display: flex;
   gap: 8px;
+  margin-bottom: 8px;
   align-items: center;
 }
 
-.env-key,
-.env-value {
+.env-key-input,
+.env-value-input {
   flex: 1;
-  border-radius: 6px !important;
 }
 
 .env-remove-btn {
   border: none !important;
   background: transparent !important;
   color: #ff4d4f !important;
-  padding: 4px !important;
-  height: auto !important;
 }
 
 .add-env-btn {
+  width: 100%;
   border-radius: 6px !important;
-  border-style: dashed !important;
-  transition: all 0.3s ease;
-}
-
-.add-env-btn:hover {
-  color: #1890ff !important;
-  border-color: #1890ff !important;
 }
 
 /* ===== 详情页样式 ===== */
 .detail-content {
-  max-height: 600px;
+  max-height: 700px;
   overflow-y: auto;
 }
 
 .detail-tabs :deep(.ant-tabs-tab) {
-  font-weight: 500;
+  border-radius: 6px 6px 0 0 !important;
 }
 
 .detail-descriptions {
-  margin-bottom: 24px;
+  margin-bottom: 16px;
 }
 
-/* ===== Pod 表格 ===== */
-.pod-table :deep(.ant-table-thead > tr > th) {
-  font-weight: 600 !important;
+/* ===== 资源详情卡片 ===== */
+.resource-details {
+  margin: 16px 0;
 }
 
-.pod-resources {
+.resource-card {
+  text-align: center;
+  border-radius: 8px !important;
+  transition: all 0.3s ease;
+}
+
+.resource-card:hover {
+  transform: translateY(-2px);
+}
+
+.resource-header {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
-  font-size: 12px;
-}
-
-/* ===== 事件时间轴 ===== */
-.event-timeline {
-  max-height: 400px;
-  overflow-y: auto;
-}
-
-.event-item {
-  padding: 8px 0;
-}
-
-.event-header {
-  display: flex;
-  justify-content: space-between;
   align-items: center;
-  margin-bottom: 4px;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 12px;
 }
 
-.event-type {
-  font-weight: 500;
+.resource-card-icon {
+  font-size: 20px;
+}
+
+.resource-card-icon.cpu {
+  color: #52c41a;
+}
+
+.resource-card-icon.memory {
+  color: #1890ff;
+}
+
+.resource-card-icon.gpu {
+  color: #722ed1;
+}
+
+.resource-title {
+  font-weight: 600;
   font-size: 14px;
 }
 
-.event-time {
-  font-size: 12px;
-  opacity: 0.6;
-}
-
-.event-message {
-  font-size: 13px;
+.resource-value {
+  font-size: 20px;
+  font-weight: 600;
+  margin-bottom: 8px;
 }
 
 /* ===== 日志容器 ===== */
 .log-container {
-  display: flex;
-  flex-direction: column;
-  height: 500px;
+  margin: 16px 0;
 }
 
 .log-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
-  padding-bottom: 8px;
-  border-bottom: 1px solid #f0f0f0;
+  margin-bottom: 12px;
 }
 
-.pod-select {
-  border-radius: 6px !important;
+.log-title {
+  font-weight: 600;
+  font-size: 16px;
 }
 
+.pod-select,
 .log-refresh-btn,
 .log-download-btn {
-  border-radius: 4px !important;
-  transition: all 0.3s ease;
+  border-radius: 6px !important;
 }
 
 .log-refresh-btn:hover,
@@ -2190,34 +2013,22 @@ onMounted(() => {
 
 .log-content {
   border-radius: 6px !important;
-  padding: 12px !important;
-  flex: 1;
+  padding: 16px !important;
+  max-height: 400px;
   overflow-y: auto;
   font-family: 'Monaco', 'Consolas', 'Courier New', monospace !important;
-  font-size: 12px;
-  line-height: 1.4;
+  border: 1px solid #d9d9d9;
 }
 
 .log-line {
   margin: 0;
-  padding: 2px 0;
-}
-
-.log-error {
-  color: #ff4d4f;
-}
-
-.log-warning {
-  color: #faad14;
-}
-
-.log-info {
-  color: #1890ff;
+  font-size: 12px;
+  line-height: 1.5;
 }
 
 /* ===== 响应式设计 ===== */
 @media (max-width: 768px) {
-  .job-queue-container {
+  .training-container {
     padding: 16px;
   }
 
@@ -2253,10 +2064,6 @@ onMounted(() => {
     max-width: calc(100vw - 32px) !important;
   }
 
-  .stat-card {
-    margin-bottom: 16px;
-  }
-
   .stat-content {
     gap: 12px;
   }
@@ -2268,16 +2075,7 @@ onMounted(() => {
   }
 
   .stat-number {
-    font-size: 24px;
-  }
-
-  .env-var-item {
-    flex-direction: column;
-    align-items: stretch;
-  }
-
-  .log-container {
-    height: 400px;
+    font-size: 20px;
   }
 }
 
@@ -2312,18 +2110,14 @@ onMounted(() => {
     padding: 3px 6px !important;
   }
 
-  .stat-content {
+  .env-var-item {
     flex-direction: column;
-    text-align: center;
     gap: 8px;
   }
 
-  .stat-icon {
-    align-self: center;
-  }
-
-  .log-container {
-    height: 300px;
+  .env-key-input,
+  .env-value-input {
+    width: 100%;
   }
 }
 

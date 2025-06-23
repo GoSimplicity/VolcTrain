@@ -11,12 +11,21 @@ const routes: RouteRecordRaw[] = [
     path: '/training',
     children: [
       {
+        name: 'TrainingDashboard',
+        path: 'dashboard',
+        component: () => import('#/views/training/TrainingDashboard.vue'),
+        meta: {
+          icon: 'carbon:dashboard',
+          title: '训练概览',
+        },
+      },
+      {
         name: 'TrainingQueue',
         path: 'queue',
         component: () => import('#/views/training/TrainingQueue.vue'),
         meta: {
-          icon: 'carbon:align-box-bottom-center',
-          title: '训练队列管理',
+          icon: 'carbon:task',
+          title: '任务队列',
         },
       },
       {
@@ -24,8 +33,17 @@ const routes: RouteRecordRaw[] = [
         path: 'history',
         component: () => import('#/views/training/TrainingHistory.vue'),
         meta: {
-          icon: 'carbon:document',
-          title: '历史任务记录',
+          icon: 'carbon:task',
+          title: '历史记录',
+        },
+      },
+      {
+        name: 'ResourceAllocation',
+        path: 'allocation',
+        component: () => import('#/views/training/ResourceAllocation.vue'),
+        meta: {
+          icon: 'carbon:cloud-service-management',
+          title: '资源分配',
         },
       },
       {
@@ -34,16 +52,25 @@ const routes: RouteRecordRaw[] = [
         component: () => import('#/views/training/TrainingTemplate.vue'),
         meta: {
           icon: 'carbon:template',
-          title: '训练模板管理',
+          title: '训练模板',
         },
       },
       {
-        name: 'TrainingConfig',
-        path: 'config',
-        component: () => import('#/views/training/TrainingConfig.vue'),
+        name: 'NotebookServices',
+        path: 'notebooks',
+        component: () => import('#/views/training/NotebookServices.vue'),
         meta: {
-          icon: 'carbon:settings',
-          title: '训练配置管理',
+          icon: 'carbon:tools',
+          title: 'Notebook服务',
+        },
+      },
+      {
+        name: 'ExperimentTracking',
+        path: 'experiments',
+        component: () => import('#/views/training/ExperimentTracking.vue'),
+        meta: {
+          icon: 'carbon:tools',
+          title: '实验跟踪',
         },
       },
     ],

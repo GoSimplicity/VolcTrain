@@ -5,33 +5,45 @@ const routes: RouteRecordRaw[] = [
     meta: {
       icon: 'ic:baseline-dataset',
       order: 3,
-      title: '数据集管理',
+      title: '数据集处理',
     },
     name: 'Dataset',
     path: '/dataset',
     children: [
       {
-        name: 'DatasetList',
-        path: 'list',
-        component: () => import('#/views/dataset/DatasetList.vue'),
+        name: 'DatasetManagement',
+        path: 'management',
+        component: () => import('#/views/dataset/DatasetManagement.vue'),
         meta: {
-          title: '数据集列表',
+          icon: 'carbon:data-view',
+          title: '数据集管理',
         },
       },
       {
-        name: 'DatasetUpload',
-        path: 'upload',
-        component: () => import('#/views/dataset/DatasetUpload.vue'),
+        name: 'DatasetAnnotation',
+        path: 'annotation',
+        component: () => import('#/views/dataset/DatasetAnnotation.vue'),
         meta: {
-          title: '数据集上传',
+          icon: 'carbon:tag',
+          title: '数据标注',
         },
       },
       {
-        name: 'DatasetProcess',
-        path: 'process',
-        component: () => import('#/views/dataset/DatasetProcess.vue'),
+        name: 'DatasetAnalytics',
+        path: 'analytics',
+        component: () => import('#/views/dataset/DatasetAnalytics.vue'),
         meta: {
-          title: '数据集处理',
+          icon: 'carbon:chart-line',
+          title: '数据分析',
+        },
+      },
+      {
+        name: 'DatasetVersion',
+        path: 'version',
+        component: () => import('#/views/dataset/DatasetVersion.vue'),
+        meta: {
+          icon: 'carbon:version',
+          title: '版本管理',
         },
       },
     ],
