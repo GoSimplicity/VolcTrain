@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, h } from 'vue';
 import {
   Card,
   Tabs,
@@ -78,7 +78,8 @@ const processTemplates = ref([
     id: '1',
     name: '图像分类数据预处理',
     type: '图像处理',
-    description: '针对图像分类任务的数据预处理模板，包含图像缩放、裁剪、数据增强等步骤',
+    description:
+      '针对图像分类任务的数据预处理模板，包含图像缩放、裁剪、数据增强等步骤',
     steps: ['图像缩放', '图像裁剪', '数据增强'],
     creator: '系统',
     createTime: '2023-10-01',
@@ -88,7 +89,8 @@ const processTemplates = ref([
     id: '2',
     name: '文本分类预处理',
     type: '文本处理',
-    description: '针对文本分类任务的数据预处理模板，包含分词、去停用词、向量化等步骤',
+    description:
+      '针对文本分类任务的数据预处理模板，包含分词、去停用词、向量化等步骤',
     steps: ['分词', '去停用词', '向量化'],
     creator: '系统',
     createTime: '2023-10-01',
@@ -98,7 +100,8 @@ const processTemplates = ref([
     id: '3',
     name: '语音数据标准化',
     type: '音频处理',
-    description: '语音数据标准化处理模板，包含音频格式统一、采样率调整、音量归一化等步骤',
+    description:
+      '语音数据标准化处理模板，包含音频格式统一、采样率调整、音量归一化等步骤',
     steps: ['格式转换', '采样率调整', '音量归一化'],
     creator: '张三',
     createTime: '2023-10-15',
@@ -148,12 +151,17 @@ const taskColumns = [
     dataIndex: 'status',
     key: 'status',
     customRender: ({ text }) => {
-      const color = 
-        text === '已完成' ? 'green' : 
-        text === '处理中' ? 'blue' : 
-        text === '等待中' ? 'orange' : 
-        text === '失败' ? 'red' : 'default';
-      return <Tag color={color}>{text}</Tag>;
+      const color =
+        text === '已完成'
+          ? 'green'
+          : text === '处理中'
+            ? 'blue'
+            : text === '等待中'
+              ? 'orange'
+              : text === '失败'
+                ? 'red'
+                : 'default';
+      return h(Tag, { color }, () => text);
     },
   },
   {
@@ -162,13 +170,17 @@ const taskColumns = [
     key: 'progress',
     customRender: ({ text, record }) => {
       if (record.status === '已完成') {
-        return <Progress percent={100} size="small" status="success" />;
+        return h(Progress, { percent: 100, size: 'small', status: 'success' });
       } else if (record.status === '处理中') {
-        return <Progress percent={text} size="small" status="active" />;
+        return h(Progress, { percent: text, size: 'small', status: 'active' });
       } else if (record.status === '失败') {
-        return <Progress percent={text} size="small" status="exception" />;
+        return h(Progress, {
+          percent: text,
+          size: 'small',
+          status: 'exception',
+        });
       } else {
-        return <Progress percent={0} size="small" />;
+        return h(Progress, { percent: 0, size: 'small' });
       }
     },
   },
@@ -190,14 +202,13 @@ const taskColumns = [
   {
     title: '操作',
     key: 'action',
-    customRender: ({ record }) => (
-      <Space size="middle">
-        <a onClick={() => showTaskDetail(record)}>详情</a>
-        {record.status === '失败' && <a>重试</a>}
-        {record.status !== '处理中' && <a>删除</a>}
-        {record.status === '已完成' && <a>导出</a>}
-      </Space>
-    ),
+    customRender: ({ record }) =>
+      h(Space, { size: 'middle' }, [
+        h('a', { onClick: () => showTaskDetail(record) }, '详情'),
+        record.status === '失败' && h('a', {}, '重试'),
+        record.status !== '处理中' && h('a', {}, '删除'),
+        record.status === '已完成' && h('a', {}, '导出'),
+      ]),
   },
 ];
 
@@ -218,11 +229,15 @@ const templateColumns = [
     dataIndex: 'type',
     key: 'type',
     customRender: ({ text }) => {
-      const color = 
-        text === '图像处理' ? 'blue' : 
-        text === '文本处理' ? 'green' : 
-        text === '音频处理' ? 'purple' : 'default';
-      return <Tag color={color}>{text}</Tag>;
+      const color =
+        text === '图像处理'
+          ? 'blue'
+          : text === '文本处理'
+            ? 'green'
+            : text === '音频处理'
+              ? 'purple'
+              : 'default';
+      return h(Tag, { color }, () => text);
     },
   },
   {
@@ -234,13 +249,15 @@ const templateColumns = [
     title: '处理步骤',
     dataIndex: 'steps',
     key: 'steps',
-    customRender: ({ text }) => (
-      <>
-        {text.map((step, index) => (
-          <Tag key={index} style={{ marginBottom: '5px' }}>{step}</Tag>
-        ))}
-      </>
-    ),
+    customRender: ({ text }) => {
+      return h(
+        'div',
+        {},
+        text.map((step, index) =>
+          h(Tag, { key: index, style: { marginBottom: '5px' } }, () => step),
+        ),
+      );
+    },
   },
   {
     title: '创建者',
@@ -260,13 +277,12 @@ const templateColumns = [
   {
     title: '操作',
     key: 'action',
-    customRender: ({ record }) => (
-      <Space size="middle">
-        <a>使用</a>
-        <a>编辑</a>
-        <a>导出</a>
-      </Space>
-    ),
+    customRender: ({ record }) =>
+      h(Space, { size: 'middle' }, [
+        h('a', {}, '使用'),
+        h('a', {}, '编辑'),
+        h('a', {}, '导出'),
+      ]),
   },
 ];
 
@@ -304,7 +320,7 @@ const datasetOptions = [
 ];
 
 // 模板选项
-const templateOptions = processTemplates.value.map(template => ({
+const templateOptions = processTemplates.value.map((template) => ({
   label: template.name,
   value: template.name,
 }));
@@ -353,8 +369,10 @@ const handleNewTaskOk = () => {
   taskFormRef.value
     .validate()
     .then(() => {
-      const template = processTemplates.value.find(t => t.name === taskFormState.value.template);
-      
+      const template = processTemplates.value.find(
+        (t) => t.name === taskFormState.value.template,
+      );
+
       // 添加新任务
       processTasks.value.push({
         id: String(processTasks.value.length + 1),
@@ -368,7 +386,7 @@ const handleNewTaskOk = () => {
         endTime: '-',
         creator: '当前用户',
       });
-      
+
       newTaskVisible.value = false;
       taskFormState.value = {
         name: '',
@@ -398,7 +416,7 @@ const handleNewTemplateOk = () => {
         createTime: new Date().toLocaleDateString(),
         usage: 0,
       });
-      
+
       newTemplateVisible.value = false;
       templateFormState.value = {
         name: '',
@@ -435,15 +453,25 @@ const activeKey = ref('tasks');
           <template #extra>
             <Button type="primary" @click="showNewTask">新建处理任务</Button>
           </template>
-          <Table :columns="taskColumns" :dataSource="processTasks" rowKey="id" />
+          <Table
+            :columns="taskColumns"
+            :dataSource="processTasks"
+            rowKey="id"
+          />
         </Card>
       </Tabs.TabPane>
       <Tabs.TabPane key="templates" tab="处理模板">
         <Card title="数据处理模板">
           <template #extra>
-            <Button type="primary" @click="showNewTemplate">新建处理模板</Button>
+            <Button type="primary" @click="showNewTemplate"
+              >新建处理模板</Button
+            >
           </template>
-          <Table :columns="templateColumns" :dataSource="processTemplates" rowKey="id" />
+          <Table
+            :columns="templateColumns"
+            :dataSource="processTemplates"
+            rowKey="id"
+          />
         </Card>
       </Tabs.TabPane>
     </Tabs>
@@ -462,14 +490,20 @@ const activeKey = ref('tasks');
           label="任务名称"
           :rules="[{ required: true, message: '请输入任务名称' }]"
         >
-          <Input v-model:value="taskFormState.name" placeholder="请输入任务名称" />
+          <Input
+            v-model:value="taskFormState.name"
+            placeholder="请输入任务名称"
+          />
         </Form.Item>
         <Form.Item
           name="dataset"
           label="选择数据集"
           :rules="[{ required: true, message: '请选择数据集' }]"
         >
-          <Select v-model:value="taskFormState.dataset" placeholder="请选择数据集">
+          <Select
+            v-model:value="taskFormState.dataset"
+            placeholder="请选择数据集"
+          >
             <Select.Option
               v-for="option in datasetOptions"
               :key="option.value"
@@ -484,7 +518,10 @@ const activeKey = ref('tasks');
           label="处理模板"
           :rules="[{ required: true, message: '请选择处理模板' }]"
         >
-          <Select v-model:value="taskFormState.template" placeholder="请选择处理模板">
+          <Select
+            v-model:value="taskFormState.template"
+            placeholder="请选择处理模板"
+          >
             <Select.Option
               v-for="option in templateOptions"
               :key="option.value"
@@ -518,14 +555,20 @@ const activeKey = ref('tasks');
           label="模板名称"
           :rules="[{ required: true, message: '请输入模板名称' }]"
         >
-          <Input v-model:value="templateFormState.name" placeholder="请输入模板名称" />
+          <Input
+            v-model:value="templateFormState.name"
+            placeholder="请输入模板名称"
+          />
         </Form.Item>
         <Form.Item
           name="type"
           label="适用类型"
           :rules="[{ required: true, message: '请选择适用类型' }]"
         >
-          <Select v-model:value="templateFormState.type" placeholder="请选择适用类型">
+          <Select
+            v-model:value="templateFormState.type"
+            placeholder="请选择适用类型"
+          >
             <Select.Option
               v-for="option in typeOptions"
               :key="option.value"
@@ -560,11 +603,11 @@ const activeKey = ref('tasks');
             placeholder="请输入模板描述"
           />
         </Form.Item>
-        <Alert 
-          message="您可以根据需要自定义处理步骤顺序，系统会按照选择的顺序执行处理。" 
-          type="info" 
-          showIcon 
-          style="margin-bottom: 16px" 
+        <Alert
+          message="您可以根据需要自定义处理步骤顺序，系统会按照选择的顺序执行处理。"
+          type="info"
+          showIcon
+          style="margin-bottom: 16px"
         />
       </Form>
     </Modal>
@@ -579,31 +622,53 @@ const activeKey = ref('tasks');
     >
       <div v-if="selectedTask">
         <Descriptions title="基本信息" bordered>
-          <Descriptions.Item label="任务ID">{{ selectedTask.id }}</Descriptions.Item>
-          <Descriptions.Item label="任务名称">{{ selectedTask.name }}</Descriptions.Item>
+          <Descriptions.Item label="任务ID">{{
+            selectedTask.id
+          }}</Descriptions.Item>
+          <Descriptions.Item label="任务名称">{{
+            selectedTask.name
+          }}</Descriptions.Item>
           <Descriptions.Item label="处理状态">
-            <Tag :color="
-              selectedTask.status === '已完成' ? 'green' : 
-              selectedTask.status === '处理中' ? 'blue' : 
-              selectedTask.status === '等待中' ? 'orange' : 
-              'red'
-            ">
+            <Tag
+              :color="
+                selectedTask.status === '已完成'
+                  ? 'green'
+                  : selectedTask.status === '处理中'
+                    ? 'blue'
+                    : selectedTask.status === '等待中'
+                      ? 'orange'
+                      : 'red'
+              "
+            >
               {{ selectedTask.status }}
             </Tag>
           </Descriptions.Item>
-          <Descriptions.Item label="数据集">{{ selectedTask.dataset }}</Descriptions.Item>
-          <Descriptions.Item label="数据类型">{{ selectedTask.type }}</Descriptions.Item>
-          <Descriptions.Item label="创建者">{{ selectedTask.creator }}</Descriptions.Item>
-          <Descriptions.Item label="开始时间">{{ selectedTask.startTime }}</Descriptions.Item>
-          <Descriptions.Item label="结束时间">{{ selectedTask.endTime }}</Descriptions.Item>
+          <Descriptions.Item label="数据集">{{
+            selectedTask.dataset
+          }}</Descriptions.Item>
+          <Descriptions.Item label="数据类型">{{
+            selectedTask.type
+          }}</Descriptions.Item>
+          <Descriptions.Item label="创建者">{{
+            selectedTask.creator
+          }}</Descriptions.Item>
+          <Descriptions.Item label="开始时间">{{
+            selectedTask.startTime
+          }}</Descriptions.Item>
+          <Descriptions.Item label="结束时间">{{
+            selectedTask.endTime
+          }}</Descriptions.Item>
           <Descriptions.Item label="处理进度">
-            <Progress 
-              :percent="selectedTask.progress" 
+            <Progress
+              :percent="selectedTask.progress"
               :status="
-                selectedTask.status === '已完成' ? 'success' : 
-                selectedTask.status === '处理中' ? 'active' : 
-                selectedTask.status === '失败' ? 'exception' : 
-                'normal'
+                selectedTask.status === '已完成'
+                  ? 'success'
+                  : selectedTask.status === '处理中'
+                    ? 'active'
+                    : selectedTask.status === '失败'
+                      ? 'exception'
+                      : 'normal'
               "
             />
           </Descriptions.Item>
@@ -613,7 +678,9 @@ const activeKey = ref('tasks');
 
         <h3>处理步骤</h3>
         <Descriptions bordered>
-          <Descriptions.Item label="处理类型">{{ selectedTask.processType }}</Descriptions.Item>
+          <Descriptions.Item label="处理类型">{{
+            selectedTask.processType
+          }}</Descriptions.Item>
         </Descriptions>
 
         <div v-if="selectedTask.status === '失败'" style="margin-top: 16px">
@@ -634,10 +701,14 @@ const activeKey = ref('tasks');
           />
         </div>
 
-        <div style="margin-top: 24px; text-align: right;">
+        <div style="margin-top: 24px; text-align: right">
           <Space>
-            {selectedTask.status === '已完成' && <Button type="primary">查看结果</Button>}
-            {selectedTask.status === '失败' && <Button type="primary">重新处理</Button>}
+            <Button v-if="selectedTask.status === '已完成'" type="primary"
+              >查看结果</Button
+            >
+            <Button v-if="selectedTask.status === '失败'" type="primary"
+              >重新处理</Button
+            >
             <Button @click="() => handleCancel('detail')">关闭</Button>
           </Space>
         </div>

@@ -84,7 +84,11 @@ const handleFinish = () => {
   <div class="workspace-create-container">
     <Card title="创建工作空间" :bordered="false">
       <Steps :current="currentStep" style="margin-bottom: 30px">
-        <Steps.Step v-for="(item, index) in steps" :key="index" :title="item.title" />
+        <Steps.Step
+          v-for="(item, index) in steps"
+          :key="index"
+          :title="item.title"
+        />
       </Steps>
 
       <div class="steps-content">
@@ -95,7 +99,10 @@ const handleFinish = () => {
               label="工作空间名称"
               :rules="[{ required: true, message: '请输入工作空间名称' }]"
             >
-              <Input v-model:value="formState.name" placeholder="请输入工作空间名称" />
+              <Input
+                v-model:value="formState.name"
+                placeholder="请输入工作空间名称"
+              />
             </Form.Item>
             <Form.Item
               name="description"
@@ -174,7 +181,11 @@ const handleFinish = () => {
       </div>
 
       <div class="steps-action">
-        <Button v-if="currentStep > 0" style="margin-right: 8px" @click="prevStep">
+        <Button
+          v-if="currentStep > 0"
+          style="margin-right: 8px"
+          @click="prevStep"
+        >
           上一步
         </Button>
         <Button
@@ -206,8 +217,6 @@ const handleFinish = () => {
 .steps-content {
   margin-top: 16px;
   padding: 20px;
-  background-color: #fafafa;
-  border: 1px dashed #e9e9e9;
   border-radius: 2px;
   min-height: 200px;
   margin-bottom: 16px;
@@ -217,7 +226,9 @@ const handleFinish = () => {
   display: flex;
   justify-content: flex-end;
 }
-.step-1, .step-2, .step-3 {
+.step-1,
+.step-2,
+.step-3 {
   max-width: 800px;
   margin: 0 auto;
 }

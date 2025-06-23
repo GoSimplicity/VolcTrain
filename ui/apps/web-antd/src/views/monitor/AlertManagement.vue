@@ -14,12 +14,62 @@ import {
   InputNumber,
   Switch,
   Popconfirm,
+  Checkbox,
 } from 'ant-design-vue';
 
 defineOptions({ name: 'AlertManagement' });
 
+interface AlertRule {
+  id: string;
+  name: string;
+  description: string;
+  type: string;
+  metric: string;
+  threshold: string;
+  duration: string;
+  severity: string;
+  notifyChannel: string;
+  status: string;
+  createTime: string;
+}
+
+interface AlertHistory {
+  id: string;
+  ruleName: string;
+  target: string;
+  description: string;
+  severity: string;
+  time: string;
+  duration: string;
+  status: string;
+  handler: string;
+  handleTime: string;
+}
+
+interface FormState {
+  name: string;
+  description: string;
+  type: string;
+  metric: string;
+  operator: string;
+  threshold: number;
+  duration: number;
+  severity: string;
+  notifyMail: boolean;
+  notifySms: boolean;
+  notifyPhone: boolean;
+  status: boolean;
+}
+
+interface Option {
+  label: string;
+  value: string;
+}
+
+type CheckedType = boolean | (() => boolean);
+
 // 告警规则数据
-const alertRules = ref([
+const alertRules = ref<AlertRule[]>([
   {
     id: '1',
     name: 'CPU使用率过高',
@@ -75,7 +125,7 @@ const alertRules = ref([
 ]);
 
 // 告警历史数据
-const alertHistory = ref([
+const alertHistory = ref<AlertHistory[]>([
   {
     id: '1001',
     ruleName: 'CPU使用率过高',
@@ -167,7 +217,7 @@ const ruleColumns = [
     title: '严重程度',
     dataIndex: 'severity',
     key: 'severity',
-    customRender: ({ text }) => {
+    customRender: ({ text }: { text: string }) => {
       const color =
         text === '紧急'
           ? 'red'
@@ -188,7 +238,7 @@ const ruleColumns = [
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    customRender: ({ text }) => {
+    customRender: ({ text }: { text: string }) => {
       const color = text === '启用' ? 'green' : 'red';
       return h(Tag, { color }, () => text);
     },
@@ -201,20 +251,21 @@ const ruleColumns = [
   {
     title: '操作',
     key: 'action',
-    customRender: ({ record }) => 
+    customRender: ({ record }: { record: AlertRule }) =>
       h(Space, { size: 'middle' }, [
         h('a', { onClick: () => handleEditRule(record) }, '编辑'),
         h(Switch, {
           checked: record.status === '启用',
-          onChange: (checked) => handleToggleStatus(record, checked),
+          onChange: (checked: CheckedType) =>
+            handleToggleStatus(record, checked as boolean),
         }),
         h(Popconfirm, {
           title: '确定要删除这条规则吗?',
           onConfirm: () => handleDeleteRule(record),
           okText: '是',
           cancelText: '否',
+          children: [h('a', {}, '删除')],
         }),
-        h('a', {}, '删除'),
       ]),
   },
 ];
@@ -245,7 +296,7 @@ const historyColumns = [
     title: '严重程度',
     dataIndex: 'severity',
     key: 'severity',
-    customRender: ({ text }) => {
+    customRender: ({ text }: { text: string }) => {
       const color =
         text === '紧急'
           ? 'red'
@@ -271,7 +322,7 @@ const historyColumns = [
     title: '处理状态',
     dataIndex: 'status',
     key: 'status',
-    customRender: ({ text }) => {
+    customRender: ({ text }: { text: string }) => {
       const color = text === '已处理' ? 'green' : 'orange';
       return h(Tag, { color }, () => text);
     },
@@ -289,20 +340,25 @@ const historyColumns = [
   {
     title: '操作',
     key: 'action',
-    customRender: ({ record }) => (
-      h(Space, { size: 'middle' }, [
-        h('a', {}, '详情'),
-        record.status === '未处理' ? h('a', { onClick: () => handleAlert(record) }, '处理') : null,
-      ].filter(Boolean))
-    ),
+    customRender: ({ record }: { record: AlertHistory }) =>
+      h(
+        Space,
+        { size: 'middle' },
+        [
+          h('a', {}, '详情'),
+          record.status === '未处理'
+            ? h('a', { onClick: () => handleAlert(record) }, '处理')
+            : null,
+        ].filter(Boolean),
+      ),
   },
 ];
 
 const activeKey = ref('1');
 const ruleModalVisible = ref(false);
-const editingRule = ref(null);
+const editingRule = ref<AlertRule | null>(null);
 const formRef = ref();
-const formState = ref({
+const formState = ref<FormState>({
   name: '',
   description: '',
   type: '',
@@ -317,21 +373,21 @@ const formState = ref({
   status: true,
 });
 
-const severityOptions = [
+const severityOptions: Option[] = [
   { label: '紧急', value: '紧急' },
   { label: '严重', value: '严重' },
   { label: '中等', value: '中等' },
   { label: '一般', value: '一般' },
 ];
 
-const typeOptions = [
+const typeOptions: Option[] = [
   { label: '集群资源', value: '集群资源' },
   { label: '任务资源', value: '任务资源' },
   { label: '节点状态', value: '节点状态' },
   { label: '任务状态', value: '任务状态' },
 ];
 
-const metricOptions = [
+const metricOptions: Option[] = [
   { label: 'CPU使用率', value: 'CPU使用率' },
   { label: '内存使用率', value: '内存使用率' },
   { label: 'GPU使用率', value: 'GPU使用率' },
@@ -340,7 +396,7 @@ const metricOptions = [
   { label: '任务状态', value: '任务状态' },
 ];
 
-const handleEditRule = (rule) => {
+const handleEditRule = (rule: AlertRule) => {
   editingRule.value = rule;
   formState.value = {
     name: rule.name,
@@ -385,12 +441,12 @@ const handleCancel = () => {
 const handleSaveRule = () => {
   formRef.value.validate().then(() => {
     // 构建通知渠道字符串
-    let channels = [];
+    let channels: string[] = [];
     if (formState.value.notifyMail) channels.push('邮件');
     if (formState.value.notifySms) channels.push('短信');
     if (formState.value.notifyPhone) channels.push('电话');
 
-    const rule = {
+    const rule: AlertRule = {
       id: editingRule.value
         ? editingRule.value.id
         : String(alertRules.value.length + 1),
@@ -409,7 +465,7 @@ const handleSaveRule = () => {
     if (editingRule.value) {
       // 更新现有规则
       const index = alertRules.value.findIndex(
-        (r) => r.id === editingRule.value.id,
+        (r) => r.id === editingRule.value!.id,
       );
       alertRules.value[index] = { ...alertRules.value[index], ...rule };
     } else {
@@ -421,17 +477,17 @@ const handleSaveRule = () => {
   });
 };
 
-const handleToggleStatus = (record, checked) => {
+const handleToggleStatus = (record: AlertRule, checked: boolean) => {
   const index = alertRules.value.findIndex((r) => r.id === record.id);
   alertRules.value[index].status = checked ? '启用' : '禁用';
 };
 
-const handleDeleteRule = (record) => {
+const handleDeleteRule = (record: AlertRule) => {
   const index = alertRules.value.findIndex((r) => r.id === record.id);
   alertRules.value.splice(index, 1);
 };
 
-const handleAlert = (record) => {
+const handleAlert = (record: AlertHistory) => {
   const index = alertHistory.value.findIndex((a) => a.id === record.id);
   alertHistory.value[index].status = '已处理';
   alertHistory.value[index].handler = '当前用户';

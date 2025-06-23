@@ -1,5 +1,5 @@
 <script lang="ts" setup>
-import { ref } from 'vue';
+import { ref, h } from 'vue';
 import {
   Table,
   Card,
@@ -13,11 +13,27 @@ import {
   Divider,
   Tooltip,
 } from 'ant-design-vue';
+import type { SelectValue } from 'ant-design-vue/es/select';
 
 defineOptions({ name: 'DatasetList' });
 
+interface DatasetItem {
+  id: string;
+  name: string;
+  type: string;
+  description: string;
+  size: string;
+  files: number;
+  format: string;
+  creator: string;
+  createTime: string;
+  updateTime: string;
+  status: string;
+  shared: boolean;
+}
+
 // 数据集列表数据
-const dataSource = ref([
+const dataSource = ref<DatasetItem[]>([
   {
     id: '1',
     name: 'COCO数据集',
@@ -106,25 +122,32 @@ const columns = [
     title: '类型',
     dataIndex: 'type',
     key: 'type',
-    customRender: ({ text }) => {
-      const color = 
-        text === '图像分类' ? 'blue' : 
-        text === '文本' ? 'green' : 
-        text === '音频' ? 'purple' : 'default';
-      return <Tag color={color}>{text}</Tag>;
+    customRender: ({ text }: { text: string }) => {
+      const color =
+        text === '图像分类'
+          ? 'blue'
+          : text === '文本'
+            ? 'green'
+            : text === '音频'
+              ? 'purple'
+              : 'default';
+      return h(Tag, { color }, () => text);
     },
   },
   {
     title: '描述',
     dataIndex: 'description',
     key: 'description',
-    customRender: ({ text }) => {
-      return (
-        <Tooltip placement="topLeft" title={text}>
-          <div style="width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
-            {text}
-          </div>
-        </Tooltip>
+    customRender: ({ text }: { text: string }) => {
+      return h(Tooltip, { placement: 'topLeft', title: text }, () =>
+        h(
+          'div',
+          {
+            style:
+              'width: 150px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;',
+          },
+          text,
+        ),
       );
     },
   },
@@ -162,34 +185,39 @@ const columns = [
     title: '状态',
     dataIndex: 'status',
     key: 'status',
-    customRender: ({ text }) => {
-      const color = 
-        text === '已处理' ? 'green' : 
-        text === '处理中' ? 'blue' : 
-        text === '未处理' ? 'orange' : 
-        'default';
-      return <Tag color={color}>{text}</Tag>;
+    customRender: ({ text }: { text: string }) => {
+      const color =
+        text === '已处理'
+          ? 'green'
+          : text === '处理中'
+            ? 'blue'
+            : text === '未处理'
+              ? 'orange'
+              : 'default';
+      return h(Tag, { color }, () => text);
     },
   },
   {
     title: '共享',
     dataIndex: 'shared',
     key: 'shared',
-    customRender: ({ text }) => {
-      return text ? <Tag color="green">是</Tag> : <Tag>否</Tag>;
+    customRender: ({ text }: { text: boolean }) => {
+      return text
+        ? h(Tag, { color: 'green' }, () => '是')
+        : h(Tag, {}, () => '否');
     },
   },
   {
     title: '操作',
     key: 'action',
-    customRender: ({ record }) => (
-      <Space size="middle">
-        <a>查看</a>
-        <a>下载</a>
-        {record.status === '未处理' && <a>处理</a>}
-        <a>删除</a>
-      </Space>
-    ),
+    customRender: ({ record }: { record: DatasetItem }) =>
+      h(Space, { size: 'middle' }, [
+        h('a', { onClick: () => console.log('查看', record) }, '查看'),
+        h('a', { onClick: () => console.log('下载', record) }, '下载'),
+        record.status === '未处理' &&
+          h('a', { onClick: () => console.log('处理', record) }, '处理'),
+        h('a', { onClick: () => console.log('删除', record) }, '删除'),
+      ]),
   },
 ];
 
@@ -200,7 +228,7 @@ const formState = ref({
   name: '',
   type: '',
   description: '',
-  shared: false,
+  shared: false as boolean,
 });
 
 const typeOptions = [
@@ -238,7 +266,7 @@ const handleOk = () => {
         status: '未处理',
         shared: formState.value.shared,
       });
-      
+
       visible.value = false;
       formState.value = {
         name: '',
@@ -247,7 +275,7 @@ const handleOk = () => {
         shared: false,
       };
     })
-    .catch((error) => {
+    .catch((error: any) => {
       console.error('验证失败:', error);
     });
 };
@@ -285,14 +313,22 @@ const resetSearch = () => {
         </Space>
       </template>
 
-      <--set 搜索区域 -->
+      <!-- 搜索区域 -->
       <div class="search-area">
         <Form layout="inline" :model="searchForm">
           <Form.Item name="name" label="数据集名称">
-            <Input v-model:value="searchForm.name" placeholder="请输入数据集名称" />
+            <Input
+              v-model:value="searchForm.name"
+              placeholder="请输入数据集名称"
+            />
           </Form.Item>
           <Form.Item name="type" label="数据类型">
-            <Select v-model:value="searchForm.type" placeholder="请选择类型" style="width: 120px" allowClear>
+            <Select
+              v-model:value="searchForm.type"
+              placeholder="请选择类型"
+              style="width: 120px"
+              allowClear
+            >
               <Select.Option value="图像分类">图像分类</Select.Option>
               <Select.Option value="文本">文本</Select.Option>
               <Select.Option value="音频">音频</Select.Option>
@@ -300,7 +336,12 @@ const resetSearch = () => {
             </Select>
           </Form.Item>
           <Form.Item name="status" label="状态">
-            <Select v-model:value="searchForm.status" placeholder="请选择状态" style="width: 120px" allowClear>
+            <Select
+              v-model:value="searchForm.status"
+              placeholder="请选择状态"
+              style="width: 120px"
+              allowClear
+            >
               <Select.Option value="已处理">已处理</Select.Option>
               <Select.Option value="处理中">处理中</Select.Option>
               <Select.Option value="未处理">未处理</Select.Option>
@@ -331,7 +372,10 @@ const resetSearch = () => {
           label="数据集名称"
           :rules="[{ required: true, message: '请输入数据集名称' }]"
         >
-          <Input v-model:value="formState.name" placeholder="请输入数据集名称" />
+          <Input
+            v-model:value="formState.name"
+            placeholder="请输入数据集名称"
+          />
         </Form.Item>
         <Form.Item
           name="type"
