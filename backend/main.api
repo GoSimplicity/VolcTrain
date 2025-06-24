@@ -1,0 +1,13 @@
+syntax = "v1"
+
+import (
+    "api/common.api"
+    "api/dataset.api"
+    "api/gpu.api"
+    "api/model.api"
+    "api/monitor.api"
+    "api/system.api"
+    "api/training.api"
+    "api/user.api"
+    "api/workspace.api"
+)

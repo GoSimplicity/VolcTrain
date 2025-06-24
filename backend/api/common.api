@@ -1,0 +1,10 @@
+syntax = "v1"
+
+type EmptyReq {}
+
+type EmptyResp {}
+
+type LabelValue {
+    Label string `json:"label"`
+    Value string `json:"value"`
+}
