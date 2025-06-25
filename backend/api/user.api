@@ -1,1 +1,603 @@
 syntax = "v1"
+
+import "common.api"
+
+// 用户信息
+type UserInfo {
+    Id               int64   `json:"id"`
+    Username         string  `json:"username"`
+    Email            string  `json:"email"`
+    Phone            string  `json:"phone,omitempty"`
+    RealName         string  `json:"realName,omitempty"`
+    Nickname         string  `json:"nickname,omitempty"`
+    Status           string  `json:"status"`
+    UserType         string  `json:"userType"`
+    LastLoginAt      string  `json:"lastLoginAt,omitempty"`
+    LastLoginIp      string  `json:"lastLoginIp,omitempty"`
+    PasswordExpiresAt string `json:"passwordExpiresAt,omitempty"`
+    LoginAttempts    int     `json:"loginAttempts"`
+    LockedUntil      string  `json:"lockedUntil,omitempty"`
+    MfaEnabled       bool    `json:"mfaEnabled"`
+    EmailVerified    bool    `json:"emailVerified"`
+    PhoneVerified    bool    `json:"phoneVerified"`
+    CreatedAt        string  `json:"createdAt"`
+    UpdatedAt        string  `json:"updatedAt"`
+}
+
+// 创建用户请求
+type CreateUserReq {
+    Username    string `json:"username"`
+    Email       string `json:"email"`
+    Phone       string `json:"phone,omitempty"`
+    Password    string `json:"password"`
+    RealName    string `json:"realName,omitempty"`
+    Nickname    string `json:"nickname,omitempty"`
+    UserType    string `json:"userType,optional,default=user"`
+    Status      string `json:"status,optional,default=pending"`
+}
+
+// 创建用户响应
+type CreateUserResp {
+    Id int64 `json:"id"`
+}
+
+// 更新用户请求
+type UpdateUserReq {
+    Id          int64  `json:"id"`
+    Email       string `json:"email,omitempty"`
+    Phone       string `json:"phone,omitempty"`
+    RealName    string `json:"realName,omitempty"`
+    Nickname    string `json:"nickname,omitempty"`
+    Status      string `json:"status,omitempty"`
+    UserType    string `json:"userType,omitempty"`
+}
+
+// 用户列表请求
+type ListUsersReq {
+    Page      int    `form:"page,optional,default=1"`
+    PageSize  int    `form:"pageSize,optional,default=20"`
+    Status    string `form:"status,omitempty"`
+    UserType  string `form:"userType,omitempty"`
+    Keyword   string `form:"keyword,omitempty"`
+}
+
+// 用户列表响应
+type ListUsersResp {
+    List  []UserInfo `json:"list"`
+    Total int64      `json:"total"`
+    Page  int        `json:"page"`
+    PageSize int     `json:"pageSize"`
+}
+
+// 获取用户详情请求
+type GetUserReq {
+    Id int64 `path:"id"`
+}
+
+// 获取用户详情响应
+type GetUserResp {
+    User UserInfo `json:"user"`
+}
+
+// 删除用户请求
+type DeleteUserReq {
+    Id int64 `path:"id"`
+}
+
+// 重置密码请求
+type ResetPasswordReq {
+    Id          int64  `json:"id"`
+    NewPassword string `json:"newPassword"`
+}
+
+// 修改密码请求
+type ChangePasswordReq {
+    OldPassword string `json:"oldPassword"`
+    NewPassword string `json:"newPassword"`
+}
+
+// ============== 部门相关 ==============
+
+// 部门信息
+type DepartmentInfo {
+    Id             int64  `json:"id"`
+    Name           string `json:"name"`
+    ParentId       int64  `json:"parentId,omitempty"`
+    Level          int    `json:"level"`
+    Path           string `json:"path,omitempty"`
+    Description    string `json:"description,omitempty"`
+    DepartmentCode string `json:"departmentCode,omitempty"`
+    SortOrder      int    `json:"sortOrder"`
+    Status         string `json:"status"`
+    CreatedAt      string `json:"createdAt"`
+    UpdatedAt      string `json:"updatedAt"`
+    Children       []DepartmentInfo `json:"children,omitempty"`
+}
+
+// 创建部门请求
+type CreateDepartmentReq {
+    Name           string `json:"name"`
+    ParentId       int64  `json:"parentId,omitempty"`
+    Description    string `json:"description,omitempty"`
+    DepartmentCode string `json:"departmentCode,omitempty"`
+    SortOrder      int    `json:"sortOrder,optional,default=0"`
+    Status         string `json:"status,optional,default=active"`
+}
+
+// 创建部门响应
+type CreateDepartmentResp {
+    Id int64 `json:"id"`
+}
+
+// 更新部门请求
+type UpdateDepartmentReq {
+    Id             int64  `json:"id"`
+    Name           string `json:"name,omitempty"`
+    ParentId       int64  `json:"parentId,omitempty"`
+    Description    string `json:"description,omitempty"`
+    DepartmentCode string `json:"departmentCode,omitempty"`
+    SortOrder      int    `json:"sortOrder,omitempty"`
+    Status         string `json:"status,omitempty"`
+}
+
+// 部门列表请求
+type ListDepartmentsReq {
+    Status    string `form:"status,omitempty"`
+    ParentId  int64  `form:"parentId,omitempty"`
+    TreeMode  bool   `form:"treeMode,optional,default=false"`
+}
+
+// 部门列表响应
+type ListDepartmentsResp {
+    List []DepartmentInfo `json:"list"`
+}
+
+// 获取部门详情请求
+type GetDepartmentReq {
+    Id int64 `path:"id"`
+}
+
+// 获取部门详情响应
+type GetDepartmentResp {
+    Department DepartmentInfo `json:"department"`
+}
+
+// 删除部门请求
+type DeleteDepartmentReq {
+    Id int64 `path:"id"`
+}
+
+// ============== 权限相关 ==============
+
+// 权限信息
+type PermissionInfo {
+    Id             int64  `json:"id"`
+    Name           string `json:"name"`
+    DisplayName    string `json:"displayName,omitempty"`
+    Description    string `json:"description,omitempty"`
+    Module         string `json:"module,omitempty"`
+    Action         string `json:"action,omitempty"`
+    Resource       string `json:"resource,omitempty"`
+    PermissionCode string `json:"permissionCode,omitempty"`
+    ParentId       int64  `json:"parentId"`
+    Level          int    `json:"level"`
+    SortOrder      int    `json:"sortOrder"`
+    Status         string `json:"status"`
+    CreatedAt      string `json:"createdAt"`
+    UpdatedAt      string `json:"updatedAt"`
+    Children       []PermissionInfo `json:"children,omitempty"`
+}
+
+// 创建权限请求
+type CreatePermissionReq {
+    Name           string `json:"name"`
+    DisplayName    string `json:"displayName,omitempty"`
+    Description    string `json:"description,omitempty"`
+    Module         string `json:"module,omitempty"`
+    Action         string `json:"action,omitempty"`
+    Resource       string `json:"resource,omitempty"`
+    PermissionCode string `json:"permissionCode,omitempty"`
+    ParentId       int64  `json:"parentId,optional,default=0"`
+    SortOrder      int    `json:"sortOrder,optional,default=0"`
+    Status         string `json:"status,optional,default=active"`
+}
+
+// 创建权限响应
+type CreatePermissionResp {
+    Id int64 `json:"id"`
+}
+
+// 更新权限请求
+type UpdatePermissionReq {
+    Id             int64  `json:"id"`
+    Name           string `json:"name,omitempty"`
+    DisplayName    string `json:"displayName,omitempty"`
+    Description    string `json:"description,omitempty"`
+    Module         string `json:"module,omitempty"`
+    Action         string `json:"action,omitempty"`
+    Resource       string `json:"resource,omitempty"`
+    PermissionCode string `json:"permissionCode,omitempty"`
+    ParentId       int64  `json:"parentId,omitempty"`
+    SortOrder      int    `json:"sortOrder,omitempty"`
+    Status         string `json:"status,omitempty"`
+}
+
+// 权限列表请求
+type ListPermissionsReq {
+    Status   string `form:"status,omitempty"`
+    Module   string `form:"module,omitempty"`
+    ParentId int64  `form:"parentId,omitempty"`
+    TreeMode bool   `form:"treeMode,optional,default=false"`
+}
+
+// 权限列表响应
+type ListPermissionsResp {
+    List []PermissionInfo `json:"list"`
+}
+
+// 获取权限详情请求
+type GetPermissionReq {
+    Id int64 `path:"id"`
+}
+
+// 获取权限详情响应
+type GetPermissionResp {
+    Permission PermissionInfo `json:"permission"`
+}
+
+// 删除权限请求
+type DeletePermissionReq {
+    Id int64 `path:"id"`
+}
+
+// ============== 角色相关 ==============
+
+// 角色信息
+type RoleInfo {
+    Id          int64            `json:"id"`
+    Name        string           `json:"name"`
+    DisplayName string           `json:"displayName,omitempty"`
+    Description string           `json:"description,omitempty"`
+    RoleCode    string           `json:"roleCode,omitempty"`
+    RoleType    string           `json:"roleType"`
+    SortOrder   int              `json:"sortOrder"`
+    Status      string           `json:"status"`
+    CreatedAt   string           `json:"createdAt"`
+    UpdatedAt   string           `json:"updatedAt"`
+    Permissions []PermissionInfo `json:"permissions,omitempty"`
+}
+
+// 创建角色请求
+type CreateRoleReq {
+    Name        string  `json:"name"`
+    DisplayName string  `json:"displayName,omitempty"`
+    Description string  `json:"description,omitempty"`
+    RoleCode    string  `json:"roleCode,omitempty"`
+    RoleType    string  `json:"roleType,optional,default=custom"`
+    SortOrder   int     `json:"sortOrder,optional,default=0"`
+    Status      string  `json:"status,optional,default=active"`
+    PermissionIds []int64 `json:"permissionIds,omitempty"`
+}
+
+// 创建角色响应
+type CreateRoleResp {
+    Id int64 `json:"id"`
+}
+
+// 更新角色请求
+type UpdateRoleReq {
+    Id          int64   `json:"id"`
+    Name        string  `json:"name,omitempty"`
+    DisplayName string  `json:"displayName,omitempty"`
+    Description string  `json:"description,omitempty"`
+    RoleCode    string  `json:"roleCode,omitempty"`
+    RoleType    string  `json:"roleType,omitempty"`
+    SortOrder   int     `json:"sortOrder,omitempty"`
+    Status      string  `json:"status,omitempty"`
+    PermissionIds []int64 `json:"permissionIds,omitempty"`
+}
+
+// 角色列表请求
+type ListRolesReq {
+    Page     int    `form:"page,optional,default=1"`
+    PageSize int    `form:"pageSize,optional,default=20"`
+    Status   string `form:"status,omitempty"`
+    RoleType string `form:"roleType,omitempty"`
+    Keyword  string `form:"keyword,omitempty"`
+}
+
+// 角色列表响应
+type ListRolesResp {
+    List     []RoleInfo `json:"list"`
+    Total    int64      `json:"total"`
+    Page     int        `json:"page"`
+    PageSize int        `json:"pageSize"`
+}
+
+// 获取角色详情请求
+type GetRoleReq {
+    Id int64 `path:"id"`
+}
+
+// 获取角色详情响应
+type GetRoleResp {
+    Role RoleInfo `json:"role"`
+}
+
+// 删除角色请求
+type DeleteRoleReq {
+    Id int64 `path:"id"`
+}
+
+// ============== 用户角色关联相关 ==============
+
+// 用户角色信息
+type UserRoleInfo {
+    Id          int64  `json:"id"`
+    UserId      int64  `json:"userId"`
+    RoleId      int64  `json:"roleId"`
+    WorkspaceId int64  `json:"workspaceId,omitempty"`
+    ExpiresAt   string `json:"expiresAt,omitempty"`
+    AssignedBy  int64  `json:"assignedBy,omitempty"`
+    Status      string `json:"status"`
+    CreatedAt   string `json:"createdAt"`
+    UpdatedAt   string `json:"updatedAt"`
+    RoleInfo    RoleInfo `json:"roleInfo,omitempty"`
+    UserInfo    UserInfo `json:"userInfo,omitempty"`
+}
+
+// 分配用户角色请求
+type AssignUserRoleReq {
+    UserId      int64  `json:"userId"`
+    RoleId      int64  `json:"roleId"`
+    WorkspaceId int64  `json:"workspaceId,omitempty"`
+    ExpiresAt   string `json:"expiresAt,omitempty"`
+}
+
+// 移除用户角色请求
+type RemoveUserRoleReq {
+    UserId      int64 `json:"userId"`
+    RoleId      int64 `json:"roleId"`
+    WorkspaceId int64 `json:"workspaceId,omitempty"`
+}
+
+// 获取用户角色列表请求
+type ListUserRolesReq {
+    UserId      int64 `form:"userId,omitempty"`
+    RoleId      int64 `form:"roleId,omitempty"`
+    WorkspaceId int64 `form:"workspaceId,omitempty"`
+    Status      string `form:"status,omitempty"`
+}
+
+// 获取用户角色列表响应
+type ListUserRolesResp {
+    List []UserRoleInfo `json:"list"`
+}
+
+// ============== 用户部门关联相关 ==============
+
+// 用户部门信息
+type UserDepartmentInfo {
+    Id           int64  `json:"id"`
+    UserId       int64  `json:"userId"`
+    DepartmentId int64  `json:"departmentId"`
+    Position     string `json:"position,omitempty"`
+    IsPrimary    bool   `json:"isPrimary"`
+    JoinDate     string `json:"joinDate,omitempty"`
+    LeaveDate    string `json:"leaveDate,omitempty"`
+    Status       string `json:"status"`
+    CreatedAt    string `json:"createdAt"`
+    UpdatedAt    string `json:"updatedAt"`
+    DepartmentInfo DepartmentInfo `json:"departmentInfo,omitempty"`
+    UserInfo     UserInfo `json:"userInfo,omitempty"`
+}
+
+// 分配用户部门请求
+type AssignUserDepartmentReq {
+    UserId       int64  `json:"userId"`
+    DepartmentId int64  `json:"departmentId"`
+    Position     string `json:"position,omitempty"`
+    IsPrimary    bool   `json:"isPrimary,optional,default=false"`
+    JoinDate     string `json:"joinDate,omitempty"`
+}
+
+// 移除用户部门请求
+type RemoveUserDepartmentReq {
+    UserId       int64 `json:"userId"`
+    DepartmentId int64 `json:"departmentId"`
+}
+
+// 获取用户部门列表请求
+type ListUserDepartmentsReq {
+    UserId       int64 `form:"userId,omitempty"`
+    DepartmentId int64 `form:"departmentId,omitempty"`
+    Status       string `form:"status,omitempty"`
+}
+
+// 获取用户部门列表响应
+type ListUserDepartmentsResp {
+    List []UserDepartmentInfo `json:"list"`
+}
+
+// ============== 部门管理者相关 ==============
+
+// 部门管理者信息
+type DepartmentManagerInfo {
+    Id           int64  `json:"id"`
+    DepartmentId int64  `json:"departmentId"`
+    UserId       int64  `json:"userId"`
+    ManagerType  string `json:"managerType"`
+    StartDate    string `json:"startDate,omitempty"`
+    EndDate      string `json:"endDate,omitempty"`
+    Status       string `json:"status"`
+    CreatedAt    string `json:"createdAt"`
+    UpdatedAt    string `json:"updatedAt"`
+    DepartmentInfo DepartmentInfo `json:"departmentInfo,omitempty"`
+    UserInfo     UserInfo `json:"userInfo,omitempty"`
+}
+
+// 分配部门管理者请求
+type AssignDepartmentManagerReq {
+    DepartmentId int64  `json:"departmentId"`
+    UserId       int64  `json:"userId"`
+    ManagerType  string `json:"managerType,optional,default=primary"`
+    StartDate    string `json:"startDate,omitempty"`
+    EndDate      string `json:"endDate,omitempty"`
+}
+
+// 移除部门管理者请求
+type RemoveDepartmentManagerReq {
+    DepartmentId int64  `json:"departmentId"`
+    UserId       int64  `json:"userId"`
+    ManagerType  string `json:"managerType"`
+}
+
+// 获取部门管理者列表请求
+type ListDepartmentManagersReq {
+    DepartmentId int64  `form:"departmentId,omitempty"`
+    UserId       int64  `form:"userId,omitempty"`
+    ManagerType  string `form:"managerType,omitempty"`
+    Status       string `form:"status,omitempty"`
+}
+
+// 获取部门管理者列表响应
+type ListDepartmentManagersResp {
+    List []DepartmentManagerInfo `json:"list"`
+}
+
+// ============== 服务定义 ==============
+
+@server(
+    group: user
+    prefix: /api/v1/users
+)
+service user-api {
+    @handler CreateUser
+    post / (CreateUserReq) returns (CreateUserResp)
+    
+    @handler ListUsers
+    get / (ListUsersReq) returns (ListUsersResp)
+    
+    @handler GetUser
+    get /:id (GetUserReq) returns (GetUserResp)
+    
+    @handler UpdateUser
+    put /:id (UpdateUserReq) returns (EmptyResp)
+    
+    @handler DeleteUser
+    delete /:id (DeleteUserReq) returns (EmptyResp)
+    
+    @handler ResetPassword
+    post /:id/reset-password (ResetPasswordReq) returns (EmptyResp)
+    
+    @handler ChangePassword
+    post /change-password (ChangePasswordReq) returns (EmptyResp)
+}
+
+@server(
+    group: department
+    prefix: /api/v1/departments
+)
+service user-api {
+    @handler CreateDepartment
+    post / (CreateDepartmentReq) returns (CreateDepartmentResp)
+    
+    @handler ListDepartments
+    get / (ListDepartmentsReq) returns (ListDepartmentsResp)
+    
+    @handler GetDepartment
+    get /:id (GetDepartmentReq) returns (GetDepartmentResp)
+    
+    @handler UpdateDepartment
+    put /:id (UpdateDepartmentReq) returns (EmptyResp)
+    
+    @handler DeleteDepartment
+    delete /:id (DeleteDepartmentReq) returns (EmptyResp)
+}
+
+@server(
+    group: permission
+    prefix: /api/v1/permissions
+)
+service user-api {
+    @handler CreatePermission
+    post / (CreatePermissionReq) returns (CreatePermissionResp)
+    
+    @handler ListPermissions
+    get / (ListPermissionsReq) returns (ListPermissionsResp)
+    
+    @handler GetPermission
+    get /:id (GetPermissionReq) returns (GetPermissionResp)
+    
+    @handler UpdatePermission
+    put /:id (UpdatePermissionReq) returns (EmptyResp)
+    
+    @handler DeletePermission
+    delete /:id (DeletePermissionReq) returns (EmptyResp)
+}
+
+@server(
+    group: role
+    prefix: /api/v1/roles
+)
+service user-api {
+    @handler CreateRole
+    post / (CreateRoleReq) returns (CreateRoleResp)
+    
+    @handler ListRoles
+    get / (ListRolesReq) returns (ListRolesResp)
+    
+    @handler GetRole
+    get /:id (GetRoleReq) returns (GetRoleResp)
+    
+    @handler UpdateRole
+    put /:id (UpdateRoleReq) returns (EmptyResp)
+    
+    @handler DeleteRole
+    delete /:id (DeleteRoleReq) returns (EmptyResp)
+}
+
+@server(
+    group: userRole
+    prefix: /api/v1/user-roles
+)
+service user-api {
+    @handler AssignUserRole
+    post /assign (AssignUserRoleReq) returns (EmptyResp)
+    
+    @handler RemoveUserRole
+    post /remove (RemoveUserRoleReq) returns (EmptyResp)
+    
+    @handler ListUserRoles
+    get / (ListUserRolesReq) returns (ListUserRolesResp)
+}
+
+@server(
+    group: userDepartment
+    prefix: /api/v1/user-departments
+)
+service user-api {
+    @handler AssignUserDepartment
+    post /assign (AssignUserDepartmentReq) returns (EmptyResp)
+    
+    @handler RemoveUserDepartment
+    post /remove (RemoveUserDepartmentReq) returns (EmptyResp)
+    
+    @handler ListUserDepartments
+    get / (ListUserDepartmentsReq) returns (ListUserDepartmentsResp)
+}
+
+@server(
+    group: departmentManager
+    prefix: /api/v1/department-managers
+)
+service user-api {
+    @handler AssignDepartmentManager
+    post /assign (AssignDepartmentManagerReq) returns (EmptyResp)
+    
+    @handler RemoveDepartmentManager
+    post /remove (RemoveDepartmentManagerReq) returns (EmptyResp)
+    
+    @handler ListDepartmentManagers
+    get / (ListDepartmentManagersReq) returns (ListDepartmentManagersResp)
+}

@@ -1,0 +1,563 @@
+syntax = "v1"
+
+import "common.api"
+
+type K8sResource {
+    Id              int64       `json:"id"`
+    ResourceType    string      `json:"resourceType"`    // 资源类型：Job, Pod, Service, ConfigMap, Secret等
+    ResourceName    string      `json:"resourceName"`    // K8s资源名称
+    Namespace       string      `json:"namespace"`       // K8s命名空间
+    Uid             string      `json:"uid"`             // K8s资源UID
+    ApiVersion      string      `json:"apiVersion"`      // API版本
+    Kind            string      `json:"kind"`            // 资源种类
+    ClusterName     string     `json:"clusterName,optional"`     // 所属集群名称
+    RelatedType     string     `json:"relatedType,optional"`     // 关联资源类型
+    RelatedId       int64      `json:"relatedId,optional"`       // 关联资源ID
+    Labels          interface{} `json:"labels,omitempty"`          // K8s标签
+    Annotations     interface{} `json:"annotations,omitempty"`     // K8s注解
+    Spec            interface{} `json:"spec,omitempty"`            // 资源规格
+    Status          interface{} `json:"status,omitempty"`          // 资源状态
+    K8sCreatedAt    string     `json:"k8sCreatedAt,optional"`    // K8s创建时间
+    K8sDeletedAt    string     `json:"k8sDeletedAt,optional"`    // K8s删除时间
+    LastSyncAt      string     `json:"lastSyncAt,optional"`      // 最后同步时间
+    SyncStatus      string      `json:"syncStatus"`                // 同步状态：synced, pending, failed
+    SyncError       string     `json:"syncError,optional"`       // 同步错误信息
+    CreatedAt       string      `json:"createdAt"`                 // 创建时间
+    UpdatedAt       string      `json:"updatedAt"`                 // 更新时间
+}
+
+type CreateK8sResourceReq {
+    ResourceType    string      `json:"resourceType"`
+    ResourceName    string      `json:"resourceName"`
+    Namespace       string      `json:"namespace"`
+    Uid             string      `json:"uid"`
+    ApiVersion      string      `json:"apiVersion"`
+    Kind            string      `json:"kind"`
+    ClusterName     string     `json:"clusterName,optional"`
+    RelatedType     string     `json:"relatedType,optional"`
+    RelatedId       int64      `json:"relatedId,optional"`
+    Labels          interface{} `json:"labels,omitempty"`
+    Annotations     interface{} `json:"annotations,omitempty"`
+    Spec            interface{} `json:"spec,omitempty"`
+    Status          interface{} `json:"status,omitempty"`
+    K8sCreatedAt    string     `json:"k8sCreatedAt,optional"`
+}
+
+type UpdateK8sResourceReq {
+    Id              int64       `json:"id"`
+    Labels          interface{} `json:"labels,omitempty"`
+    Annotations     interface{} `json:"annotations,omitempty"`
+    Spec            interface{} `json:"spec,omitempty"`
+    Status          interface{} `json:"status,omitempty"`
+    K8sDeletedAt    string     `json:"k8sDeletedAt,optional"`
+    SyncStatus      string     `json:"syncStatus,optional"`
+    SyncError       string     `json:"syncError,optional"`
+}
+
+type GetK8sResourceReq {
+    Id int64 `path:"id"`
+}
+
+type ListK8sResourcesReq {
+    Page         int     `form:"page,default=1"`
+    PageSize     int     `form:"pageSize,default=20"`
+    ResourceType *string `form:"resourceType,omitempty"`
+    Namespace    *string `form:"namespace,omitempty"`
+    ClusterName  *string `form:"clusterName,omitempty"`
+    RelatedType  *string `form:"relatedType,omitempty"`
+    RelatedId    *int64  `form:"relatedId,omitempty"`
+    SyncStatus   *string `form:"syncStatus,omitempty"`
+}
+
+type ListK8sResourcesResp {
+    Total int64         `json:"total"`
+    List  []K8sResource `json:"list"`
+}
+
+type DeleteK8sResourceReq {
+    Id int64 `path:"id"`
+}
+
+// ============= Volcano作业详情表相关 =============
+
+type VolcanoJob {
+    Id                        int64       `json:"id"`
+    JobName                   string      `json:"jobName"`                          // Volcano作业名称
+    Namespace                 string      `json:"namespace"`                        // K8s命名空间
+    Uid                       string      `json:"uid"`                              // K8s UID
+    TrainingJobId             int64       `json:"trainingJobId"`                    // 训练任务ID
+    QueueName                 string      `json:"queueName"`                        // Volcano队列名称
+    Priority                  int         `json:"priority"`                         // 优先级
+    MinAvailable              int         `json:"minAvailable"`                     // 最小可用实例数
+    SchedulingPolicy          interface{} `json:"schedulingPolicy,omitempty"`       // 调度策略
+    Plugins                   interface{} `json:"plugins,omitempty"`                // 插件配置
+    SchedulerName             string      `json:"schedulerName"`                    // 调度器名称
+    TaskSpecs                 interface{} `json:"taskSpecs,omitempty"`              // 任务规格列表
+    Volumes                   interface{} `json:"volumes,omitempty"`                // 卷配置
+    TtlSecondsAfterFinished   int        `json:"ttlSecondsAfterFinished,optional"` // 完成后保留时间(秒)
+    ActiveDeadlineSeconds     int        `json:"activeDeadlineSeconds,optional"`   // 活跃截止时间(秒)
+    BackoffLimit              int         `json:"backoffLimit"`                     // 重试次数限制
+    Phase                     string     `json:"phase,optional"`                  // 作业阶段
+    Conditions                interface{} `json:"conditions,omitempty"`             // 作业条件
+    StatusMessage             string     `json:"statusMessage,optional"`          // 状态消息
+    StartTime                 string     `json:"startTime,optional"`              // 开始时间
+    CompletionTime            string     `json:"completionTime,optional"`         // 完成时间
+    RunningDuration           int        `json:"runningDuration,optional"`        // 运行时长(秒)
+    TotalCpuRequest           float64    `json:"totalCpuRequest,optional"`        // 总CPU请求
+    TotalMemoryRequest        int64      `json:"totalMemoryRequest,optional"`     // 总内存请求(bytes)
+    TotalGpuRequest           int        `json:"totalGpuRequest,optional"`        // 总GPU请求
+    CreatedAt                 string      `json:"createdAt"`                        // 创建时间
+    UpdatedAt                 string      `json:"updatedAt"`                        // 更新时间
+}
+
+type CreateVolcanoJobReq {
+    JobName                   string      `json:"jobName"`
+    Namespace                 string      `json:"namespace"`
+    Uid                       string      `json:"uid"`
+    TrainingJobId             int64       `json:"trainingJobId"`
+    QueueName                 string      `json:"queueName"`
+    Priority                  int         `json:"priority"`
+    MinAvailable              int         `json:"minAvailable"`
+    SchedulingPolicy          interface{} `json:"schedulingPolicy,omitempty"`
+    Plugins                   interface{} `json:"plugins,omitempty"`
+    SchedulerName             string      `json:"schedulerName"`
+    TaskSpecs                 interface{} `json:"taskSpecs,omitempty"`
+    Volumes                   interface{} `json:"volumes,omitempty"`
+    TtlSecondsAfterFinished   int        `json:"ttlSecondsAfterFinished,optional"`
+    ActiveDeadlineSeconds     int        `json:"activeDeadlineSeconds,optional"`
+    BackoffLimit              int         `json:"backoffLimit"`
+}
+
+type UpdateVolcanoJobReq {
+    Id                      int64       `json:"id"`
+    Phase                   string     `json:"phase,optional"`
+    Conditions              interface{} `json:"conditions,omitempty"`
+    StatusMessage           string     `json:"statusMessage,optional"`
+    StartTime               string     `json:"startTime,optional"`
+    CompletionTime          string     `json:"completionTime,optional"`
+    RunningDuration         int        `json:"runningDuration,optional"`
+    TotalCpuRequest         float64    `json:"totalCpuRequest,optional"`
+    TotalMemoryRequest      int64      `json:"totalMemoryRequest,optional"`
+    TotalGpuRequest         int        `json:"totalGpuRequest,optional"`
+}
+
+type GetVolcanoJobReq {
+    Id int64 `path:"id"`
+}
+
+type ListVolcanoJobsReq {
+    Page            int     `form:"page,default=1"`
+    PageSize        int     `form:"pageSize,default=20"`
+    TrainingJobId   *int64  `form:"trainingJobId,omitempty"`
+    QueueName       *string `form:"queueName,omitempty"`
+    Phase           *string `form:"phase,omitempty"`
+    SchedulerName   *string `form:"schedulerName,omitempty"`
+    Namespace       *string `form:"namespace,omitempty"`
+}
+
+type ListVolcanoJobsResp {
+    Total int64        `json:"total"`
+    List  []VolcanoJob `json:"list"`
+}
+
+type DeleteVolcanoJobReq {
+    Id int64 `path:"id"`
+}
+
+// ============= Volcano队列配置表相关 =============
+
+type VolcanoQueue {
+    Id           int64       `json:"id"`
+    QueueName    string      `json:"queueName"`               // 队列名称
+    Namespace    string      `json:"namespace"`               // 命名空间
+    Weight       int         `json:"weight"`                  // 权重
+    Capability   interface{} `json:"capability,omitempty"`    // 队列容量配置
+    CpuQuota     float64    `json:"cpuQuota,optional"`      // CPU配额
+    MemoryQuota  int64      `json:"memoryQuota,optional"`   // 内存配额(bytes)
+    GpuQuota     int        `json:"gpuQuota,optional"`      // GPU配额
+    State        string      `json:"state"`                   // 队列状态：Open, Closed
+    RunningJobs  int         `json:"runningJobs"`             // 运行中的作业数
+    PendingJobs  int         `json:"pendingJobs"`             // 等待中的作业数
+    CreatedAt    string      `json:"createdAt"`               // 创建时间
+    UpdatedAt    string      `json:"updatedAt"`               // 更新时间
+}
+
+type CreateVolcanoQueueReq {
+    QueueName    string      `json:"queueName"`
+    Namespace    string      `json:"namespace"`
+    Weight       int         `json:"weight"`
+    Capability   interface{} `json:"capability,omitempty"`
+    CpuQuota     *float64    `json:"cpuQuota,omitempty"`
+    MemoryQuota  *int64      `json:"memoryQuota,omitempty"`
+    GpuQuota     *int        `json:"gpuQuota,omitempty"`
+    State        string      `json:"state"`
+}
+
+type UpdateVolcanoQueueReq {
+    Id           int64       `json:"id"`
+    Weight       int        `json:"weight,optional"`
+    Capability   interface{} `json:"capability,omitempty"`
+    CpuQuota     *float64    `json:"cpuQuota,omitempty"`
+    MemoryQuota  *int64      `json:"memoryQuota,omitempty"`
+    GpuQuota     *int        `json:"gpuQuota,omitempty"`
+    State        string     `json:"state,optional"`
+    RunningJobs  int        `json:"runningJobs,optional"`
+    PendingJobs  int        `json:"pendingJobs,optional"`
+}
+
+type GetVolcanoQueueReq {
+    Id int64 `path:"id"`
+}
+
+type ListVolcanoQueuesReq {
+    Page      int     `form:"page,default=1"`
+    PageSize  int     `form:"pageSize,default=20"`
+    QueueName *string `form:"queueName,omitempty"`
+    Namespace *string `form:"namespace,omitempty"`
+    State     *string `form:"state,omitempty"`
+}
+
+type ListVolcanoQueuesResp {
+    Total int64          `json:"total"`
+    List  []VolcanoQueue `json:"list"`
+}
+
+type DeleteVolcanoQueueReq {
+    Id int64 `path:"id"`
+}
+
+// ============= Pod事件记录表相关 =============
+
+type PodEvent {
+    Id              int64   `json:"id"`
+    PodName         string  `json:"podName"`                    // Pod名称
+    Namespace       string  `json:"namespace"`                  // 命名空间
+    Uid             string `json:"uid,optional"`              // Pod UID
+    EventType       string  `json:"eventType"`                  // 事件类型：Normal, Warning
+    Reason          string  `json:"reason"`                     // 事件原因
+    Message         string `json:"message,optional"`          // 事件消息
+    SourceComponent string `json:"sourceComponent,optional"`  // 来源组件
+    SourceHost      string `json:"sourceHost,optional"`       // 来源主机
+    FirstTimestamp  string  `json:"firstTimestamp"`             // 首次发生时间
+    LastTimestamp   string  `json:"lastTimestamp"`              // 最后发生时间
+    Count           int     `json:"count"`                      // 发生次数
+    CreatedAt       string  `json:"createdAt"`                  // 创建时间
+}
+
+type CreatePodEventReq {
+    PodName         string  `json:"podName"`
+    Namespace       string  `json:"namespace"`
+    Uid             *string `json:"uid,omitempty"`
+    EventType       string  `json:"eventType"`
+    Reason          string  `json:"reason"`
+    Message         *string `json:"message,omitempty"`
+    SourceComponent *string `json:"sourceComponent,omitempty"`
+    SourceHost      *string `json:"sourceHost,omitempty"`
+    FirstTimestamp  string  `json:"firstTimestamp"`
+    LastTimestamp   string  `json:"lastTimestamp"`
+    Count           int     `json:"count"`
+}
+
+type UpdatePodEventReq {
+    Id            int64   `json:"id"`
+    Message       string `json:"message,optional"`
+    LastTimestamp string `json:"lastTimestamp,optional"`
+    Count         int    `json:"count,optional"`
+}
+
+type GetPodEventReq {
+    Id int64 `path:"id"`
+}
+
+type ListPodEventsReq {
+    Page      int     `form:"page,default=1"`
+    PageSize  int     `form:"pageSize,default=20"`
+    PodName   *string `form:"podName,omitempty"`
+    Namespace *string `form:"namespace,omitempty"`
+    EventType *string `form:"eventType,omitempty"`
+    Reason    *string `form:"reason,omitempty"`
+}
+
+type ListPodEventsResp {
+    Total int64      `json:"total"`
+    List  []PodEvent `json:"list"`
+}
+
+type DeletePodEventReq {
+    Id int64 `path:"id"`
+}
+
+// ============= 用户收藏表相关 =============
+
+type UserFavorite {
+    Id           int64   `json:"id"`
+    ResourceType string  `json:"resourceType"`         // 资源类型：dataset, model, template, dashboard, workspace
+    ResourceId   int64   `json:"resourceId"`           // 资源ID
+    FolderName   string `json:"folderName,optional"` // 收藏夹名称
+    Notes        string `json:"notes,optional"`      // 备注
+    CreatedAt    string  `json:"createdAt"`            // 创建时间
+}
+
+type CreateUserFavoriteReq {
+    ResourceType string  `json:"resourceType"`
+    ResourceId   int64   `json:"resourceId"`
+    FolderName   string `json:"folderName,optional"`
+    Notes        string `json:"notes,optional"`
+}
+
+type UpdateUserFavoriteReq {
+    Id         int64   `json:"id"`
+    FolderName string `json:"folderName,optional"`
+    Notes      string `json:"notes,optional"`
+}
+
+type GetUserFavoriteReq {
+    Id int64 `path:"id"`
+}
+
+type ListUserFavoritesReq {
+    Page         int     `form:"page,default=1"`
+    PageSize     int     `form:"pageSize,default=20"`
+    ResourceType *string `form:"resourceType,omitempty"`
+    ResourceId   *int64  `form:"resourceId,omitempty"`
+    FolderName   *string `form:"folderName,omitempty"`
+}
+
+type ListUserFavoritesResp {
+    Total int64          `json:"total"`
+    List  []UserFavorite `json:"list"`
+}
+
+type DeleteUserFavoriteReq {
+    Id int64 `path:"id"`
+}
+
+// ============= 资源标签关联表相关 =============
+
+type ResourceTag {
+    Id           int64   `json:"id"`
+    ResourceType string  `json:"resourceType"`         // 资源类型
+    ResourceId   int64   `json:"resourceId"`           // 资源ID
+    TagName      string  `json:"tagName"`              // 标签名称
+    TagValue     string `json:"tagValue,optional"`   // 标签值
+    CreatedAt    string  `json:"createdAt"`            // 创建时间
+}
+
+type CreateResourceTagReq {
+    ResourceType string  `json:"resourceType"`
+    ResourceId   int64   `json:"resourceId"`
+    TagName      string  `json:"tagName"`
+    TagValue     *string `json:"tagValue,omitempty"`
+}
+
+type UpdateResourceTagReq {
+    Id       int64   `json:"id"`
+    TagValue string `json:"tagValue,optional"`
+}
+
+type GetResourceTagReq {
+    Id int64 `path:"id"`
+}
+
+type ListResourceTagsReq {
+    Page         int     `form:"page,default=1"`
+    PageSize     int     `form:"pageSize,default=20"`
+    ResourceType *string `form:"resourceType,omitempty"`
+    ResourceId   *int64  `form:"resourceId,omitempty"`
+    TagName      *string `form:"tagName,omitempty"`
+}
+
+type ListResourceTagsResp {
+    Total int64         `json:"total"`
+    List  []ResourceTag `json:"list"`
+}
+
+type DeleteResourceTagReq {
+    Id int64 `path:"id"`
+}
+
+// ============= 通用关联表相关 =============
+
+type ResourceRelation {
+    Id           int64       `json:"id"`
+    SourceType   string      `json:"sourceType"`           // 源资源类型
+    SourceId     int64       `json:"sourceId"`             // 源资源ID
+    TargetType   string      `json:"targetType"`           // 目标资源类型
+    TargetId     int64       `json:"targetId"`             // 目标资源ID
+    RelationType string      `json:"relationType"`         // 关联类型
+    Metadata     interface{} `json:"metadata,omitempty"`   // 关联元数据
+    CreatedAt    string      `json:"createdAt"`            // 创建时间
+}
+
+type CreateResourceRelationReq {
+    SourceType   string      `json:"sourceType"`
+    SourceId     int64       `json:"sourceId"`
+    TargetType   string      `json:"targetType"`
+    TargetId     int64       `json:"targetId"`
+    RelationType string      `json:"relationType"`
+    Metadata     interface{} `json:"metadata,omitempty"`
+}
+
+type GetResourceRelationReq {
+    Id int64 `path:"id"`
+}
+
+type ListResourceRelationsReq {
+    Page         int     `form:"page,default=1"`
+    PageSize     int     `form:"pageSize,default=20"`
+    SourceType   *string `form:"sourceType,omitempty"`
+    SourceId     *int64  `form:"sourceId,omitempty"`
+    TargetType   *string `form:"targetType,omitempty"`
+    TargetId     *int64  `form:"targetId,omitempty"`
+    RelationType *string `form:"relationType,omitempty"`
+}
+
+type ListResourceRelationsResp {
+    Total int64              `json:"total"`
+    List  []ResourceRelation `json:"list"`
+}
+
+type DeleteResourceRelationReq {
+    Id int64 `path:"id"`
+}
+
+// ============= API路由定义 =============
+
+@server(
+    group: k8s
+    prefix: /api/v1/k8s
+)
+service K8sRelation {
+    // K8s资源映射表
+    @handler CreateK8sResource
+    post /resources (CreateK8sResourceReq) returns (K8sResource)
+    
+    @handler UpdateK8sResource
+    put /resources (UpdateK8sResourceReq) returns (K8sResource)
+    
+    @handler GetK8sResource
+    get /resources/:id (GetK8sResourceReq) returns (K8sResource)
+    
+    @handler ListK8sResources
+    get /resources (ListK8sResourcesReq) returns (ListK8sResourcesResp)
+    
+    @handler DeleteK8sResource
+    delete /resources/:id (DeleteK8sResourceReq) returns (EmptyResp)
+}
+
+@server(
+    group: volcano
+    prefix: /api/v1/volcano
+)
+service Volcano {
+    // Volcano作业管理
+    @handler CreateVolcanoJob
+    post /jobs (CreateVolcanoJobReq) returns (VolcanoJob)
+    
+    @handler UpdateVolcanoJob
+    put /jobs (UpdateVolcanoJobReq) returns (VolcanoJob)
+    
+    @handler GetVolcanoJob
+    get /jobs/:id (GetVolcanoJobReq) returns (VolcanoJob)
+    
+    @handler ListVolcanoJobs
+    get /jobs (ListVolcanoJobsReq) returns (ListVolcanoJobsResp)
+    
+    @handler DeleteVolcanoJob
+    delete /jobs/:id (DeleteVolcanoJobReq) returns (EmptyResp)
+    
+    // Volcano队列管理
+    @handler CreateVolcanoQueue
+    post /queues (CreateVolcanoQueueReq) returns (VolcanoQueue)
+    
+    @handler UpdateVolcanoQueue
+    put /queues (UpdateVolcanoQueueReq) returns (VolcanoQueue)
+    
+    @handler GetVolcanoQueue
+    get /queues/:id (GetVolcanoQueueReq) returns (VolcanoQueue)
+    
+    @handler ListVolcanoQueues
+    get /queues (ListVolcanoQueuesReq) returns (ListVolcanoQueuesResp)
+    
+    @handler DeleteVolcanoQueue
+    delete /queues/:id (DeleteVolcanoQueueReq) returns (EmptyResp)
+}
+
+@server(
+    group: pod
+    prefix: /api/v1/pod
+)
+service Pod {
+    // Pod事件管理
+    @handler CreatePodEvent
+    post /events (CreatePodEventReq) returns (PodEvent)
+    
+    @handler UpdatePodEvent
+    put /events (UpdatePodEventReq) returns (PodEvent)
+    
+    @handler GetPodEvent
+    get /events/:id (GetPodEventReq) returns (PodEvent)
+    
+    @handler ListPodEvents
+    get /events (ListPodEventsReq) returns (ListPodEventsResp)
+    
+    @handler DeletePodEvent
+    delete /events/:id (DeletePodEventReq) returns (EmptyResp)
+}
+
+@server(
+    group: user
+    prefix: /api/v1/user
+)
+service User {
+    // 用户收藏管理
+    @handler CreateUserFavorite
+    post /favorites (CreateUserFavoriteReq) returns (UserFavorite)
+    
+    @handler UpdateUserFavorite
+    put /favorites (UpdateUserFavoriteReq) returns (UserFavorite)
+    
+    @handler GetUserFavorite
+    get /favorites/:id (GetUserFavoriteReq) returns (UserFavorite)
+    
+    @handler ListUserFavorites
+    get /favorites (ListUserFavoritesReq) returns (ListUserFavoritesResp)
+    
+    @handler DeleteUserFavorite
+    delete /favorites/:id (DeleteUserFavoriteReq) returns (EmptyResp)
+}
+
+@server(
+    group: resource
+    prefix: /api/v1/resource
+)
+service Resource {
+    // 资源标签管理
+    @handler CreateResourceTag
+    post /tags (CreateResourceTagReq) returns (ResourceTag)
+    
+    @handler UpdateResourceTag
+    put /tags (UpdateResourceTagReq) returns (ResourceTag)
+    
+    @handler GetResourceTag
+    get /tags/:id (GetResourceTagReq) returns (ResourceTag)
+    
+    @handler ListResourceTags
+    get /tags (ListResourceTagsReq) returns (ListResourceTagsResp)
+    
+    @handler DeleteResourceTag
+    delete /tags/:id (DeleteResourceTagReq) returns (EmptyResp)
+    
+    // 资源关联管理
+    @handler CreateResourceRelation
+    post /relations (CreateResourceRelationReq) returns (ResourceRelation)
+    
+    @handler GetResourceRelation
+    get /relations/:id (GetResourceRelationReq) returns (ResourceRelation)
+    
+    @handler ListResourceRelations
+    get /relations (ListResourceRelationsReq) returns (ListResourceRelationsResp)
+    
+    @handler DeleteResourceRelation
+    delete /relations/:id (DeleteResourceRelationReq) returns (EmptyResp)
+}

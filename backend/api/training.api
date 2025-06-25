@@ -1,2 +1,853 @@
 syntax = "v1"
 
+import "common.api"
+
+type TrainingQueueInfo {
+    Id                    int64  `json:"id"`
+    Name                  string `json:"name"`
+    DisplayName           string `json:"displayName,optional"`
+    Description           string `json:"description,optional"`
+    QueueType             string `json:"queueType"`
+    Priority              int64  `json:"priority"`
+    MaxConcurrentJobs     int64  `json:"maxConcurrentJobs"`
+    MaxQueueSize          int64  `json:"maxQueueSize"`
+    MaxJobDurationHours   int64  `json:"maxJobDurationHours"`
+    ResourceQuota         string `json:"resourceQuota,optional"`
+    GpuQuota              int64  `json:"gpuQuota,optional"`
+    CpuQuota              string `json:"cpuQuota,optional"`
+    MemoryQuotaGb         int64  `json:"memoryQuotaGb,optional"`
+    StorageQuotaGb        int64  `json:"storageQuotaGb,optional"`
+    SchedulingPolicy      string `json:"schedulingPolicy"`
+    PreemptionEnabled     bool   `json:"preemptionEnabled"`
+    GangScheduling        bool   `json:"gangScheduling"`
+    WorkspaceIds          string `json:"workspaceIds,optional"`
+    UserIds               string `json:"userIds,optional"`
+    DepartmentIds         string `json:"departmentIds,optional"`
+    ClusterIds            string `json:"clusterIds,optional"`
+    NodeSelector          string `json:"nodeSelector,optional"`
+    Tolerations           string `json:"tolerations,optional"`
+    Status                string `json:"status"`
+    CurrentJobs           int64  `json:"currentJobs"`
+    PendingJobs           int64  `json:"pendingJobs"`
+    CreatedAt             string `json:"createdAt"`
+    UpdatedAt             string `json:"updatedAt"`
+}
+
+type CreateTrainingQueueReq {
+    Name                  string `json:"name"`
+    DisplayName           string `json:"displayName,optional"`
+    Description           string `json:"description,optional"`
+    QueueType             string `json:"queueType,default=default"`
+    Priority              int64  `json:"priority,default=0"`
+    MaxConcurrentJobs     int64  `json:"maxConcurrentJobs,default=10"`
+    MaxQueueSize          int64  `json:"maxQueueSize,default=100"`
+    MaxJobDurationHours   int64  `json:"maxJobDurationHours,default=168"`
+    ResourceQuota         string `json:"resourceQuota,optional"`
+    GpuQuota              int64  `json:"gpuQuota,optional"`
+    CpuQuota              string `json:"cpuQuota,optional"`
+    MemoryQuotaGb         int64  `json:"memoryQuotaGb,optional"`
+    StorageQuotaGb        int64  `json:"storageQuotaGb,optional"`
+    SchedulingPolicy      string `json:"schedulingPolicy,default=fifo"`
+    PreemptionEnabled     bool   `json:"preemptionEnabled,default=false"`
+    GangScheduling        bool   `json:"gangScheduling,default=false"`
+    WorkspaceIds          string `json:"workspaceIds,optional"`
+    UserIds               string `json:"userIds,optional"`
+    DepartmentIds         string `json:"departmentIds,optional"`
+    ClusterIds            string `json:"clusterIds,optional"`
+    NodeSelector          string `json:"nodeSelector,optional"`
+    Tolerations           string `json:"tolerations,optional"`
+}
+
+type CreateTrainingQueueResp {
+    Id int64 `json:"id"`
+}
+
+type UpdateTrainingQueueReq {
+    Id                    int64  `json:"id"`
+    DisplayName           string `json:"displayName,optional"`
+    Description           string `json:"description,optional"`
+    QueueType             string `json:"queueType,optional"`
+    Priority              int64  `json:"priority,optional"`
+    MaxConcurrentJobs     int64  `json:"maxConcurrentJobs,optional"`
+    MaxQueueSize          int64  `json:"maxQueueSize,optional"`
+    MaxJobDurationHours   int64  `json:"maxJobDurationHours,optional"`
+    ResourceQuota         string `json:"resourceQuota,optional"`
+    GpuQuota              int64  `json:"gpuQuota,optional"`
+    CpuQuota              string `json:"cpuQuota,optional"`
+    MemoryQuotaGb         int64  `json:"memoryQuotaGb,optional"`
+    StorageQuotaGb        int64  `json:"storageQuotaGb,optional"`
+    SchedulingPolicy      string `json:"schedulingPolicy,optional"`
+    PreemptionEnabled     bool   `json:"preemptionEnabled,optional"`
+    GangScheduling        bool   `json:"gangScheduling,optional"`
+    WorkspaceIds          string `json:"workspaceIds,optional"`
+    UserIds               string `json:"userIds,optional"`
+    DepartmentIds         string `json:"departmentIds,optional"`
+    ClusterIds            string `json:"clusterIds,optional"`
+    NodeSelector          string `json:"nodeSelector,optional"`
+    Tolerations           string `json:"tolerations,optional"`
+    Status                string `json:"status,optional"`
+}
+
+type GetTrainingQueueReq {
+    Id int64 `path:"id"`
+}
+
+type GetTrainingQueueResp {
+    Queue TrainingQueueInfo `json:"queue"`
+}
+
+type ListTrainingQueuesReq {
+    Page       int64  `form:"page,default=1"`
+    PageSize   int64  `form:"pageSize,default=10"`
+    QueueType  string `form:"queueType,optional"`
+    Status     string `form:"status,optional"`
+    Search     string `form:"search,optional"`
+}
+
+type ListTrainingQueuesResp {
+    Total  int64                `json:"total"`
+    Queues []TrainingQueueInfo `json:"queues"`
+}
+
+type DeleteTrainingQueueReq {
+    Id int64 `path:"id"`
+}
+
+type GetQueueOptionsResp {
+    QueueTypes       []LabelValue `json:"queueTypes"`
+    SchedulingPolicies []LabelValue `json:"schedulingPolicies"`
+    StatusOptions    []LabelValue `json:"statusOptions"`
+}
+
+type TrainingJobInfo {
+    Id                       int64  `json:"id"`
+    Name                     string `json:"name"`
+    DisplayName              string `json:"displayName,optional"`
+    Description              string `json:"description,optional"`
+    JobType                  string `json:"jobType"`
+    Framework                string `json:"framework"`
+    FrameworkVersion         string `json:"frameworkVersion,optional"`
+    PythonVersion            string `json:"pythonVersion"`
+    CodeSourceType           string `json:"codeSourceType"`
+    CodeSourceConfig         string `json:"codeSourceConfig,optional"`
+    EntryPoint               string `json:"entryPoint"`
+    WorkingDir               string `json:"workingDir"`
+    Image                    string `json:"image"`
+    ImagePullPolicy          string `json:"imagePullPolicy"`
+    ImagePullSecrets         string `json:"imagePullSecrets,optional"`
+    DatasetMountConfigs      string `json:"datasetMountConfigs,optional"`
+    DataSourceConfig         string `json:"dataSourceConfig,optional"`
+    ModelConfig              string `json:"modelConfig,optional"`
+    OutputModelName          string `json:"outputModelName,optional"`
+    ModelSaveStrategy        string `json:"modelSaveStrategy"`
+    CpuCores                 string `json:"cpuCores,optional"`
+    MemoryGb                 string `json:"memoryGb,optional"`
+    GpuCount                 int64  `json:"gpuCount"`
+    GpuType                  string `json:"gpuType,optional"`
+    GpuMemoryGb              string `json:"gpuMemoryGb,optional"`
+    StorageGb                string `json:"storageGb,optional"`
+    SharedMemoryGb           string `json:"sharedMemoryGb,optional"`
+    WorkerCount              int64  `json:"workerCount"`
+    PsCount                  int64  `json:"psCount"`
+    MasterCount              int64  `json:"masterCount"`
+    EnvVars                  string `json:"envVars,optional"`
+    CommandArgs              string `json:"commandArgs,optional"`
+    Secrets                  string `json:"secrets,optional"`
+    ConfigMaps               string `json:"configMaps,optional"`
+    VolumeMounts             string `json:"volumeMounts,optional"`
+    QueueName                string `json:"queueName"`
+    Priority                 int64  `json:"priority"`
+    NodeSelector             string `json:"nodeSelector,optional"`
+    Tolerations              string `json:"tolerations,optional"`
+    Affinity                 string `json:"affinity,optional"`
+    MaxRuntimeSeconds        int64  `json:"maxRuntimeSeconds"`
+    MaxIdleSeconds           int64  `json:"maxIdleSeconds"`
+    AutoRestart              bool   `json:"autoRestart"`
+    MaxRetryCount            int64  `json:"maxRetryCount"`
+    VolcanoJobName           string `json:"volcanoJobName,optional"`
+    VolcanoQueue             string `json:"volcanoQueue,optional"`
+    MinAvailable             int64  `json:"minAvailable"`
+    Status                   string `json:"status"`
+    Phase                    string `json:"phase"`
+    Namespace                string `json:"namespace,optional"`
+    ClusterName              string `json:"clusterName,optional"`
+    ErrorMessage             string `json:"errorMessage,optional"`
+    ErrorCode                string `json:"errorCode,optional"`
+    ExitCode                 int64  `json:"exitCode,optional"`
+    FailureReason            string `json:"failureReason,optional"`
+    SubmittedAt              string `json:"submittedAt"`
+    QueuedAt                 string `json:"queuedAt,optional"`
+    ScheduledAt              string `json:"scheduledAt,optional"`
+    StartTime                string `json:"startTime,optional"`
+    EndTime                  string `json:"endTime,optional"`
+    DurationSeconds          int64  `json:"durationSeconds,optional"`
+    ActualCpuUsage           string `json:"actualCpuUsage,optional"`
+    ActualMemoryUsageGb      string `json:"actualMemoryUsageGb,optional"`
+    ActualGpuUsage           string `json:"actualGpuUsage,optional"`
+    PeakMemoryUsageGb        string `json:"peakMemoryUsageGb,optional"`
+    TotalGpuHours            string `json:"totalGpuHours,optional"`
+    WorkspacePath            string `json:"workspacePath,optional"`
+    LogsPath                 string `json:"logsPath,optional"`
+    OutputPath               string `json:"outputPath,optional"`
+    CheckpointPath           string `json:"checkpointPath,optional"`
+    TensorboardPath          string `json:"tensorboardPath,optional"`
+    Hyperparameters          string `json:"hyperparameters,optional"`
+    TrainingConfig           string `json:"trainingConfig,optional"`
+    OptimizerConfig          string `json:"optimizerConfig,optional"`
+    SchedulerConfig          string `json:"schedulerConfig,optional"`
+    EnableTensorboard        bool   `json:"enableTensorboard"`
+    EnableProfiling          bool   `json:"enableProfiling"`
+    MetricsCollectionInterval int64  `json:"metricsCollectionInterval"`
+    NotificationConfig       string `json:"notificationConfig,optional"`
+    Tags                     string `json:"tags,optional"`
+    Annotations              string `json:"annotations,optional"`
+    Metadata                 string `json:"metadata,optional"`
+    CreatedAt                string `json:"createdAt"`
+    UpdatedAt                string `json:"updatedAt"`
+}
+
+type CreateTrainingJobReq {
+    Name                     string `json:"name"`
+    DisplayName              string `json:"displayName,optional"`
+    Description              string `json:"description,optional"`
+    JobType                  string `json:"jobType,default=single"`
+    Framework                string `json:"framework"`
+    FrameworkVersion         string `json:"frameworkVersion,optional"`
+    PythonVersion            string `json:"pythonVersion,default=3.8"`
+    CodeSourceType           string `json:"codeSourceType,default=upload"`
+    CodeSourceConfig         string `json:"codeSourceConfig,optional"`
+    EntryPoint               string `json:"entryPoint"`
+    WorkingDir               string `json:"workingDir,default=/workspace"`
+    Image                    string `json:"image"`
+    ImagePullPolicy          string `json:"imagePullPolicy,default=IfNotPresent"`
+    ImagePullSecrets         string `json:"imagePullSecrets,optional"`
+    DatasetMountConfigs      string `json:"datasetMountConfigs,optional"`
+    DataSourceConfig         string `json:"dataSourceConfig,optional"`
+    ModelConfig              string `json:"modelConfig,optional"`
+    OutputModelName          string `json:"outputModelName,optional"`
+    ModelSaveStrategy        string `json:"modelSaveStrategy,default=best"`
+    CpuCores                 string `json:"cpuCores,optional"`
+    MemoryGb                 string `json:"memoryGb,optional"`
+    GpuCount                 int64  `json:"gpuCount,default=0"`
+    GpuType                  string `json:"gpuType,optional"`
+    GpuMemoryGb              string `json:"gpuMemoryGb,optional"`
+    StorageGb                string `json:"storageGb,optional"`
+    SharedMemoryGb           string `json:"sharedMemoryGb,optional"`
+    WorkerCount              int64  `json:"workerCount,default=1"`
+    PsCount                  int64  `json:"psCount,default=0"`
+    MasterCount              int64  `json:"masterCount,default=1"`
+    EnvVars                  string `json:"envVars,optional"`
+    CommandArgs              string `json:"commandArgs,optional"`
+    Secrets                  string `json:"secrets,optional"`
+    ConfigMaps               string `json:"configMaps,optional"`
+    VolumeMounts             string `json:"volumeMounts,optional"`
+    QueueName                string `json:"queueName,default=default"`
+    Priority                 int64  `json:"priority,default=0"`
+    NodeSelector             string `json:"nodeSelector,optional"`
+    Tolerations              string `json:"tolerations,optional"`
+    Affinity                 string `json:"affinity,optional"`
+    MaxRuntimeSeconds        int64  `json:"maxRuntimeSeconds,default=86400"`
+    MaxIdleSeconds           int64  `json:"maxIdleSeconds,default=3600"`
+    AutoRestart              bool   `json:"autoRestart,default=false"`
+    MaxRetryCount            int64  `json:"maxRetryCount,default=3"`
+    MinAvailable             int64  `json:"minAvailable,default=1"`
+    Hyperparameters          string `json:"hyperparameters,optional"`
+    TrainingConfig           string `json:"trainingConfig,optional"`
+    OptimizerConfig          string `json:"optimizerConfig,optional"`
+    SchedulerConfig          string `json:"schedulerConfig,optional"`
+    EnableTensorboard        bool   `json:"enableTensorboard,default=true"`
+    EnableProfiling          bool   `json:"enableProfiling,default=false"`
+    MetricsCollectionInterval int64  `json:"metricsCollectionInterval,default=60"`
+    NotificationConfig       string `json:"notificationConfig,optional"`
+    Tags                     string `json:"tags,optional"`
+    Annotations              string `json:"annotations,optional"`
+    Metadata                 string `json:"metadata,optional"`
+}
+
+type CreateTrainingJobResp {
+    Id int64 `json:"id"`
+}
+
+type UpdateTrainingJobReq {
+    Id                       int64  `json:"id"`
+    DisplayName              string `json:"displayName,optional"`
+    Description              string `json:"description,optional"`
+    Priority                 int64  `json:"priority,optional"`
+    MaxRuntimeSeconds        int64  `json:"maxRuntimeSeconds,optional"`
+    MaxIdleSeconds           int64  `json:"maxIdleSeconds,optional"`
+    AutoRestart              bool   `json:"autoRestart,optional"`
+    MaxRetryCount            int64  `json:"maxRetryCount,optional"`
+    NotificationConfig       string `json:"notificationConfig,optional"`
+    Tags                     string `json:"tags,optional"`
+    Annotations              string `json:"annotations,optional"`
+    Metadata                 string `json:"metadata,optional"`
+}
+
+type GetTrainingJobReq {
+    Id int64 `path:"id"`
+}
+
+type GetTrainingJobResp {
+    Job TrainingJobInfo `json:"job"`
+}
+
+type ListTrainingJobsReq {
+    Page       int64  `form:"page,default=1"`
+    PageSize   int64  `form:"pageSize,default=10"`
+    Status     string `form:"status,optional"`
+    Framework  string `form:"framework,optional"`
+    QueueName  string `form:"queueName,optional"`
+    JobType    string `form:"jobType,optional"`
+    Search     string `form:"search,optional"`
+    StartTime  string `form:"startTime,optional"`
+    EndTime    string `form:"endTime,optional"`
+}
+
+type ListTrainingJobsResp {
+    Total int64              `json:"total"`
+    Jobs  []TrainingJobInfo `json:"jobs"`
+}
+
+type DeleteTrainingJobReq {
+    Id int64 `path:"id"`
+}
+
+type CancelTrainingJobReq {
+    Id int64 `path:"id"`
+}
+
+type RestartTrainingJobReq {
+    Id int64 `path:"id"`
+}
+
+type SuspendTrainingJobReq {
+    Id int64 `path:"id"`
+}
+
+type ResumeTrainingJobReq {
+    Id int64 `path:"id"`
+}
+
+type GetJobOptionsResp {
+    JobTypes          []LabelValue `json:"jobTypes"`
+    Frameworks        []LabelValue `json:"frameworks"`
+    CodeSourceTypes   []LabelValue `json:"codeSourceTypes"`
+    ModelSaveStrategies []LabelValue `json:"modelSaveStrategies"`
+    StatusOptions     []LabelValue `json:"statusOptions"`
+    PhaseOptions      []LabelValue `json:"phaseOptions"`
+}
+
+type TrainingJobInstanceInfo {
+    Id                    int64  `json:"id"`
+    JobId                 int64  `json:"jobId"`
+    InstanceName          string `json:"instanceName"`
+    InstanceType          string `json:"instanceType"`
+    InstanceIndex         int64  `json:"instanceIndex"`
+    ReplicaIndex          int64  `json:"replicaIndex,optional"`
+    PodName               string `json:"podName,optional"`
+    Namespace             string `json:"namespace,optional"`
+    NodeName              string `json:"nodeName,optional"`
+    NodeIp                string `json:"nodeIp,optional"`
+    PodIp                 string `json:"podIp,optional"`
+    ContainerId           string `json:"containerId,optional"`
+    AllocatedCpuCores     string `json:"allocatedCpuCores,optional"`
+    AllocatedMemoryGb     string `json:"allocatedMemoryGb,optional"`
+    AllocatedGpuDevices   string `json:"allocatedGpuDevices,optional"`
+    AllocatedStorageGb    string `json:"allocatedStorageGb,optional"`
+    Status                string `json:"status"`
+    Phase                 string `json:"phase,optional"`
+    Reason                string `json:"reason,optional"`
+    Message               string `json:"message,optional"`
+    Ready                 bool   `json:"ready"`
+    CreatedAt             string `json:"createdAt"`
+    UpdatedAt             string `json:"updatedAt"`
+    ScheduledAt           string `json:"scheduledAt,optional"`
+    StartTime             string `json:"startTime,optional"`
+    EndTime               string `json:"endTime,optional"`
+    LastTransitionTime    string `json:"lastTransitionTime,optional"`
+    RestartCount          int64  `json:"restartCount"`
+    LastRestartTime       string `json:"lastRestartTime,optional"`
+    ExitCode              int64  `json:"exitCode,optional"`
+    TerminationReason     string `json:"terminationReason,optional"`
+    CpuUsagePercent       string `json:"cpuUsagePercent"`
+    MemoryUsagePercent    string `json:"memoryUsagePercent"`
+    GpuUsagePercent       string `json:"gpuUsagePercent"`
+    LogsPath              string `json:"logsPath,optional"`
+    Labels                string `json:"labels,optional"`
+    Annotations           string `json:"annotations,optional"`
+}
+
+type GetJobInstancesReq {
+    JobId int64 `path:"jobId"`
+}
+
+type GetJobInstancesResp {
+    Instances []TrainingJobInstanceInfo `json:"instances"`
+}
+
+type GetJobInstanceReq {
+    Id int64 `path:"id"`
+}
+
+type GetJobInstanceResp {
+    Instance TrainingJobInstanceInfo `json:"instance"`
+}
+
+type GetJobInstanceLogsReq {
+    Id        int64  `path:"id"`
+    Lines     int64  `form:"lines,default=100"`
+    Follow    bool   `form:"follow,default=false"`
+    Timestamp bool   `form:"timestamp,default=true"`
+}
+
+type GetJobInstanceLogsResp {
+    Logs string `json:"logs"`
+}
+
+type TrainingMetricInfo {
+    Id                  int64  `json:"id"`
+    JobId               int64  `json:"jobId"`
+    InstanceId          int64  `json:"instanceId,optional"`
+    MetricName          string `json:"metricName"`
+    MetricType          string `json:"metricType"`
+    MetricValue         string `json:"metricValue,optional"`
+    MetricData          string `json:"metricData,optional"`
+    Step                int64  `json:"step,optional"`
+    Epoch               int64  `json:"epoch,optional"`
+    GlobalStep          int64  `json:"globalStep,optional"`
+    BatchIdx            int64  `json:"batchIdx,optional"`
+    Tag                 string `json:"tag,optional"`
+    Category            string `json:"category,optional"`
+    Phase               string `json:"phase,optional"`
+    MetricTime          string `json:"metricTime"`
+    WallTime            string `json:"wallTime,optional"`
+    RelativeTimeSeconds string `json:"relativeTimeSeconds,optional"`
+    MinValue            string `json:"minValue,optional"`
+    MaxValue            string `json:"maxValue,optional"`
+    AvgValue            string `json:"avgValue,optional"`
+    StdValue            string `json:"stdValue,optional"`
+    CreatedAt           string `json:"createdAt"`
+}
+
+type GetJobMetricsReq {
+    JobId      int64  `path:"jobId"`
+    MetricName string `form:"metricName,optional"`
+    Phase      string `form:"phase,optional"`
+    Category   string `form:"category,optional"`
+    StartStep  int64  `form:"startStep,optional"`
+    EndStep    int64  `form:"endStep,optional"`
+    StartTime  string `form:"startTime,optional"`
+    EndTime    string `form:"endTime,optional"`
+    Page       int64  `form:"page,default=1"`
+    PageSize   int64  `form:"pageSize,default=100"`
+}
+
+type GetJobMetricsResp {
+    Total   int64                 `json:"total"`
+    Metrics []TrainingMetricInfo `json:"metrics"`
+}
+
+type CreateJobMetricReq {
+    JobId               int64  `json:"jobId"`
+    InstanceId          int64  `json:"instanceId,optional"`
+    MetricName          string `json:"metricName"`
+    MetricType          string `json:"metricType,default=scalar"`
+    MetricValue         string `json:"metricValue,optional"`
+    MetricData          string `json:"metricData,optional"`
+    Step                int64  `json:"step,optional"`
+    Epoch               int64  `json:"epoch,optional"`
+    GlobalStep          int64  `json:"globalStep,optional"`
+    BatchIdx            int64  `json:"batchIdx,optional"`
+    Tag                 string `json:"tag,optional"`
+    Category            string `json:"category,optional"`
+    Phase               string `json:"phase,optional"`
+    WallTime            string `json:"wallTime,optional"`
+    RelativeTimeSeconds string `json:"relativeTimeSeconds,optional"`
+}
+
+type CreateJobMetricResp {
+    Id int64 `json:"id"`
+}
+
+type TrainingLogInfo {
+    Id            int64  `json:"id"`
+    JobId         int64  `json:"jobId"`
+    InstanceId    int64  `json:"instanceId,optional"`
+    LogLevel      string `json:"logLevel"`
+    LogSource     string `json:"logSource,optional"`
+    LogContent    string `json:"logContent"`
+    LogFormat     string `json:"logFormat"`
+    LogTime       string `json:"logTime"`
+    CreatedAt     string `json:"createdAt"`
+    FileName      string `json:"fileName,optional"`
+    LineNumber    int64  `json:"lineNumber,optional"`
+    FunctionName  string `json:"functionName,optional"`
+    ThreadId      string `json:"threadId,optional"`
+    ProcessId     string `json:"processId,optional"`
+    Context       string `json:"context,optional"`
+    CorrelationId string `json:"correlationId,optional"`
+    Category      string `json:"category,optional"`
+    Tags          string `json:"tags,optional"`
+}
+
+type GetJobLogsReq {
+    JobId      int64  `path:"jobId"`
+    Level      string `form:"level,optional"`
+    Source     string `form:"source,optional"`
+    Category   string `form:"category,optional"`
+    StartTime  string `form:"startTime,optional"`
+    EndTime    string `form:"endTime,optional"`
+    Search     string `form:"search,optional"`
+    Page       int64  `form:"page,default=1"`
+    PageSize   int64  `form:"pageSize,default=100"`
+}
+
+type GetJobLogsResp {
+    Total int64              `json:"total"`
+    Logs  []TrainingLogInfo `json:"logs"`
+}
+
+type CreateJobLogReq {
+    JobId         int64  `json:"jobId"`
+    InstanceId    int64  `json:"instanceId,optional"`
+    LogLevel      string `json:"logLevel,default=INFO"`
+    LogSource     string `json:"logSource,optional"`
+    LogContent    string `json:"logContent"`
+    LogFormat     string `json:"logFormat,default=text"`
+    FileName      string `json:"fileName,optional"`
+    LineNumber    int64  `json:"lineNumber,optional"`
+    FunctionName  string `json:"functionName,optional"`
+    ThreadId      string `json:"threadId,optional"`
+    ProcessId     string `json:"processId,optional"`
+    Context       string `json:"context,optional"`
+    CorrelationId string `json:"correlationId,optional"`
+    Category      string `json:"category,optional"`
+    Tags          string `json:"tags,optional"`
+}
+
+type CreateJobLogResp {
+    Id int64 `json:"id"`
+}
+
+type TrainingCheckpointInfo {
+    Id               int64  `json:"id"`
+    JobId            int64  `json:"jobId"`
+    CheckpointName   string `json:"checkpointName"`
+    CheckpointType   string `json:"checkpointType"`
+    CheckpointFormat string `json:"checkpointFormat,optional"`
+    Step             int64  `json:"step,optional"`
+    Epoch            int64  `json:"epoch,optional"`
+    GlobalStep       int64  `json:"globalStep,optional"`
+    StoragePath      string `json:"storagePath"`
+    FileSize         int64  `json:"fileSize,optional"`
+    Checksum         string `json:"checksum,optional"`
+    CompressionType  string `json:"compressionType"`
+    Metrics          string `json:"metrics,optional"`
+    LossValue        string `json:"lossValue,optional"`
+    Accuracy         string `json:"accuracy,optional"`
+    ValidationScore  string `json:"validationScore,optional"`
+    ModelConfig      string `json:"modelConfig,optional"`
+    OptimizerState   string `json:"optimizerState,optional"`
+    SchedulerState   string `json:"schedulerState,optional"`
+    Status           string `json:"status"`
+    IsBest           bool   `json:"isBest"`
+    IsLatest         bool   `json:"isLatest"`
+    Tags             string `json:"tags,optional"`
+    Metadata         string `json:"metadata,optional"`
+    Description      string `json:"description,optional"`
+    CreatedAt        string `json:"createdAt"`
+    UpdatedAt        string `json:"updatedAt"`
+    SavedAt          string `json:"savedAt,optional"`
+}
+
+type GetJobCheckpointsReq {
+    JobId          int64  `path:"jobId"`
+    CheckpointType string `form:"checkpointType,optional"`
+    Status         string `form:"status,optional"`
+    IsBest         bool   `form:"isBest,optional"`
+    IsLatest       bool   `form:"isLatest,optional"`
+    Page           int64  `form:"page,default=1"`
+    PageSize       int64  `form:"pageSize,default=10"`
+}
+
+type GetJobCheckpointsResp {
+    Total       int64                     `json:"total"`
+    Checkpoints []TrainingCheckpointInfo `json:"checkpoints"`
+}
+
+type GetCheckpointReq {
+    Id int64 `path:"id"`
+}
+
+type GetCheckpointResp {
+    Checkpoint TrainingCheckpointInfo `json:"checkpoint"`
+}
+
+type CreateCheckpointReq {
+    JobId            int64  `json:"jobId"`
+    CheckpointName   string `json:"checkpointName"`
+    CheckpointType   string `json:"checkpointType,default=auto"`
+    CheckpointFormat string `json:"checkpointFormat,optional"`
+    Step             int64  `json:"step,optional"`
+    Epoch            int64  `json:"epoch,optional"`
+    GlobalStep       int64  `json:"globalStep,optional"`
+    StoragePath      string `json:"storagePath"`
+    CompressionType  string `json:"compressionType,default=none"`
+    Metrics          string `json:"metrics,optional"`
+    LossValue        string `json:"lossValue,optional"`
+    Accuracy         string `json:"accuracy,optional"`
+    ValidationScore  string `json:"validationScore,optional"`
+    ModelConfig      string `json:"modelConfig,optional"`
+    OptimizerState   string `json:"optimizerState,optional"`
+    SchedulerState   string `json:"schedulerState,optional"`
+    IsBest           bool   `json:"isBest,default=false"`
+    IsLatest         bool   `json:"isLatest,default=false"`
+    Tags             string `json:"tags,optional"`
+    Metadata         string `json:"metadata,optional"`
+    Description      string `json:"description,optional"`
+}
+
+type CreateCheckpointResp {
+    Id int64 `json:"id"`
+}
+
+type UpdateCheckpointReq {
+    Id              int64  `json:"id"`
+    CheckpointType  string `json:"checkpointType,optional"`
+    IsBest          bool   `json:"isBest,optional"`
+    IsLatest        bool   `json:"isLatest,optional"`
+    Tags            string `json:"tags,optional"`
+    Metadata        string `json:"metadata,optional"`
+    Description     string `json:"description,optional"`
+}
+
+type DeleteCheckpointReq {
+    Id int64 `path:"id"`
+}
+
+type TrainingJobRelationInfo {
+    Id           int64  `json:"id"`
+    JobId        int64  `json:"jobId"`
+    EntityType   string `json:"entityType"`
+    EntityId     int64  `json:"entityId"`
+    RelationType string `json:"relationType"`
+    IsPrimary    bool   `json:"isPrimary"`
+    SortOrder    int64  `json:"sortOrder"`
+    Status       string `json:"status"`
+    Metadata     string `json:"metadata,optional"`
+    CreatedAt    string `json:"createdAt"`
+    UpdatedAt    string `json:"updatedAt"`
+}
+
+type GetJobRelationsReq {
+    JobId        int64  `path:"jobId"`
+    EntityType   string `form:"entityType,optional"`
+    RelationType string `form:"relationType,optional"`
+    Status       string `form:"status,optional"`
+}
+
+type GetJobRelationsResp {
+    Relations []TrainingJobRelationInfo `json:"relations"`
+}
+
+type CreateJobRelationReq {
+    JobId        int64  `json:"jobId"`
+    EntityType   string `json:"entityType"`
+    EntityId     int64  `json:"entityId"`
+    RelationType string `json:"relationType"`
+    IsPrimary    bool   `json:"isPrimary,default=false"`
+    SortOrder    int64  `json:"sortOrder,default=0"`
+    Metadata     string `json:"metadata,optional"`
+}
+
+type CreateJobRelationResp {
+    Id int64 `json:"id"`
+}
+
+type DeleteJobRelationReq {
+    Id int64 `path:"id"`
+}
+
+@server(
+    group: trainingQueue
+    prefix: /api/v1/training/queues
+)
+service VtTrainingService {
+    @doc "创建训练队列"
+    @handler createTrainingQueue
+    POST / (CreateTrainingQueueReq) returns (CreateTrainingQueueResp)
+    
+    @doc "更新训练队列"
+    @handler updateTrainingQueue
+    PUT /:id (UpdateTrainingQueueReq) returns (EmptyResp)
+    
+    @doc "获取训练队列详情"
+    @handler getTrainingQueue
+    GET /:id (GetTrainingQueueReq) returns (GetTrainingQueueResp)
+    
+    @doc "获取训练队列列表"
+    @handler listTrainingQueues
+    GET / (ListTrainingQueuesReq) returns (ListTrainingQueuesResp)
+    
+    @doc "删除训练队列"
+    @handler deleteTrainingQueue
+    DELETE /:id (DeleteTrainingQueueReq) returns (EmptyResp)
+    
+    @doc "获取队列选项"
+    @handler getQueueOptions
+    GET /options (EmptyReq) returns (GetQueueOptionsResp)
+}
+
+@server(
+    group: trainingJob
+    prefix: /api/v1/training/jobs
+)
+service VtTrainingService {
+    @doc "创建训练作业"
+    @handler createTrainingJob
+    POST / (CreateTrainingJobReq) returns (CreateTrainingJobResp)
+    
+    @doc "更新训练作业"
+    @handler updateTrainingJob
+    PUT /:id (UpdateTrainingJobReq) returns (EmptyResp)
+    
+    @doc "获取训练作业详情"
+    @handler getTrainingJob
+    GET /:id (GetTrainingJobReq) returns (GetTrainingJobResp)
+    
+    @doc "获取训练作业列表"
+    @handler listTrainingJobs
+    GET / (ListTrainingJobsReq) returns (ListTrainingJobsResp)
+    
+    @doc "删除训练作业"
+    @handler deleteTrainingJob
+    DELETE /:id (DeleteTrainingJobReq) returns (EmptyResp)
+    
+    @doc "取消训练作业"
+    @handler cancelTrainingJob
+    POST /:id/cancel (CancelTrainingJobReq) returns (EmptyResp)
+    
+    @doc "重启训练作业"
+    @handler restartTrainingJob
+    POST /:id/restart (RestartTrainingJobReq) returns (EmptyResp)
+    
+    @doc "暂停训练作业"
+    @handler suspendTrainingJob
+    POST /:id/suspend (SuspendTrainingJobReq) returns (EmptyResp)
+    
+    @doc "恢复训练作业"
+    @handler resumeTrainingJob
+    POST /:id/resume (ResumeTrainingJobReq) returns (EmptyResp)
+    
+    @doc "获取作业选项"
+    @handler getJobOptions
+    GET /options (EmptyReq) returns (GetJobOptionsResp)
+}
+
+@server(
+    group: trainingJobInstance
+    prefix: /api/v1/training/jobs/:jobId/instances
+)
+service VtTrainingService {
+    @doc "获取作业实例列表"
+    @handler getJobInstances
+    GET / (GetJobInstancesReq) returns (GetJobInstancesResp)
+}
+
+@server(
+    group: trainingJobInstance
+    prefix: /api/v1/training/instances
+)
+service VtTrainingService {
+    @doc "获取实例详情"
+    @handler getJobInstance
+    GET /:id (GetJobInstanceReq) returns (GetJobInstanceResp)
+    
+    @doc "获取实例日志"
+    @handler getJobInstanceLogs
+    GET /:id/logs (GetJobInstanceLogsReq) returns (GetJobInstanceLogsResp)
+}
+
+@server(
+    group: trainingMetric
+    prefix: /api/v1/training/jobs/:jobId/metrics
+)
+service VtTrainingService {
+    @doc "获取作业指标"
+    @handler getJobMetrics
+    GET / (GetJobMetricsReq) returns (GetJobMetricsResp)
+    
+    @doc "创建作业指标"
+    @handler createJobMetric
+    POST / (CreateJobMetricReq) returns (CreateJobMetricResp)
+}
+
+@server(
+    group: trainingLog
+    prefix: /api/v1/training/jobs/:jobId/logs
+)
+service VtTrainingService {
+    @doc "获取作业日志"
+    @handler getJobLogs
+    GET / (GetJobLogsReq) returns (GetJobLogsResp)
+    
+    @doc "创建作业日志"
+    @handler createJobLog
+    POST / (CreateJobLogReq) returns (CreateJobLogResp)
+}
+
+@server(
+    group: trainingCheckpoint
+    prefix: /api/v1/training/jobs/:jobId/checkpoints
+)
+service VtTrainingService {
+    @doc "获取作业检查点列表"
+    @handler getJobCheckpoints
+    GET / (GetJobCheckpointsReq) returns (GetJobCheckpointsResp)
+    
+    @doc "创建检查点"
+    @handler createCheckpoint
+    POST / (CreateCheckpointReq) returns (CreateCheckpointResp)
+}
+
+@server(
+    group: trainingCheckpoint
+    prefix: /api/v1/training/checkpoints
+)
+service VtTrainingService {
+    @doc "获取检查点详情"
+    @handler getCheckpoint
+    GET /:id (GetCheckpointReq) returns (GetCheckpointResp)
+    
+    @doc "更新检查点"
+    @handler updateCheckpoint
+    PUT /:id (UpdateCheckpointReq) returns (EmptyResp)
+    
+    @doc "删除检查点"
+    @handler deleteCheckpoint
+    DELETE /:id (DeleteCheckpointReq) returns (EmptyResp)
+}
+
+@server(
+    group: trainingJobRelation
+    prefix: /api/v1/training/jobs/:jobId/relations
+)
+service VtTrainingService {
+    @doc "获取作业关联关系"
+    @handler getJobRelations
+    GET / (GetJobRelationsReq) returns (GetJobRelationsResp)
+    
+    @doc "创建作业关联关系"
+    @handler createJobRelation
+    POST / (CreateJobRelationReq) returns (CreateJobRelationResp)
+}
+
+@server(
+    group: trainingJobRelation
+    prefix: /api/v1/training/relations
+)
+service VtTrainingService {
+    @doc "删除作业关联关系"
+    @handler deleteJobRelation
+    DELETE /:id (DeleteJobRelationReq) returns (EmptyResp)
+}

@@ -1,1 +1,712 @@
 syntax = "v1"
+
+import "common.api"
+
+// 模型类型
+type ModelInfo {
+    Id                    int64    `json:"id"`
+    Name                  string   `json:"name"`
+    DisplayName           string   `json:"display_name,optional"`
+    Description           string   `json:"description,optional"`
+    ModelType             string   `json:"model_type"`
+    Framework             string   `json:"framework"`
+    FrameworkVersion      string   `json:"framework_version,optional"`
+    Architecture          string   `json:"architecture,optional"`
+    BaseModel             string   `json:"base_model,optional"`
+    ModelFamily           string   `json:"model_family,optional"`
+    Version               string   `json:"version"`
+    VersionDescription    string   `json:"version_description,optional"`
+    IsLatest              bool     `json:"is_latest"`
+    ModelSizeMb           float64  `json:"model_size_mb,optional"`
+    ParameterCount        int64    `json:"parameter_count,optional"`
+    Flops                 int64    `json:"flops,optional"`
+    ModelDepth            int      `json:"model_depth,optional"`
+    Accuracy              float64  `json:"accuracy,optional"`
+    PrecisionScore        float64  `json:"precision_score,optional"`
+    Recall                float64  `json:"recall,optional"`
+    F1Score               float64  `json:"f1_score,optional"`
+    AucScore              float64  `json:"auc_score,optional"`
+    LossValue             float64  `json:"loss_value,optional"`
+    InferenceTimeMs       float64  `json:"inference_time_ms,optional"`
+    ThroughputQps         float64  `json:"throughput_qps,optional"`
+    StorageType           string   `json:"storage_type"`
+    StoragePath           string   `json:"storage_path,optional"`
+    InputShape            string   `json:"input_shape,optional"`
+    OutputShape           string   `json:"output_shape,optional"`
+    InputDtype            string   `json:"input_dtype,optional"`
+    OutputDtype           string   `json:"output_dtype,optional"`
+    InputFormat           string   `json:"input_format,optional"`
+    OutputFormat          string   `json:"output_format,optional"`
+    TrainingConfig        string   `json:"training_config,optional"`
+    Hyperparameters       string   `json:"hyperparameters,optional"`
+    TrainingMetrics       string   `json:"training_metrics,optional"`
+    TrainingDurationHours float64  `json:"training_duration_hours,optional"`
+    Status                string   `json:"status"`
+    Visibility            string   `json:"visibility"`
+    IsFeatured            bool     `json:"is_featured"`
+    IsVerified            bool     `json:"is_verified"`
+    DeploymentCount       int      `json:"deployment_count"`
+    ActiveDeployments     int      `json:"active_deployments"`
+    DownloadCount         int      `json:"download_count"`
+    ViewCount             int      `json:"view_count"`
+    UsageCount            int      `json:"usage_count"`
+    StarCount             int      `json:"star_count"`
+    ForkCount             int      `json:"fork_count"`
+    Dependencies          string   `json:"dependencies,optional"`
+    Requirements          string   `json:"requirements,optional"`
+    DockerImage           string   `json:"docker_image,optional"`
+    PythonVersion         string   `json:"python_version,optional"`
+    CudaVersion           string   `json:"cuda_version,optional"`
+    License               string   `json:"license,optional"`
+    LicenseUrl            string   `json:"license_url,optional"`
+    EthicalConsiderations string   `json:"ethical_considerations,optional"`
+    BiasReport            string   `json:"bias_report,optional"`
+    Tags                  string   `json:"tags,optional"`
+    Metadata              string   `json:"metadata,optional"`
+    Readme                string   `json:"readme,optional"`
+    CreatedAt             string   `json:"created_at"`
+    UpdatedAt             string   `json:"updated_at"`
+    DeletedAt             string   `json:"deleted_at,optional"`
+}
+
+// 模型版本类型
+type ModelVersionInfo {
+    Id                  int64   `json:"id"`
+    ModelId             int64   `json:"model_id"`
+    Version             string  `json:"version"`
+    VersionName         string  `json:"version_name,optional"`
+    Description         string  `json:"description,optional"`
+    ChangeLog           string  `json:"change_log,optional"`
+    ParentVersionId     int64   `json:"parent_version_id,optional"`
+    VersionType         string  `json:"version_type"`
+    ModelSizeMb         float64 `json:"model_size_mb,optional"`
+    ModelHash           string  `json:"model_hash,optional"`
+    Checksum            string  `json:"checksum,optional"`
+    Accuracy            float64 `json:"accuracy,optional"`
+    PrecisionScore      float64 `json:"precision_score,optional"`
+    Recall              float64 `json:"recall,optional"`
+    F1Score             float64 `json:"f1_score,optional"`
+    AucScore            float64 `json:"auc_score,optional"`
+    InferenceTimeMs     float64 `json:"inference_time_ms,optional"`
+    ThroughputQps       float64 `json:"throughput_qps,optional"`
+    MemoryUsageMb       float64 `json:"memory_usage_mb,optional"`
+    TrainingConfig      string  `json:"training_config,optional"`
+    Hyperparameters     string  `json:"hyperparameters,optional"`
+    TrainingMetrics     string  `json:"training_metrics,optional"`
+    EvaluationResults   string  `json:"evaluation_results,optional"`
+    BenchmarkResults    string  `json:"benchmark_results,optional"`
+    Status              string  `json:"status"`
+    IsDefault           bool    `json:"is_default"`
+    IsStable            bool    `json:"is_stable"`
+    FrameworkVersion    string  `json:"framework_version,optional"`
+    PythonVersion       string  `json:"python_version,optional"`
+    CudaVersion         string  `json:"cuda_version,optional"`
+    Dependencies        string  `json:"dependencies,optional"`
+    DockerImage         string  `json:"docker_image,optional"`
+    Compatibility       string  `json:"compatibility,optional"`
+    MigrationGuide      string  `json:"migration_guide,optional"`
+    CreatedAt           string  `json:"created_at"`
+    UpdatedAt           string  `json:"updated_at"`
+}
+
+// 模型部署类型
+type ModelDeploymentInfo {
+    Id                        int64   `json:"id"`
+    ModelId                   int64   `json:"model_id"`
+    VersionId                 int64   `json:"version_id"`
+    DeploymentName            string  `json:"deployment_name"`
+    DeploymentType            string  `json:"deployment_type"`
+    Environment               string  `json:"environment"`
+    ServiceName               string  `json:"service_name,optional"`
+    ServicePort               int     `json:"service_port"`
+    Protocol                  string  `json:"protocol"`
+    BasePath                  string  `json:"base_path"`
+    CpuCores                  float64 `json:"cpu_cores,optional"`
+    MemoryGb                  float64 `json:"memory_gb,optional"`
+    GpuCount                  int     `json:"gpu_count"`
+    GpuType                   string  `json:"gpu_type,optional"`
+    StorageGb                 float64 `json:"storage_gb,optional"`
+    MinReplicas               int     `json:"min_replicas"`
+    MaxReplicas               int     `json:"max_replicas"`
+    AutoScaling               bool    `json:"auto_scaling"`
+    ScalingPolicy             string  `json:"scaling_policy,optional"`
+    TargetCpuUtilization      int     `json:"target_cpu_utilization"`
+    TargetMemoryUtilization   int     `json:"target_memory_utilization"`
+    TargetQps                 int     `json:"target_qps,optional"`
+    EndpointUrl               string  `json:"endpoint_url,optional"`
+    InternalEndpoint          string  `json:"internal_endpoint,optional"`
+    LoadBalancerType          string  `json:"load_balancer_type,optional"`
+    IngressConfig             string  `json:"ingress_config,optional"`
+    DockerImage               string  `json:"docker_image,optional"`
+    Command                   string  `json:"command,optional"`
+    Args                      string  `json:"args,optional"`
+    EnvironmentVars           string  `json:"environment_vars,optional"`
+    VolumeMounts              string  `json:"volume_mounts,optional"`
+    ConfigMaps                string  `json:"config_maps,optional"`
+    Secrets                   string  `json:"secrets,optional"`
+    HealthCheckPath           string  `json:"health_check_path"`
+    ReadinessProbe            string  `json:"readiness_probe,optional"`
+    LivenessProbe             string  `json:"liveness_probe,optional"`
+    StartupProbe              string  `json:"startup_probe,optional"`
+    Status                    string  `json:"status"`
+    HealthStatus              string  `json:"health_status"`
+    ReplicaCount              int     `json:"replica_count"`
+    ReadyReplicas             int     `json:"ready_replicas"`
+    AvailableReplicas         int     `json:"available_replicas"`
+    CurrentQps                float64 `json:"current_qps"`
+    AvgResponseTimeMs         float64 `json:"avg_response_time_ms"`
+    P99ResponseTimeMs         float64 `json:"p99_response_time_ms"`
+    ErrorRatePercent          float64 `json:"error_rate_percent"`
+    CpuUsagePercent           float64 `json:"cpu_usage_percent"`
+    MemoryUsagePercent        float64 `json:"memory_usage_percent"`
+    GpuUsagePercent           float64 `json:"gpu_usage_percent"`
+    RateLimitRpm              int     `json:"rate_limit_rpm,optional"`
+    QuotaLimitPerDay          int     `json:"quota_limit_per_day,optional"`
+    ConcurrentRequestsLimit   int     `json:"concurrent_requests_limit,optional"`
+    DeployedAt                string  `json:"deployed_at"`
+    LastUpdatedAt             string  `json:"last_updated_at,optional"`
+    StoppedAt                 string  `json:"stopped_at,optional"`
+    TrafficSplit              string  `json:"traffic_split,optional"`
+    CanaryConfig              string  `json:"canary_config,optional"`
+    Metadata                  string  `json:"metadata,optional"`
+    DeploymentConfig          string  `json:"deployment_config,optional"`
+    CreatedAt                 string  `json:"created_at"`
+    UpdatedAt                 string  `json:"updated_at"`
+}
+
+// 推理日志类型
+type ModelInferenceLogInfo {
+    Id                int64  `json:"id"`
+    DeploymentId      int64  `json:"deployment_id"`
+    ModelId           int64  `json:"model_id"`
+    VersionId         int64  `json:"version_id"`
+    RequestId         string `json:"request_id"`
+    ClientIp          string `json:"client_ip,optional"`
+    UserAgent         string `json:"user_agent,optional"`
+    RequestMethod     string `json:"request_method,optional"`
+    RequestPath       string `json:"request_path,optional"`
+    InputData         string `json:"input_data,optional"`
+    OutputData        string `json:"output_data,optional"`
+    InferenceTimeMs   float64 `json:"inference_time_ms,optional"`
+    TotalTimeMs       float64 `json:"total_time_ms,optional"`
+    Status            string `json:"status"`
+    ErrorMessage      string `json:"error_message,optional"`
+    HttpStatusCode    int    `json:"http_status_code,optional"`
+    RequestTime       string `json:"request_time"`
+    ResponseTime      string `json:"response_time,optional"`
+    Metadata          string `json:"metadata,optional"`
+}
+
+// 关联关系类型
+type ModelRelationInfo {
+    Id           int64  `json:"id"`
+    ModelId      int64  `json:"model_id"`
+    EntityType   string `json:"entity_type"`
+    EntityId     int64  `json:"entity_id"`
+    RelationType string `json:"relation_type"`
+    IsPrimary    bool   `json:"is_primary"`
+    SortOrder    int    `json:"sort_order"`
+    Status       string `json:"status"`
+    Metadata     string `json:"metadata,optional"`
+    CreatedAt    string `json:"created_at"`
+    UpdatedAt    string `json:"updated_at"`
+}
+
+// ==================== 请求响应结构 ====================
+
+// 创建模型请求
+type CreateModelReq {
+    Name                  string  `json:"name"`
+    DisplayName           string  `json:"display_name,optional"`
+    Description           string  `json:"description,optional"`
+    ModelType             string  `json:"model_type"`
+    Framework             string  `json:"framework"`
+    FrameworkVersion      string  `json:"framework_version,optional"`
+    Architecture          string  `json:"architecture,optional"`
+    BaseModel             string  `json:"base_model,optional"`
+    ModelFamily           string  `json:"model_family,optional"`
+    Version               string  `json:"version,optional"`
+    VersionDescription    string  `json:"version_description,optional"`
+    StorageType           string  `json:"storage_type,optional"`
+    StoragePath           string  `json:"storage_path,optional"`
+    InputShape            string  `json:"input_shape,optional"`
+    OutputShape           string  `json:"output_shape,optional"`
+    InputDtype            string  `json:"input_dtype,optional"`
+    OutputDtype           string  `json:"output_dtype,optional"`
+    InputFormat           string  `json:"input_format,optional"`
+    OutputFormat          string  `json:"output_format,optional"`
+    TrainingConfig        string  `json:"training_config,optional"`
+    Hyperparameters       string  `json:"hyperparameters,optional"`
+    Visibility            string  `json:"visibility,optional"`
+    Dependencies          string  `json:"dependencies,optional"`
+    Requirements          string  `json:"requirements,optional"`
+    DockerImage           string  `json:"docker_image,optional"`
+    PythonVersion         string  `json:"python_version,optional"`
+    CudaVersion           string  `json:"cuda_version,optional"`
+    License               string  `json:"license,optional"`
+    LicenseUrl            string  `json:"license_url,optional"`
+    EthicalConsiderations string  `json:"ethical_considerations,optional"`
+    Tags                  string  `json:"tags,optional"`
+    Metadata              string  `json:"metadata,optional"`
+    Readme                string  `json:"readme,optional"`
+}
+
+type CreateModelResp {
+    Model ModelInfo `json:"model"`
+}
+
+// 更新模型请求
+type UpdateModelReq {
+    Id                    int64   `path:"id"`
+    DisplayName           string  `json:"display_name,optional"`
+    Description           string  `json:"description,optional"`
+    VersionDescription    string  `json:"version_description,optional"`
+    ModelSizeMb           float64 `json:"model_size_mb,optional"`
+    ParameterCount        int64   `json:"parameter_count,optional"`
+    Flops                 int64   `json:"flops,optional"`
+    ModelDepth            int     `json:"model_depth,optional"`
+    Accuracy              float64 `json:"accuracy,optional"`
+    PrecisionScore        float64 `json:"precision_score,optional"`
+    Recall                float64 `json:"recall,optional"`
+    F1Score               float64 `json:"f1_score,optional"`
+    AucScore              float64 `json:"auc_score,optional"`
+    LossValue             float64 `json:"loss_value,optional"`
+    InferenceTimeMs       float64 `json:"inference_time_ms,optional"`
+    ThroughputQps         float64 `json:"throughput_qps,optional"`
+    TrainingMetrics       string  `json:"training_metrics,optional"`
+    TrainingDurationHours float64 `json:"training_duration_hours,optional"`
+    Status                string  `json:"status,optional"`
+    Visibility            string  `json:"visibility,optional"`
+    IsFeatured            bool    `json:"is_featured,optional"`
+    IsVerified            bool    `json:"is_verified,optional"`
+    EthicalConsiderations string  `json:"ethical_considerations,optional"`
+    BiasReport            string  `json:"bias_report,optional"`
+    Tags                  string  `json:"tags,optional"`
+    Metadata              string  `json:"metadata,optional"`
+    Readme                string  `json:"readme,optional"`
+}
+
+type UpdateModelResp {
+    Model ModelInfo `json:"model"`
+}
+
+// 获取模型请求
+type GetModelReq {
+    Id int64 `path:"id"`
+}
+
+type GetModelResp {
+    Model ModelInfo `json:"model"`
+}
+
+// 删除模型请求
+type DeleteModelReq {
+    Id int64 `path:"id"`
+}
+
+// 查询模型列表请求
+type ListModelsReq {
+    Page         int    `form:"page,optional"`
+    PageSize     int    `form:"page_size,optional"`
+    ModelType    string `form:"model_type,optional"`
+    Framework    string `form:"framework,optional"`
+    Architecture string `form:"architecture,optional"`
+    Status       string `form:"status,optional"`
+    Visibility   string `form:"visibility,optional"`
+    IsFeatured   bool   `form:"is_featured,optional"`
+    IsVerified   bool   `form:"is_verified,optional"`
+    Keyword      string `form:"keyword,optional"`
+    SortBy       string `form:"sort_by,optional"`
+    SortOrder    string `form:"sort_order,optional"`
+}
+
+type ListModelsResp {
+    Models []ModelInfo `json:"models"`
+    Total  int64       `json:"total"`
+    Page   int         `json:"page"`
+    Size   int         `json:"size"`
+}
+
+// 创建模型版本请求
+type CreateModelVersionReq {
+    ModelId           int64   `json:"model_id"`
+    Version           string  `json:"version"`
+    VersionName       string  `json:"version_name,optional"`
+    Description       string  `json:"description,optional"`
+    ChangeLog         string  `json:"change_log,optional"`
+    ParentVersionId   int64   `json:"parent_version_id,optional"`
+    VersionType       string  `json:"version_type,optional"`
+    ModelHash         string  `json:"model_hash,optional"`
+    Checksum          string  `json:"checksum,optional"`
+    TrainingConfig    string  `json:"training_config,optional"`
+    Hyperparameters   string  `json:"hyperparameters,optional"`
+    FrameworkVersion  string  `json:"framework_version,optional"`
+    PythonVersion     string  `json:"python_version,optional"`
+    CudaVersion       string  `json:"cuda_version,optional"`
+    Dependencies      string  `json:"dependencies,optional"`
+    DockerImage       string  `json:"docker_image,optional"`
+    Compatibility     string  `json:"compatibility,optional"`
+    MigrationGuide    string  `json:"migration_guide,optional"`
+}
+
+type CreateModelVersionResp {
+    Version ModelVersionInfo `json:"version"`
+}
+
+// 获取模型版本请求
+type GetModelVersionReq {
+    Id int64 `path:"id"`
+}
+
+type GetModelVersionResp {
+    Version ModelVersionInfo `json:"version"`
+}
+
+// 查询模型版本列表请求
+type ListModelVersionsReq {
+    ModelId   int64  `form:"model_id"`
+    Page      int    `form:"page,optional"`
+    PageSize  int    `form:"page_size,optional"`
+    Status    string `form:"status,optional"`
+    IsDefault bool   `form:"is_default,optional"`
+    IsStable  bool   `form:"is_stable,optional"`
+}
+
+type ListModelVersionsResp {
+    Versions []ModelVersionInfo `json:"versions"`
+    Total    int64              `json:"total"`
+    Page     int                `json:"page"`
+    Size     int                `json:"size"`
+}
+
+// 创建模型部署请求
+type CreateModelDeploymentReq {
+    ModelId                   int64   `json:"model_id"`
+    VersionId                 int64   `json:"version_id"`
+    DeploymentName            string  `json:"deployment_name"`
+    DeploymentType            string  `json:"deployment_type,optional"`
+    Environment               string  `json:"environment,optional"`
+    ServiceName               string  `json:"service_name,optional"`
+    ServicePort               int     `json:"service_port,optional"`
+    Protocol                  string  `json:"protocol,optional"`
+    BasePath                  string  `json:"base_path,optional"`
+    CpuCores                  float64 `json:"cpu_cores,optional"`
+    MemoryGb                  float64 `json:"memory_gb,optional"`
+    GpuCount                  int     `json:"gpu_count,optional"`
+    GpuType                   string  `json:"gpu_type,optional"`
+    StorageGb                 float64 `json:"storage_gb,optional"`
+    MinReplicas               int     `json:"min_replicas,optional"`
+    MaxReplicas               int     `json:"max_replicas,optional"`
+    AutoScaling               bool    `json:"auto_scaling,optional"`
+    ScalingPolicy             string  `json:"scaling_policy,optional"`
+    TargetCpuUtilization      int     `json:"target_cpu_utilization,optional"`
+    TargetMemoryUtilization   int     `json:"target_memory_utilization,optional"`
+    TargetQps                 int     `json:"target_qps,optional"`
+    LoadBalancerType          string  `json:"load_balancer_type,optional"`
+    IngressConfig             string  `json:"ingress_config,optional"`
+    DockerImage               string  `json:"docker_image,optional"`
+    Command                   string  `json:"command,optional"`
+    Args                      string  `json:"args,optional"`
+    EnvironmentVars           string  `json:"environment_vars,optional"`
+    VolumeMounts              string  `json:"volume_mounts,optional"`
+    ConfigMaps                string  `json:"config_maps,optional"`
+    Secrets                   string  `json:"secrets,optional"`
+    HealthCheckPath           string  `json:"health_check_path,optional"`
+    ReadinessProbe            string  `json:"readiness_probe,optional"`
+    LivenessProbe             string  `json:"liveness_probe,optional"`
+    StartupProbe              string  `json:"startup_probe,optional"`
+    RateLimitRpm              int     `json:"rate_limit_rpm,optional"`
+    QuotaLimitPerDay          int     `json:"quota_limit_per_day,optional"`
+    ConcurrentRequestsLimit   int     `json:"concurrent_requests_limit,optional"`
+    TrafficSplit              string  `json:"traffic_split,optional"`
+    CanaryConfig              string  `json:"canary_config,optional"`
+    Metadata                  string  `json:"metadata,optional"`
+    DeploymentConfig          string  `json:"deployment_config,optional"`
+}
+
+type CreateModelDeploymentResp {
+    Deployment ModelDeploymentInfo `json:"deployment"`
+}
+
+// 获取模型部署请求
+type GetModelDeploymentReq {
+    Id int64 `path:"id"`
+}
+
+type GetModelDeploymentResp {
+    Deployment ModelDeploymentInfo `json:"deployment"`
+}
+
+// 更新模型部署请求
+type UpdateModelDeploymentReq {
+    Id                        int64   `path:"id"`
+    CpuCores                  float64 `json:"cpu_cores,optional"`
+    MemoryGb                  float64 `json:"memory_gb,optional"`
+    GpuCount                  int     `json:"gpu_count,optional"`
+    MinReplicas               int     `json:"min_replicas,optional"`
+    MaxReplicas               int     `json:"max_replicas,optional"`
+    AutoScaling               bool    `json:"auto_scaling,optional"`
+    ScalingPolicy             string  `json:"scaling_policy,optional"`
+    TargetCpuUtilization      int     `json:"target_cpu_utilization,optional"`
+    TargetMemoryUtilization   int     `json:"target_memory_utilization,optional"`
+    TargetQps                 int     `json:"target_qps,optional"`
+    RateLimitRpm              int     `json:"rate_limit_rpm,optional"`
+    QuotaLimitPerDay          int     `json:"quota_limit_per_day,optional"`
+    ConcurrentRequestsLimit   int     `json:"concurrent_requests_limit,optional"`
+    TrafficSplit              string  `json:"traffic_split,optional"`
+    CanaryConfig              string  `json:"canary_config,optional"`
+    Metadata                  string  `json:"metadata,optional"`
+}
+
+type UpdateModelDeploymentResp {
+    Deployment ModelDeploymentInfo `json:"deployment"`
+}
+
+// 删除模型部署请求
+type DeleteModelDeploymentReq {
+    Id int64 `path:"id"`
+}
+
+// 查询模型部署列表请求
+type ListModelDeploymentsReq {
+    Page           int    `form:"page,optional"`
+    PageSize       int    `form:"page_size,optional"`
+    ModelId        int64  `form:"model_id,optional"`
+    VersionId      int64  `form:"version_id,optional"`
+    DeploymentType string `form:"deployment_type,optional"`
+    Environment    string `form:"environment,optional"`
+    Status         string `form:"status,optional"`
+    HealthStatus   string `form:"health_status,optional"`
+}
+
+type ListModelDeploymentsResp {
+    Deployments []ModelDeploymentInfo `json:"deployments"`
+    Total       int64                 `json:"total"`
+    Page        int                   `json:"page"`
+    Size        int                   `json:"size"`
+}
+
+// 启动模型部署请求
+type StartModelDeploymentReq {
+    Id int64 `path:"id"`
+}
+
+type StartModelDeploymentResp {
+    Deployment ModelDeploymentInfo `json:"deployment"`
+}
+
+// 停止模型部署请求
+type StopModelDeploymentReq {
+    Id int64 `path:"id"`
+}
+
+type StopModelDeploymentResp {
+    Deployment ModelDeploymentInfo `json:"deployment"`
+}
+
+// 查询推理日志请求
+type ListModelInferenceLogsReq {
+    Page         int    `form:"page,optional"`
+    PageSize     int    `form:"page_size,optional"`
+    DeploymentId int64  `form:"deployment_id,optional"`
+    ModelId      int64  `form:"model_id,optional"`
+    VersionId    int64  `form:"version_id,optional"`
+    RequestId    string `form:"request_id,optional"`
+    Status       string `form:"status,optional"`
+    StartTime    string `form:"start_time,optional"`
+    EndTime      string `form:"end_time,optional"`
+}
+
+type ListModelInferenceLogsResp {
+    Logs  []ModelInferenceLogInfo `json:"logs"`
+    Total int64                   `json:"total"`
+    Page  int                     `json:"page"`
+    Size  int                     `json:"size"`
+}
+
+// 获取推理日志详情请求
+type GetModelInferenceLogReq {
+    Id int64 `path:"id"`
+}
+
+type GetModelInferenceLogResp {
+    Log ModelInferenceLogInfo `json:"log"`
+}
+
+// 创建模型关联关系请求
+type CreateModelRelationReq {
+    ModelId      int64  `json:"model_id"`
+    EntityType   string `json:"entity_type"`
+    EntityId     int64  `json:"entity_id"`
+    RelationType string `json:"relation_type"`
+    IsPrimary    bool   `json:"is_primary,optional"`
+    SortOrder    int    `json:"sort_order,optional"`
+    Metadata     string `json:"metadata,optional"`
+}
+
+type CreateModelRelationResp {
+    Relation ModelRelationInfo `json:"relation"`
+}
+
+// 删除模型关联关系请求
+type DeleteModelRelationReq {
+    Id int64 `path:"id"`
+}
+
+// 查询模型关联关系请求
+type ListModelRelationsReq {
+    ModelId      int64  `form:"model_id,optional"`
+    EntityType   string `form:"entity_type,optional"`
+    EntityId     int64  `form:"entity_id,optional"`
+    RelationType string `form:"relation_type,optional"`
+    Status       string `form:"status,optional"`
+    Page         int    `form:"page,optional"`
+    PageSize     int    `form:"page_size,optional"`
+}
+
+type ListModelRelationsResp {
+    Relations []ModelRelationInfo `json:"relations"`
+    Total     int64               `json:"total"`
+    Page      int                 `json:"page"`
+    Size      int                 `json:"size"`
+}
+
+// 获取模型统计信息请求
+type GetModelStatsReq {
+    Id int64 `path:"id"`
+}
+
+type ModelStatsInfo {
+    ModelId           int64 `json:"model_id"`
+    DeploymentCount   int   `json:"deployment_count"`
+    ActiveDeployments int   `json:"active_deployments"`
+    DownloadCount     int   `json:"download_count"`
+    ViewCount         int   `json:"view_count"`
+    UsageCount        int   `json:"usage_count"`
+    StarCount         int   `json:"star_count"`
+    ForkCount         int   `json:"fork_count"`
+    VersionCount      int   `json:"version_count"`
+    TotalInferences   int64 `json:"total_inferences"`
+    AvgInferenceTime  float64 `json:"avg_inference_time"`
+    SuccessRate       float64 `json:"success_rate"`
+}
+
+type GetModelStatsResp {
+    Stats ModelStatsInfo `json:"stats"`
+}
+
+// ==================== API路由定义 ====================
+
+@server (
+    group: model
+    prefix: /api/v1/models
+)
+service ModelService {
+    @doc "创建模型"
+    @handler CreateModel
+    post / (CreateModelReq) returns (CreateModelResp)
+    
+    @doc "获取模型详情"
+    @handler GetModel
+    get /:id (GetModelReq) returns (GetModelResp)
+    
+    @doc "更新模型"
+    @handler UpdateModel
+    put /:id (UpdateModelReq) returns (UpdateModelResp)
+    
+    @doc "删除模型"
+    @handler DeleteModel
+    delete /:id (DeleteModelReq) returns (EmptyResp)
+    
+    @doc "查询模型列表"
+    @handler ListModels
+    get / (ListModelsReq) returns (ListModelsResp)
+    
+    @doc "获取模型统计信息"
+    @handler GetModelStats
+    get /:id/stats (GetModelStatsReq) returns (GetModelStatsResp)
+}
+
+@server (
+    group: model_version
+    prefix: /api/v1/model-versions
+)
+service ModelVersionService {
+    @doc "创建模型版本"
+    @handler CreateModelVersion
+    post / (CreateModelVersionReq) returns (CreateModelVersionResp)
+    
+    @doc "获取模型版本详情"
+    @handler GetModelVersion
+    get /:id (GetModelVersionReq) returns (GetModelVersionResp)
+    
+    @doc "查询模型版本列表"
+    @handler ListModelVersions
+    get / (ListModelVersionsReq) returns (ListModelVersionsResp)
+}
+
+@server (
+    group: model_deployment
+    prefix: /api/v1/model-deployments
+)
+service ModelDeploymentService {
+    @doc "创建模型部署"
+    @handler CreateModelDeployment
+    post / (CreateModelDeploymentReq) returns (CreateModelDeploymentResp)
+    
+    @doc "获取模型部署详情"
+    @handler GetModelDeployment
+    get /:id (GetModelDeploymentReq) returns (GetModelDeploymentResp)
+    
+    @doc "更新模型部署"
+    @handler UpdateModelDeployment
+    put /:id (UpdateModelDeploymentReq) returns (UpdateModelDeploymentResp)
+    
+    @doc "删除模型部署"
+    @handler DeleteModelDeployment
+    delete /:id (DeleteModelDeploymentReq) returns (EmptyResp)
+    
+    @doc "查询模型部署列表"
+    @handler ListModelDeployments
+    get / (ListModelDeploymentsReq) returns (ListModelDeploymentsResp)
+    
+    @doc "启动模型部署"
+    @handler StartModelDeployment
+    post /:id/start (StartModelDeploymentReq) returns (StartModelDeploymentResp)
+    
+    @doc "停止模型部署"
+    @handler StopModelDeployment
+    post /:id/stop (StopModelDeploymentReq) returns (StopModelDeploymentResp)
+}
+
+@server (
+    group: model_inference
+    prefix: /api/v1/model-inference
+)
+service ModelInferenceService {
+    @doc "查询推理日志列表"
+    @handler ListModelInferenceLogs
+    get /logs (ListModelInferenceLogsReq) returns (ListModelInferenceLogsResp)
+    
+    @doc "获取推理日志详情"
+    @handler GetModelInferenceLog
+    get /logs/:id (GetModelInferenceLogReq) returns (GetModelInferenceLogResp)
+}
+
+@server (
+    group: model_relation
+    prefix: /api/v1/model-relations
+)
+service ModelRelationService {
+    @doc "创建模型关联关系"
+    @handler CreateModelRelation
+    post / (CreateModelRelationReq) returns (CreateModelRelationResp)
+    
+    @doc "删除模型关联关系"
+    @handler DeleteModelRelation
+    delete /:id (DeleteModelRelationReq) returns (EmptyResp)
+    
+    @doc "查询模型关联关系列表"
+    @handler ListModelRelations
+    get / (ListModelRelationsReq) returns (ListModelRelationsResp)
+}

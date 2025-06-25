@@ -1,1 +1,419 @@
 syntax = "v1"
+
+import "common.api"
+
+type WorkspaceInfo {
+    Id                  int64    `json:"id"`
+    Name                string   `json:"name"`
+    DisplayName         string   `json:"display_name,omitempty"`
+    Description         string   `json:"description,omitempty"`
+    WorkspaceType       string   `json:"workspace_type"`        // personal, team, organization, project
+    Visibility          string   `json:"visibility"`            // public, private, internal
+    StorageQuotaGb      float64  `json:"storage_quota_gb"`
+    ComputeQuotaHours   float64  `json:"compute_quota_hours"`
+    GpuQuotaHours       float64  `json:"gpu_quota_hours"`
+    DatasetQuotaCount   int      `json:"dataset_quota_count"`
+    ModelQuotaCount     int      `json:"model_quota_count"`
+    MemberQuotaCount    int      `json:"member_quota_count"`
+    StorageUsedGb       float64  `json:"storage_used_gb"`
+    ComputeUsedHours    float64  `json:"compute_used_hours"`
+    GpuUsedHours        float64  `json:"gpu_used_hours"`
+    DatasetCount        int      `json:"dataset_count"`
+    ModelCount          int      `json:"model_count"`
+    MemberCount         int      `json:"member_count"`
+    Status              string   `json:"status"`               // active, inactive, suspended, archived
+    FeaturesEnabled     string   `json:"features_enabled,omitempty"`
+    Settings            string   `json:"settings,omitempty"`
+    DefaultPermissions  string   `json:"default_permissions,omitempty"`
+    BillingType         string   `json:"billing_type"`         // free, subscription, pay_as_go
+    BillingConfig       string   `json:"billing_config,omitempty"`
+    Tags                string   `json:"tags,omitempty"`
+    Metadata            string   `json:"metadata,omitempty"`
+    CreatedAt           string   `json:"created_at"`
+    UpdatedAt           string   `json:"updated_at"`
+    DeletedAt           string   `json:"deleted_at,omitempty"`
+    LastActivityAt      string   `json:"last_activity_at"`
+}
+
+type CreateWorkspaceReq {
+    Name                string   `json:"name"`
+    DisplayName         string   `json:"display_name,omitempty"`
+    Description         string   `json:"description,omitempty"`
+    WorkspaceType       string   `json:"workspace_type,omitempty"`
+    Visibility          string   `json:"visibility,omitempty"`
+    StorageQuotaGb      float64  `json:"storage_quota_gb,omitempty"`
+    ComputeQuotaHours   float64  `json:"compute_quota_hours,omitempty"`
+    GpuQuotaHours       float64  `json:"gpu_quota_hours,omitempty"`
+    DatasetQuotaCount   int      `json:"dataset_quota_count,omitempty"`
+    ModelQuotaCount     int      `json:"model_quota_count,omitempty"`
+    MemberQuotaCount    int      `json:"member_quota_count,omitempty"`
+    FeaturesEnabled     string   `json:"features_enabled,omitempty"`
+    Settings            string   `json:"settings,omitempty"`
+    DefaultPermissions  string   `json:"default_permissions,omitempty"`
+    BillingType         string   `json:"billing_type,omitempty"`
+    BillingConfig       string   `json:"billing_config,omitempty"`
+    Tags                string   `json:"tags,omitempty"`
+    Metadata            string   `json:"metadata,omitempty"`
+}
+
+type CreateWorkspaceResp {
+    Id int64 `json:"id"`
+}
+
+type UpdateWorkspaceReq {
+    Id                  int64    `json:"id"`
+    DisplayName         string   `json:"display_name,omitempty"`
+    Description         string   `json:"description,omitempty"`
+    Visibility          string   `json:"visibility,omitempty"`
+    StorageQuotaGb      float64  `json:"storage_quota_gb,omitempty"`
+    ComputeQuotaHours   float64  `json:"compute_quota_hours,omitempty"`
+    GpuQuotaHours       float64  `json:"gpu_quota_hours,omitempty"`
+    DatasetQuotaCount   int      `json:"dataset_quota_count,omitempty"`
+    ModelQuotaCount     int      `json:"model_quota_count,omitempty"`
+    MemberQuotaCount    int      `json:"member_quota_count,omitempty"`
+    Status              string   `json:"status,omitempty"`
+    FeaturesEnabled     string   `json:"features_enabled,omitempty"`
+    Settings            string   `json:"settings,omitempty"`
+    DefaultPermissions  string   `json:"default_permissions,omitempty"`
+    BillingType         string   `json:"billing_type,omitempty"`
+    BillingConfig       string   `json:"billing_config,omitempty"`
+    Tags                string   `json:"tags,omitempty"`
+    Metadata            string   `json:"metadata,omitempty"`
+}
+
+type GetWorkspaceReq {
+    Id int64 `path:"id"`
+}
+
+type GetWorkspaceResp {
+    Workspace WorkspaceInfo `json:"workspace"`
+}
+
+type ListWorkspacesReq {
+    Page           int    `form:"page,default=1"`
+    PageSize       int    `form:"page_size,default=20"`
+    WorkspaceType  string `form:"workspace_type,omitempty"`
+    Status         string `form:"status,omitempty"`
+    Visibility     string `form:"visibility,omitempty"`
+    Search         string `form:"search,omitempty"`
+}
+
+type ListWorkspacesResp {
+    Workspaces []WorkspaceInfo `json:"workspaces"`
+    Total      int64           `json:"total"`
+    Page       int             `json:"page"`
+    PageSize   int             `json:"page_size"`
+}
+
+type DeleteWorkspaceReq {
+    Id int64 `path:"id"`
+}
+
+// ========== 工作空间成员相关结构体 ==========
+
+type WorkspaceMemberInfo {
+    Id                    int64  `json:"id"`
+    WorkspaceId           int64  `json:"workspace_id"`
+    UserId                int64  `json:"user_id"`
+    Role                  string `json:"role"`                    // owner, admin, member, viewer, guest
+    InvitedBy             int64  `json:"invited_by,omitempty"`
+    InvitedAt             string `json:"invited_at,omitempty"`
+    InvitationToken       string `json:"invitation_token,omitempty"`
+    InvitationMessage     string `json:"invitation_message,omitempty"`
+    InvitationExpiresAt   string `json:"invitation_expires_at,omitempty"`
+    JoinedAt              string `json:"joined_at"`
+    LastActivityAt        string `json:"last_activity_at"`
+    Status                string `json:"status"`                  // active, inactive, pending, rejected, removed
+    CustomPermissions     string `json:"custom_permissions,omitempty"`
+    ResourceLimits        string `json:"resource_limits,omitempty"`
+    NotificationSettings  string `json:"notification_settings,omitempty"`
+    Metadata              string `json:"metadata,omitempty"`
+    CreatedAt             string `json:"created_at"`
+    UpdatedAt             string `json:"updated_at"`
+}
+
+type InviteMemberReq {
+    WorkspaceId         int64  `json:"workspace_id"`
+    UserId              int64  `json:"user_id,omitempty"`
+    Email               string `json:"email,omitempty"`
+    Role                string `json:"role"`
+    InvitationMessage   string `json:"invitation_message,omitempty"`
+    CustomPermissions   string `json:"custom_permissions,omitempty"`
+    ResourceLimits      string `json:"resource_limits,omitempty"`
+}
+
+type InviteMemberResp {
+    Id              int64  `json:"id"`
+    InvitationToken string `json:"invitation_token"`
+}
+
+type AcceptInvitationReq {
+    InvitationToken string `json:"invitation_token"`
+}
+
+type UpdateMemberRoleReq {
+    Id                int64  `json:"id"`
+    Role              string `json:"role"`
+    CustomPermissions string `json:"custom_permissions,omitempty"`
+    ResourceLimits    string `json:"resource_limits,omitempty"`
+}
+
+type RemoveMemberReq {
+    Id int64 `path:"id"`
+}
+
+type ListWorkspaceMembersReq {
+    WorkspaceId int64  `path:"workspace_id"`
+    Page        int    `form:"page,default=1"`
+    PageSize    int    `form:"page_size,default=20"`
+    Role        string `form:"role,omitempty"`
+    Status      string `form:"status,omitempty"`
+    Search      string `form:"search,omitempty"`
+}
+
+type ListWorkspaceMembersResp {
+    Members  []WorkspaceMemberInfo `json:"members"`
+    Total    int64                 `json:"total"`
+    Page     int                   `json:"page"`
+    PageSize int                   `json:"page_size"`
+}
+
+type GetMemberReq {
+    Id int64 `path:"id"`
+}
+
+type GetMemberResp {
+    Member WorkspaceMemberInfo `json:"member"`
+}
+
+// ========== 工作空间项目相关结构体 ==========
+
+type WorkspaceProjectInfo {
+    Id                int64   `json:"id"`
+    WorkspaceId       int64   `json:"workspace_id"`
+    Name              string  `json:"name"`
+    DisplayName       string  `json:"display_name,omitempty"`
+    Description       string  `json:"description,omitempty"`
+    ProjectType       string  `json:"project_type"`        // ml_training, data_analysis, model_serving, research, experiment, custom
+    RepositoryUrl     string  `json:"repository_url,omitempty"`
+    StorageUsedGb     float64 `json:"storage_used_gb"`
+    ComputeUsedHours  float64 `json:"compute_used_hours"`
+    GpuUsedHours      float64 `json:"gpu_used_hours"`
+    Status            string  `json:"status"`              // active, inactive, completed, archived
+    Visibility        string  `json:"visibility"`          // public, private, workspace
+    Priority          string  `json:"priority"`            // low, normal, high, urgent
+    StartedAt         string  `json:"started_at"`
+    PlannedEndAt      string  `json:"planned_end_at,omitempty"`
+    CompletedAt       string  `json:"completed_at,omitempty"`
+    LastActivityAt    string  `json:"last_activity_at"`
+    Tags              string  `json:"tags,omitempty"`
+    Metadata          string  `json:"metadata,omitempty"`
+    Settings          string  `json:"settings,omitempty"`
+    CreatedAt         string  `json:"created_at"`
+    UpdatedAt         string  `json:"updated_at"`
+    DeletedAt         string  `json:"deleted_at,omitempty"`
+}
+
+type CreateProjectReq {
+    WorkspaceId   int64  `json:"workspace_id"`
+    Name          string `json:"name"`
+    DisplayName   string `json:"display_name,omitempty"`
+    Description   string `json:"description,omitempty"`
+    ProjectType   string `json:"project_type,omitempty"`
+    RepositoryUrl string `json:"repository_url,omitempty"`
+    Visibility    string `json:"visibility,omitempty"`
+    Priority      string `json:"priority,omitempty"`
+    PlannedEndAt  string `json:"planned_end_at,omitempty"`
+    Tags          string `json:"tags,omitempty"`
+    Metadata      string `json:"metadata,omitempty"`
+    Settings      string `json:"settings,omitempty"`
+}
+
+type CreateProjectResp {
+    Id int64 `json:"id"`
+}
+
+type UpdateProjectReq {
+    Id            int64  `json:"id"`
+    DisplayName   string `json:"display_name,omitempty"`
+    Description   string `json:"description,omitempty"`
+    RepositoryUrl string `json:"repository_url,omitempty"`
+    Status        string `json:"status,omitempty"`
+    Visibility    string `json:"visibility,omitempty"`
+    Priority      string `json:"priority,omitempty"`
+    PlannedEndAt  string `json:"planned_end_at,omitempty"`
+    CompletedAt   string `json:"completed_at,omitempty"`
+    Tags          string `json:"tags,omitempty"`
+    Metadata      string `json:"metadata,omitempty"`
+    Settings      string `json:"settings,omitempty"`
+}
+
+type GetProjectReq {
+    Id int64 `path:"id"`
+}
+
+type GetProjectResp {
+    Project WorkspaceProjectInfo `json:"project"`
+}
+
+type ListProjectsReq {
+    WorkspaceId int64  `path:"workspace_id"`
+    Page        int    `form:"page,default=1"`
+    PageSize    int    `form:"page_size,default=20"`
+    ProjectType string `form:"project_type,omitempty"`
+    Status      string `form:"status,omitempty"`
+    Visibility  string `form:"visibility,omitempty"`
+    Priority    string `form:"priority,omitempty"`
+    Search      string `form:"search,omitempty"`
+}
+
+type ListProjectsResp {
+    Projects []WorkspaceProjectInfo `json:"projects"`
+    Total    int64                  `json:"total"`
+    Page     int                    `json:"page"`
+    PageSize int                    `json:"page_size"`
+}
+
+type DeleteProjectReq {
+    Id int64 `path:"id"`
+}
+
+// ========== 所有者相关结构体 ==========
+
+type WorkspaceOwnerInfo {
+    Id          int64  `json:"id"`
+    WorkspaceId int64  `json:"workspace_id"`
+    UserId      int64  `json:"user_id"`
+    OwnerType   string `json:"owner_type"`    // primary, co_owner
+    StartDate   string `json:"start_date,omitempty"`
+    EndDate     string `json:"end_date,omitempty"`
+    Status      string `json:"status"`        // active, inactive
+    CreatedAt   string `json:"created_at"`
+    UpdatedAt   string `json:"updated_at"`
+}
+
+type ProjectOwnerInfo {
+    Id        int64  `json:"id"`
+    ProjectId int64  `json:"project_id"`
+    UserId    int64  `json:"user_id"`
+    OwnerType string `json:"owner_type"`    // primary, co_owner
+    StartDate string `json:"start_date,omitempty"`
+    EndDate   string `json:"end_date,omitempty"`
+    Status    string `json:"status"`        // active, inactive
+    CreatedAt string `json:"created_at"`
+    UpdatedAt string `json:"updated_at"`
+}
+
+type AddWorkspaceOwnerReq {
+    WorkspaceId int64  `json:"workspace_id"`
+    UserId      int64  `json:"user_id"`
+    OwnerType   string `json:"owner_type"`
+    StartDate   string `json:"start_date,omitempty"`
+    EndDate     string `json:"end_date,omitempty"`
+}
+
+type AddProjectOwnerReq {
+    ProjectId int64  `json:"project_id"`
+    UserId    int64  `json:"user_id"`
+    OwnerType string `json:"owner_type"`
+    StartDate string `json:"start_date,omitempty"`
+    EndDate   string `json:"end_date,omitempty"`
+}
+
+type RemoveOwnerReq {
+    Id int64 `path:"id"`
+}
+
+type ListWorkspaceOwnersReq {
+    WorkspaceId int64 `path:"workspace_id"`
+}
+
+type ListWorkspaceOwnersResp {
+    Owners []WorkspaceOwnerInfo `json:"owners"`
+}
+
+type ListProjectOwnersReq {
+    ProjectId int64 `path:"project_id"`
+}
+
+type ListProjectOwnersResp {
+    Owners []ProjectOwnerInfo `json:"owners"`
+}
+
+// ========== API 路由定义 ==========
+
+@server(
+    group: workspace
+)
+service workspace-api {
+    // 工作空间管理
+    @handler CreateWorkspace
+    post /api/v1/workspaces (CreateWorkspaceReq) returns (CreateWorkspaceResp)
+    
+    @handler UpdateWorkspace
+    put /api/v1/workspaces (UpdateWorkspaceReq) returns (EmptyResp)
+    
+    @handler GetWorkspace
+    get /api/v1/workspaces/:id (GetWorkspaceReq) returns (GetWorkspaceResp)
+    
+    @handler ListWorkspaces
+    get /api/v1/workspaces (ListWorkspacesReq) returns (ListWorkspacesResp)
+    
+    @handler DeleteWorkspace
+    delete /api/v1/workspaces/:id (DeleteWorkspaceReq) returns (EmptyResp)
+    
+    // 工作空间成员管理
+    @handler InviteMember
+    post /api/v1/workspace-members/invite (InviteMemberReq) returns (InviteMemberResp)
+    
+    @handler AcceptInvitation
+    post /api/v1/workspace-members/accept (AcceptInvitationReq) returns (EmptyResp)
+    
+    @handler UpdateMemberRole
+    put /api/v1/workspace-members/role (UpdateMemberRoleReq) returns (EmptyResp)
+    
+    @handler GetMember
+    get /api/v1/workspace-members/:id (GetMemberReq) returns (GetMemberResp)
+    
+    @handler ListWorkspaceMembers
+    get /api/v1/workspaces/:workspace_id/members (ListWorkspaceMembersReq) returns (ListWorkspaceMembersResp)
+    
+    @handler RemoveMember
+    delete /api/v1/workspace-members/:id (RemoveMemberReq) returns (EmptyResp)
+    
+    // 工作空间项目管理
+    @handler CreateProject
+    post /api/v1/workspace-projects (CreateProjectReq) returns (CreateProjectResp)
+    
+    @handler UpdateProject
+    put /api/v1/workspace-projects (UpdateProjectReq) returns (EmptyResp)
+    
+    @handler GetProject
+    get /api/v1/workspace-projects/:id (GetProjectReq) returns (GetProjectResp)
+    
+    @handler ListProjects
+    get /api/v1/workspaces/:workspace_id/projects (ListProjectsReq) returns (ListProjectsResp)
+    
+    @handler DeleteProject
+    delete /api/v1/workspace-projects/:id (DeleteProjectReq) returns (EmptyResp)
+    
+    // 工作空间所有者管理
+    @handler AddWorkspaceOwner
+    post /api/v1/workspace-owners (AddWorkspaceOwnerReq) returns (EmptyResp)
+    
+    @handler ListWorkspaceOwners
+    get /api/v1/workspaces/:workspace_id/owners (ListWorkspaceOwnersReq) returns (ListWorkspaceOwnersResp)
+    
+    @handler RemoveWorkspaceOwner
+    delete /api/v1/workspace-owners/:id (RemoveOwnerReq) returns (EmptyResp)
+    
+    // 项目所有者管理
+    @handler AddProjectOwner
+    post /api/v1/project-owners (AddProjectOwnerReq) returns (EmptyResp)
+    
+    @handler ListProjectOwners
+    get /api/v1/projects/:project_id/owners (ListProjectOwnersReq) returns (ListProjectOwnersResp)
+    
+    @handler RemoveProjectOwner
+    delete /api/v1/project-owners/:id (RemoveOwnerReq) returns (EmptyResp)
+}

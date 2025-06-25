@@ -1,0 +1,298 @@
+syntax = "v1"
+
+import "common.api"
+
+// FileInfo 文件信息结构体
+type FileInfo {
+	Id              int64  `json:"id"`                        // 文件唯一ID
+	OriginalName    string `json:"originalName"`              // 原始文件名
+	FileName        string `json:"fileName"`                  // 存储在系统中的文件名（通常是唯一的）
+	FilePath        string `json:"filePath"`                  // 文件存储路径
+	FileSize        int64  `json:"fileSize"`                  // 文件大小（字节）
+	MimeType        string `json:"mimeType,omitempty"`        // 文件的MIME类型
+	FileExtension   string `json:"fileExtension,omitempty"`   // 文件扩展名
+	FileHash        string `json:"fileHash,omitempty"`        // 文件内容的哈希值（如SHA256），用于校验文件完整性和唯一性
+	Checksum        string `json:"checksum,omitempty"`        // 文件校验和（如MD5）
+	StorageType     string `json:"storageType"`             // 存储类型: local, s3, oss, minio, hdfs
+	StorageConfig   string `json:"storageConfig,omitempty"` // 存储配置（JSON字符串）
+	BucketName      string `json:"bucketName,omitempty"`      // 对象存储的Bucket名称
+	FileCategory    string `json:"fileCategory"` // 文件分类: image, document, video, audio, archive, code, model, dataset, other
+	UploadStatus    string `json:"uploadStatus"` // 上传状态: uploading, completed, failed, deleted
+	IsPublic        int    `json:"isPublic"`                  // 是否为公开文件 (0: 私有, 1: 公开)
+	DownloadCount   int    `json:"downloadCount"`             // 文件下载次数
+	VirusScanStatus string `json:"virusScanStatus"`           // 病毒扫描状态: pending, clean, infected, error, skipped
+	VirusScanResult string `json:"virusScanResult,omitempty"` // 病毒扫描结果详情（JSON字符串）
+	CompressionType string `json:"compressionType"`           // 压缩类型: none, gzip, zip, tar
+	Metadata        string `json:"metadata,omitempty"`        // 自定义元数据（JSON字符串）
+	Tags            string `json:"tags,omitempty"`            // 文件标签（JSON字符串）
+	ExpireAt        string `json:"expireAt,omitempty"`        // 文件过期时间
+	CreatedAt       string `json:"createdAt"`                 // 创建时间
+	UpdatedAt       string `json:"updatedAt"`                 // 更新时间
+	DeletedAt       string `json:"deletedAt,omitempty"`       // 删除时间
+}
+
+// FileAccessLog 文件访问日志结构体
+type FileAccessLog {
+	Id                 int64  `json:"id"`                         // 日志唯一ID
+	FileId             int64  `json:"fileId"`                     // 被访问的文件ID
+	UserId             int64  `json:"userId,omitempty"`           // 访问者用户ID
+	WorkspaceId        int64  `json:"workspaceId,omitempty"`      // 所属工作空间ID
+	ActionType         string `json:"actionType"` // 操作类型: upload, download, view, delete, copy, move
+	AccessIp           string `json:"accessIp,omitempty"`         // 访问者IP地址
+	UserAgent          string `json:"userAgent,omitempty"`        // 访问者User Agent
+	FileSize           int64  `json:"fileSize,omitempty"`         // 传输的文件大小（字节）
+	TransferDurationMs int    `json:"transferDurationMs,omitempty"` // 传输耗时（毫秒）
+	Status             string `json:"status"` // 操作状态: success, failed, partial
+	ErrorMessage       string `json:"errorMessage,omitempty"`     // 错误信息（如果操作失败）
+	Metadata           string `json:"metadata,omitempty"` // 附加元数据（JSON字符串）
+	CreatedAt          string `json:"createdAt"`                  // 访问时间
+}
+
+// FileRelation 文件关联关系结构体
+type FileRelation {
+	Id           int64  `json:"id"`           // 关联关系唯一ID
+	FileId       int64  `json:"fileId"`       // 文件ID
+	EntityType   string `json:"entityType"` // 关联实体类型: user, workspace, dataset, model等
+	EntityId     int64  `json:"entityId"`     // 关联实体ID
+	RelationType string `json:"relationType"` // 关联类型: avatar, attachment, model_file, dataset_file等
+	WorkspaceId  int64  `json:"workspaceId,omitempty"` // 所属工作空间ID
+	OwnerId      int64  `json:"ownerId,omitempty"`     // 所有者ID
+	IsPrimary    int    `json:"isPrimary"`             // 是否为主要文件 (0: 否, 1: 是)
+	SortOrder    int    `json:"sortOrder"`             // 排序顺序
+	Status       string `json:"status"`             // 关联状态: active, inactive, pending, deleted
+	Metadata     string `json:"metadata,omitempty"` // 附加元数据（JSON字符串）
+	CreatedAt    string `json:"createdAt"`             // 创建时间
+	UpdatedAt    string `json:"updatedAt"`             // 更新时间
+}
+
+// ============== 请求和响应结构体 ==============
+
+// 文件上传请求
+type FileUploadReq {
+	WorkspaceId  int64  `json:"workspaceId,omitempty"` // 所属工作空间ID
+	FileCategory string `json:"fileCategory,omitempty"`// 文件分类
+	IsPublic     int    `json:"isPublic,omitempty"`    // 是否公开 (0: 私有, 1: 公开)
+	StorageType  string `json:"storageType,omitempty"` // 指定存储类型
+	Tags         string `json:"tags,omitempty"`        // 标签（JSON字符串）
+	Metadata     string `json:"metadata,omitempty"`    // 自定义元数据（JSON字符串）
+	ExpireAt     string `json:"expireAt,omitempty"`    // 过期时间
+}
+
+// 文件上传响应
+type FileUploadResp {
+	FileId    int64  `json:"fileId"`            // 创建的文件记录ID
+	UploadUrl string `json:"uploadUrl,omitempty"` // 预签名上传URL（如果适用）
+	FileName  string `json:"fileName"`          // 系统生成的文件名
+	Message   string `json:"message"`           // 提示信息
+}
+
+// 文件信息获取请求
+type FileGetReq {
+	FileId int64 `path:"fileId"` // 文件ID
+}
+
+// 文件信息获取响应
+type FileGetResp {
+	File FileInfo `json:"file"` // 文件详细信息
+}
+
+// 文件列表查询请求
+type FileListReq {
+	Page           int    `form:"page,default=1"`          // 页码
+	PageSize       int    `form:"pageSize,default=20"`     // 每页数量
+	WorkspaceId    int64  `form:"workspaceId,omitempty"`   // 按工作空间ID过滤
+	FileCategory   string `form:"fileCategory,omitempty"`  // 按文件分类过滤
+	UploadStatus   string `form:"uploadStatus,omitempty"`  // 按上传状态过滤
+	StorageType    string `form:"storageType,omitempty"`   // 按存储类型过滤
+	IsPublic       int    `form:"isPublic,omitempty"`      // 按是否公开过滤 (0: 私有, 1: 公开)
+	FileName       string `form:"fileName,omitempty"`      // 按文件名（原始名或存储名）模糊搜索
+	CreatedAtStart string `form:"createdAtStart,omitempty"`// 创建时间范围-开始
+	CreatedAtEnd   string `form:"createdAtEnd,omitempty"`  // 创建时间范围-结束
+}
+
+// 文件列表查询响应
+type FileListResp {
+	Files    []FileInfo `json:"files"`   // 文件列表
+	Total    int64      `json:"total"`     // 总记录数
+	Page     int        `json:"page"`      // 当前页码
+	PageSize int        `json:"pageSize"`  // 每页数量
+}
+
+// 文件下载请求
+type FileDownloadReq {
+	FileId int64 `path:"fileId"` // 文件ID
+}
+
+// 文件下载响应
+type FileDownloadResp {
+	DownloadUrl string `json:"downloadUrl"` // 预签名下载URL
+	FileName    string `json:"fileName"`    // 原始文件名
+	FileSize    int64  `json:"fileSize"`    // 文件大小
+}
+
+// 文件更新请求
+type FileUpdateReq {
+	FileId       int64  `path:"fileId"`                  // 文件ID
+	OriginalName string `json:"originalName,omitempty"`  // 更新原始文件名
+	FileCategory string `json:"fileCategory,omitempty"`  // 更新文件分类
+	IsPublic     int    `json:"isPublic,omitempty"`      // 更新是否公开状态
+	Tags         string `json:"tags,omitempty"`          // 更新标签（JSON字符串）
+	Metadata     string `json:"metadata,omitempty"`      // 更新元数据（JSON字符串）
+	ExpireAt     string `json:"expireAt,omitempty"`      // 更新过期时间
+}
+
+// 文件删除请求
+type FileDeleteReq {
+	FileId int64 `path:"fileId"` // 文件ID
+}
+
+// 批量文件删除请求
+type FileBatchDeleteReq {
+	FileIds []int64 `json:"fileIds"` // 要删除的文件ID列表
+}
+
+// 文件关联创建请求
+type FileRelationCreateReq {
+	FileId       int64  `json:"fileId"`                // 文件ID
+	EntityType   string `json:"entityType"`            // 关联实体类型
+	EntityId     int64  `json:"entityId"`              // 关联实体ID
+	RelationType string `json:"relationType"`          // 关联类型
+	WorkspaceId  int64  `json:"workspaceId,omitempty"` // 所属工作空间ID
+	IsPrimary    int    `json:"isPrimary,omitempty"`   // 是否为主要文件
+	SortOrder    int    `json:"sortOrder,omitempty"`   // 排序顺序
+	Metadata     string `json:"metadata,omitempty"`    // 元数据（JSON字符串）
+}
+
+// 文件关联创建响应
+type FileRelationCreateResp {
+	RelationId int64 `json:"relationId"` // 创建的关联关系ID
+}
+
+// 文件关联列表查询请求
+type FileRelationListReq {
+	Page         int    `form:"page,default=1"`        // 页码
+	PageSize     int    `form:"pageSize,default=20"`   // 每页数量
+	FileId       int64  `form:"fileId,omitempty"`      // 按文件ID过滤
+	EntityType   string `form:"entityType,omitempty"`  // 按实体类型过滤
+	EntityId     int64  `form:"entityId,omitempty"`    // 按实体ID过滤
+	RelationType string `form:"relationType,omitempty"`// 按关联类型过滤
+	WorkspaceId  int64  `form:"workspaceId,omitempty"` // 按工作空间ID过滤
+	Status       string `form:"status,omitempty"`      // 按状态过滤
+}
+
+// 文件关联列表查询响应
+type FileRelationListResp {
+	Relations []FileRelation `json:"relations"` // 关联关系列表
+	Total     int64          `json:"total"`     // 总记录数
+	Page      int            `json:"page"`      // 当前页码
+	PageSize  int            `json:"pageSize"`  // 每页数量
+}
+
+// 文件关联删除请求
+type FileRelationDeleteReq {
+	RelationId int64 `path:"relationId"` // 关联关系ID
+}
+
+// 文件访问日志查询请求
+type FileAccessLogListReq {
+	Page           int    `form:"page,default=1"`          // 页码
+	PageSize       int    `form:"pageSize,default=20"`     // 每页数量
+	FileId         int64  `form:"fileId,omitempty"`        // 按文件ID过滤
+	UserId         int64  `form:"userId,omitempty"`        // 按用户ID过滤
+	WorkspaceId    int64  `form:"workspaceId,omitempty"`   // 按工作空间ID过滤
+	ActionType     string `form:"actionType,omitempty"`    // 按操作类型过滤
+	Status         string `form:"status,omitempty"`        // 按操作状态过滤
+	CreatedAtStart string `form:"createdAtStart,omitempty"`// 创建时间范围-开始
+	CreatedAtEnd   string `form:"createdAtEnd,omitempty"`  // 创建时间范围-结束
+}
+
+// 文件访问日志查询响应
+type FileAccessLogListResp {
+	Logs     []FileAccessLog `json:"logs"`    // 日志列表
+	Total    int64           `json:"total"`     // 总记录数
+	Page     int             `json:"page"`      // 当前页码
+	PageSize int             `json:"pageSize"`  // 每页数量
+}
+
+// 文件统计请求
+type FileStatsReq {
+	WorkspaceId  int64  `form:"workspaceId,omitempty"` // 按工作空间ID过滤
+	FileCategory string `form:"fileCategory,omitempty"`// 按文件分类过滤
+	DateStart    string `form:"dateStart,omitempty"`   // 统计开始日期
+	DateEnd      string `form:"dateEnd,omitempty"`     // 统计结束日期
+}
+
+// 文件统计响应
+type FileStatsResp {
+	TotalFiles    int64        `json:"totalFiles"`    // 文件总数
+	TotalSize     int64        `json:"totalSize"`     // 文件总大小（字节）
+	CategoryStats []LabelValue `json:"categoryStats"` // 按文件分类统计结果
+	StorageStats  []LabelValue `json:"storageStats"`  // 按存储类型统计结果
+	UploadTrend   []LabelValue `json:"uploadTrend"`   // 文件上传趋势（按日期）
+}
+
+@server(
+	group: file
+	prefix: /api/v1/files
+)
+service file-api {
+	@doc "文件上传"
+	@handler FileUpload
+	post /upload (FileUploadReq) returns (FileUploadResp)
+
+	@doc "获取文件信息"
+	@handler FileGet
+	get /:fileId (FileGetReq) returns (FileGetResp)
+
+	@doc "文件列表查询"
+	@handler FileList
+	get / (FileListReq) returns (FileListResp)
+
+	@doc "文件下载"
+	@handler FileDownload
+	get /:fileId/download (FileDownloadReq) returns (FileDownloadResp)
+
+	@doc "更新文件信息"
+	@handler FileUpdate
+	put /:fileId (FileUpdateReq) returns (EmptyResp)
+
+	@doc "删除文件"
+	@handler FileDelete
+	delete /:fileId (FileDeleteReq) returns (EmptyResp)
+
+	@doc "批量删除文件"
+	@handler FileBatchDelete
+	delete /batch (FileBatchDeleteReq) returns (EmptyResp)
+
+	@doc "获取文件统计信息"
+	@handler FileStats
+	get /stats (FileStatsReq) returns (FileStatsResp)
+}
+
+@server(
+	group: file_relation
+	prefix: /api/v1/file-relations
+)
+service file-api {
+	@doc "创建文件关联"
+	@handler FileRelationCreate
+	post / (FileRelationCreateReq) returns (FileRelationCreateResp)
+
+	@doc "文件关联列表查询"
+	@handler FileRelationList
+	get / (FileRelationListReq) returns (FileRelationListResp)
+
+	@doc "删除文件关联"
+	@handler FileRelationDelete
+	delete /:relationId (FileRelationDeleteReq) returns (EmptyResp)
+}
+
+@server(
+	group: file_access_log
+	prefix: /api/v1/file-access-logs
+)
+service file-api {
+	@doc "文件访问日志查询"
+	@handler FileAccessLogList
+	get / (FileAccessLogListReq) returns (FileAccessLogListResp)
+}

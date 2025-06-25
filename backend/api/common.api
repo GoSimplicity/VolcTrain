@@ -5,6 +5,19 @@ type EmptyReq {}
 type EmptyResp {}
 
 type LabelValue {
-    Label string `json:"label"`
-    Value string `json:"value"`
+	Label string `json:"label"`
+	Value string `json:"value"`
+}
+
+type ListReq {
+	Page      int    `form:"page,default=1"`             // 页码
+	PageSize  int    `form:"page_size,default=20"`       // 每页数量
+	Search    string `form:"search,omitempty"`           // 搜索关键词
+	SortBy    string `form:"sort_by,default=created_at"` // 排序字段
+	SortOrder string `form:"sort_order,default=desc"`    // 排序顺序
+}
+
+type ListResp {
+	Items []interface{} `json:"items"` // 数据列表
+	Total int64         `json:"total"` // 总记录数
 }

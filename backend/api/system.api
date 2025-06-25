@@ -1,1 +1,671 @@
 syntax = "v1"
+
+import "common.api"
+
+// API密钥相关结构体
+type ApiKey {
+    Id                  int64    `json:"id"`
+    KeyName            string   `json:"keyName"`
+    ApiKey             string   `json:"apiKey"`
+    ApiSecret          string   `json:"apiSecret"`
+    KeyType            string   `json:"keyType"`           // personal, service, temporary
+    Description        string   `json:"description"`
+    Permissions        interface{} `json:"permissions"`       // JSON字符串
+    RateLimitPerMinute int      `json:"rateLimitPerMinute"`
+    RateLimitPerHour   int      `json:"rateLimitPerHour"`
+    AllowedIps         interface{} `json:"allowedIps"`        // JSON字符串
+    AllowedDomains     interface{} `json:"allowedDomains"`    // JSON字符串
+    ExpiresAt          string   `json:"expiresAt"`
+    LastUsedAt         string   `json:"lastUsedAt"`
+    LastUsedIp         string   `json:"lastUsedIp"`
+    UsageCount         int      `json:"usageCount"`
+    Status             string   `json:"status"`            // active, inactive, revoked, expired
+    CreatedAt          string   `json:"createdAt"`
+    UpdatedAt          string   `json:"updatedAt"`
+    RevokedAt          string   `json:"revokedAt"`
+}
+
+// 用户会话相关结构体
+type UserSession {
+    Id               int64  `json:"id"`
+    SessionId        string `json:"sessionId"`
+    DeviceType       string `json:"deviceType"`       // web, mobile, desktop, api
+    DeviceInfo       string `json:"deviceInfo"`
+    IpAddress        string `json:"ipAddress"`
+    UserAgent        string `json:"userAgent"`
+    LoginAt          string `json:"loginAt"`
+    LastActivityAt   string `json:"lastActivityAt"`
+    ExpiresAt        string `json:"expiresAt"`
+    Status           string `json:"status"`           // active, expired, revoked
+}
+
+// 用户偏好设置相关结构体
+type UserPreference {
+    Id              int64  `json:"id"`
+    PreferenceKey   string `json:"preferenceKey"`
+    PreferenceValue string `json:"preferenceValue"`
+    ValueType       string `json:"valueType"`       // string, number, boolean, json
+    Category        string `json:"category"`
+    CreatedAt       string `json:"createdAt"`
+    UpdatedAt       string `json:"updatedAt"`
+}
+
+// 系统配置相关结构体
+type SystemConfig {
+    Id           int64  `json:"id"`
+    ConfigKey    string `json:"configKey"`
+    ConfigValue  string `json:"configValue"`
+    ConfigType   string `json:"configType"`     // string, number, boolean, json
+    Category     string `json:"category"`
+    Description  string `json:"description"`
+    IsEncrypted  bool   `json:"isEncrypted"`
+    IsReadonly   bool   `json:"isReadonly"`
+    CreatedAt    string `json:"createdAt"`
+    UpdatedAt    string `json:"updatedAt"`
+}
+
+// 通知消息相关结构体
+type Notification {
+    Id               int64  `json:"id"`
+    Title            string `json:"title"`
+    Content          string `json:"content"`
+    NotificationType string `json:"notificationType"` // system, training, deployment, alert, workspace
+    Priority         string `json:"priority"`         // low, normal, high, urgent
+    Status           string `json:"status"`           // unread, read, archived
+    ResourceType     string `json:"resourceType"`
+    ResourceId       int64  `json:"resourceId"`
+    Metadata         interface{} `json:"metadata"`         // JSON字符串
+    SentAt           string `json:"sentAt"`
+    ReadAt           string `json:"readAt"`
+    CreatedAt        string `json:"createdAt"`
+}
+
+// 系统资源配额相关结构体
+type ResourceQuota {
+    Id           int64   `json:"id"`
+    QuotaType    string  `json:"quotaType"`    // user, workspace, global
+    TargetId     int64   `json:"targetId"`
+    ResourceType string  `json:"resourceType"` // storage, compute, gpu, memory, dataset, model
+    QuotaLimit   float64 `json:"quotaLimit"`
+    QuotaUsed    float64 `json:"quotaUsed"`
+    Unit         string  `json:"unit"`
+    ResetCycle   string  `json:"resetCycle"`   // daily, weekly, monthly, never
+    LastResetAt  string  `json:"lastResetAt"`
+    CreatedAt    string  `json:"createdAt"`
+    UpdatedAt    string  `json:"updatedAt"`
+}
+
+// 审计日志相关结构体
+type AuditLog {
+    Id           int64  `json:"id"`
+    ResourceType string `json:"resourceType"`
+    ResourceId   int64  `json:"resourceId"`
+    Action       string `json:"action"`
+    Details      string `json:"details"`      // JSON字符串
+    IpAddress    string `json:"ipAddress"`
+    UserAgent    string `json:"userAgent"`
+    Status       string `json:"status"`       // success, failed
+    ErrorMessage string `json:"errorMessage"`
+    CreatedAt    string `json:"createdAt"`
+}
+
+// 操作日志相关结构体
+type OperationLog {
+    Id               int64  `json:"id"`
+    OperationType    string `json:"operationType"`    // create, update, delete, login, logout, export, import, execute, deploy, start, stop, restart
+    ResourceType     string `json:"resourceType"`
+    ResourceId       int64  `json:"resourceId"`
+    ResourceName     string `json:"resourceName"`
+    RequestMethod    string `json:"requestMethod"`
+    RequestPath      string `json:"requestPath"`
+    RequestParams    string `json:"requestParams"`    // JSON字符串
+    RequestBody      string `json:"requestBody"`      // JSON字符串
+    ResponseCode     int    `json:"responseCode"`
+    ResponseTimeMs   int    `json:"responseTimeMs"`
+    ErrorMessage     string `json:"errorMessage"`
+    IpAddress        string `json:"ipAddress"`
+    UserAgent        string `json:"userAgent"`
+    SessionId        string `json:"sessionId"`
+    OldValue         string `json:"oldValue"`         // JSON字符串
+    NewValue         string `json:"newValue"`         // JSON字符串
+    CreatedAt        string `json:"createdAt"`
+}
+
+// 关联表通用结构体
+type RelationRecord {
+    Id           int64  `json:"id"`
+    EntityType   string `json:"entityType"`
+    EntityId     int64  `json:"entityId"`
+    RelationType string `json:"relationType"`
+    Status       string `json:"status"`       // active, inactive
+    CreatedAt    string `json:"createdAt"`
+}
+
+// API密钥管理相关请求/响应
+type CreateApiKeyReq {
+    KeyName            string `json:"keyName"`
+    KeyType            string `json:"keyType"`
+    Description        string `json:"description,optional"`
+    Permissions        string `json:"permissions,optional"`
+    RateLimitPerMinute int    `json:"rateLimitPerMinute,optional"`
+    RateLimitPerHour   int    `json:"rateLimitPerHour,optional"`
+    AllowedIps         string `json:"allowedIps,optional"`
+    AllowedDomains     string `json:"allowedDomains,optional"`
+    ExpiresAt          string `json:"expiresAt,optional"`
+}
+
+type CreateApiKeyResp {
+    ApiKey ApiKey `json:"apiKey"`
+}
+
+type UpdateApiKeyReq {
+    Id                 int64  `path:"id"`
+    KeyName            string `json:"keyName,optional"`
+    Description        string `json:"description,optional"`
+    Permissions        string `json:"permissions,optional"`
+    RateLimitPerMinute int    `json:"rateLimitPerMinute,optional"`
+    RateLimitPerHour   int    `json:"rateLimitPerHour,optional"`
+    AllowedIps         string `json:"allowedIps,optional"`
+    AllowedDomains     string `json:"allowedDomains,optional"`
+    ExpiresAt          string `json:"expiresAt,optional"`
+    Status             string `json:"status,optional"`
+}
+
+type GetApiKeyReq {
+    Id int64 `path:"id"`
+}
+
+type GetApiKeyResp {
+    ApiKey ApiKey `json:"apiKey"`
+}
+
+type ListApiKeysReq {
+    Page     int    `form:"page,optional,default=1"`
+    PageSize int    `form:"pageSize,optional,default=10"`
+    KeyType  string `form:"keyType,optional"`
+    Status   string `form:"status,optional"`
+}
+
+type ListApiKeysResp {
+    List  []ApiKey `json:"list"`
+    Total int64    `json:"total"`
+}
+
+type DeleteApiKeyReq {
+    Id int64 `path:"id"`
+}
+
+type RevokeApiKeyReq {
+    Id int64 `path:"id"`
+}
+
+// 用户会话管理相关请求/响应
+type CreateUserSessionReq {
+    SessionId      string `json:"sessionId"`
+    DeviceType     string `json:"deviceType"`
+    DeviceInfo     string `json:"deviceInfo,optional"`
+    IpAddress      string `json:"ipAddress,optional"`
+    UserAgent      string `json:"userAgent,optional"`
+    ExpiresAt      string `json:"expiresAt"`
+}
+
+type CreateUserSessionResp {
+    UserSession UserSession `json:"userSession"`
+}
+
+type UpdateUserSessionReq {
+    Id             int64  `path:"id"`
+    LastActivityAt string `json:"lastActivityAt,optional"`
+    Status         string `json:"status,optional"`
+}
+
+type GetUserSessionReq {
+    Id int64 `path:"id"`
+}
+
+type GetUserSessionResp {
+    UserSession UserSession `json:"userSession"`
+}
+
+type ListUserSessionsReq {
+    Page       int    `form:"page,optional,default=1"`
+    PageSize   int    `form:"pageSize,optional,default=10"`
+    DeviceType string `form:"deviceType,optional"`
+    Status     string `form:"status,optional"`
+}
+
+type ListUserSessionsResp {
+    List  []UserSession `json:"list"`
+    Total int64         `json:"total"`
+}
+
+type DeleteUserSessionReq {
+    Id int64 `path:"id"`
+}
+
+// 用户偏好设置相关请求/响应
+type CreateUserPreferenceReq {
+    PreferenceKey   string `json:"preferenceKey"`
+    PreferenceValue string `json:"preferenceValue"`
+    ValueType       string `json:"valueType"`
+    Category        string `json:"category,optional"`
+}
+
+type CreateUserPreferenceResp {
+    UserPreference UserPreference `json:"userPreference"`
+}
+
+type UpdateUserPreferenceReq {
+    Id              int64  `path:"id"`
+    PreferenceValue string `json:"preferenceValue,optional"`
+    ValueType       string `json:"valueType,optional"`
+    Category        string `json:"category,optional"`
+}
+
+type GetUserPreferenceReq {
+    Id int64 `path:"id"`
+}
+
+type GetUserPreferenceResp {
+    UserPreference UserPreference `json:"userPreference"`
+}
+
+type ListUserPreferencesReq {
+    Page     int    `form:"page,optional,default=1"`
+    PageSize int    `form:"pageSize,optional,default=10"`
+    Category string `form:"category,optional"`
+}
+
+type ListUserPreferencesResp {
+    List  []UserPreference `json:"list"`
+    Total int64            `json:"total"`
+}
+
+type DeleteUserPreferenceReq {
+    Id int64 `path:"id"`
+}
+
+// 系统配置相关请求/响应
+type CreateSystemConfigReq {
+    ConfigKey   string `json:"configKey"`
+    ConfigValue string `json:"configValue"`
+    ConfigType  string `json:"configType"`
+    Category    string `json:"category,optional"`
+    Description string `json:"description,optional"`
+    IsEncrypted bool   `json:"isEncrypted,optional"`
+    IsReadonly  bool   `json:"isReadonly,optional"`
+}
+
+type CreateSystemConfigResp {
+    SystemConfig SystemConfig `json:"systemConfig"`
+}
+
+type UpdateSystemConfigReq {
+    Id          int64  `path:"id"`
+    ConfigValue string `json:"configValue,optional"`
+    ConfigType  string `json:"configType,optional"`
+    Category    string `json:"category,optional"`
+    Description string `json:"description,optional"`
+    IsEncrypted bool   `json:"isEncrypted,optional"`
+    IsReadonly  bool   `json:"isReadonly,optional"`
+}
+
+type GetSystemConfigReq {
+    Id int64 `path:"id"`
+}
+
+type GetSystemConfigResp {
+    SystemConfig SystemConfig `json:"systemConfig"`
+}
+
+type ListSystemConfigsReq {
+    Page     int    `form:"page,optional,default=1"`
+    PageSize int    `form:"pageSize,optional,default=10"`
+    Category string `form:"category,optional"`
+}
+
+type ListSystemConfigsResp {
+    List  []SystemConfig `json:"list"`
+    Total int64          `json:"total"`
+}
+
+type DeleteSystemConfigReq {
+    Id int64 `path:"id"`
+}
+
+// 通知消息相关请求/响应
+type CreateNotificationReq {
+    Title            string `json:"title"`
+    Content          string `json:"content,optional"`
+    NotificationType string `json:"notificationType"`
+    Priority         string `json:"priority,optional"`
+    ResourceType     string `json:"resourceType,optional"`
+    ResourceId       int64  `json:"resourceId,optional"`
+    Metadata         string `json:"metadata,optional"`
+}
+
+type CreateNotificationResp {
+    Notification Notification `json:"notification"`
+}
+
+type UpdateNotificationReq {
+    Id     int64  `path:"id"`
+    Status string `json:"status,optional"`
+    ReadAt string `json:"readAt,optional"`
+}
+
+type GetNotificationReq {
+    Id int64 `path:"id"`
+}
+
+type GetNotificationResp {
+    Notification Notification `json:"notification"`
+}
+
+type ListNotificationsReq {
+    Page             int    `form:"page,optional,default=1"`
+    PageSize         int    `form:"pageSize,optional,default=10"`
+    NotificationType string `form:"notificationType,optional"`
+    Priority         string `form:"priority,optional"`
+    Status           string `form:"status,optional"`
+}
+
+type ListNotificationsResp {
+    List  []Notification `json:"list"`
+    Total int64          `json:"total"`
+}
+
+type DeleteNotificationReq {
+    Id int64 `path:"id"`
+}
+
+// 资源配额相关请求/响应
+type CreateResourceQuotaReq {
+    QuotaType    string  `json:"quotaType"`
+    TargetId     int64   `json:"targetId,optional"`
+    ResourceType string  `json:"resourceType"`
+    QuotaLimit   float64 `json:"quotaLimit"`
+    Unit         string  `json:"unit"`
+    ResetCycle   string  `json:"resetCycle,optional"`
+}
+
+type CreateResourceQuotaResp {
+    ResourceQuota ResourceQuota `json:"resourceQuota"`
+}
+
+type UpdateResourceQuotaReq {
+    Id         int64   `path:"id"`
+    QuotaLimit float64 `json:"quotaLimit,optional"`
+    QuotaUsed  float64 `json:"quotaUsed,optional"`
+    ResetCycle string  `json:"resetCycle,optional"`
+}
+
+type GetResourceQuotaReq {
+    Id int64 `path:"id"`
+}
+
+type GetResourceQuotaResp {
+    ResourceQuota ResourceQuota `json:"resourceQuota"`
+}
+
+type ListResourceQuotasReq {
+    Page         int    `form:"page,optional,default=1"`
+    PageSize     int    `form:"pageSize,optional,default=10"`
+    QuotaType    string `form:"quotaType,optional"`
+    ResourceType string `form:"resourceType,optional"`
+    TargetId     int64  `form:"targetId,optional"`
+}
+
+type ListResourceQuotasResp {
+    List  []ResourceQuota `json:"list"`
+    Total int64           `json:"total"`
+}
+
+type DeleteResourceQuotaReq {
+    Id int64 `path:"id"`
+}
+
+// 审计日志相关请求/响应
+type CreateAuditLogReq {
+    ResourceType string `json:"resourceType"`
+    ResourceId   int64  `json:"resourceId,optional"`
+    Action       string `json:"action"`
+    Details      string `json:"details,optional"`
+    IpAddress    string `json:"ipAddress,optional"`
+    UserAgent    string `json:"userAgent,optional"`
+    Status       string `json:"status,optional"`
+    ErrorMessage string `json:"errorMessage,optional"`
+}
+
+type CreateAuditLogResp {
+    AuditLog AuditLog `json:"auditLog"`
+}
+
+type GetAuditLogReq {
+    Id int64 `path:"id"`
+}
+
+type GetAuditLogResp {
+    AuditLog AuditLog `json:"auditLog"`
+}
+
+type ListAuditLogsReq {
+    Page         int    `form:"page,optional,default=1"`
+    PageSize     int    `form:"pageSize,optional,default=10"`
+    ResourceType string `form:"resourceType,optional"`
+    Action       string `form:"action,optional"`
+    Status       string `form:"status,optional"`
+    StartTime    string `form:"startTime,optional"`
+    EndTime      string `form:"endTime,optional"`
+}
+
+type ListAuditLogsResp {
+    List  []AuditLog `json:"list"`
+    Total int64      `json:"total"`
+}
+
+// 操作日志相关请求/响应
+type CreateOperationLogReq {
+    OperationType  string `json:"operationType"`
+    ResourceType   string `json:"resourceType,optional"`
+    ResourceId     int64  `json:"resourceId,optional"`
+    ResourceName   string `json:"resourceName,optional"`
+    RequestMethod  string `json:"requestMethod,optional"`
+    RequestPath    string `json:"requestPath,optional"`
+    RequestParams  string `json:"requestParams,optional"`
+    RequestBody    string `json:"requestBody,optional"`
+    ResponseCode   int    `json:"responseCode,optional"`
+    ResponseTimeMs int    `json:"responseTimeMs,optional"`
+    ErrorMessage   string `json:"errorMessage,optional"`
+    IpAddress      string `json:"ipAddress,optional"`
+    UserAgent      string `json:"userAgent,optional"`
+    SessionId      string `json:"sessionId,optional"`
+    OldValue       string `json:"oldValue,optional"`
+    NewValue       string `json:"newValue,optional"`
+}
+
+type CreateOperationLogResp {
+    OperationLog OperationLog `json:"operationLog"`
+}
+
+type GetOperationLogReq {
+    Id int64 `path:"id"`
+}
+
+type GetOperationLogResp {
+    OperationLog OperationLog `json:"operationLog"`
+}
+
+type ListOperationLogsReq {
+    Page          int    `form:"page,optional,default=1"`
+    PageSize      int    `form:"pageSize,optional,default=10"`
+    OperationType string `form:"operationType,optional"`
+    ResourceType  string `form:"resourceType,optional"`
+    StartTime     string `form:"startTime,optional"`
+    EndTime       string `form:"endTime,optional"`
+}
+
+type ListOperationLogsResp {
+    List  []OperationLog `json:"list"`
+    Total int64          `json:"total"`
+}
+
+// 系统支持相关API
+@server (
+    group: apikey
+    prefix: /api/v1/apikeys
+)
+service support {
+    @handler CreateApiKey
+    post / (CreateApiKeyReq) returns (CreateApiKeyResp)
+    
+    @handler UpdateApiKey
+    put /:id (UpdateApiKeyReq) returns (EmptyResp)
+    
+    @handler GetApiKey
+    get /:id (GetApiKeyReq) returns (GetApiKeyResp)
+    
+    @handler ListApiKeys
+    get / (ListApiKeysReq) returns (ListApiKeysResp)
+    
+    @handler DeleteApiKey
+    delete /:id (DeleteApiKeyReq) returns (EmptyResp)
+    
+    @handler RevokeApiKey
+    post /:id/revoke (RevokeApiKeyReq) returns (EmptyResp)
+}
+
+@server (
+    group: session
+    prefix: /api/v1/sessions
+)
+service support {
+    @handler CreateUserSession
+    post / (CreateUserSessionReq) returns (CreateUserSessionResp)
+    
+    @handler UpdateUserSession
+    put /:id (UpdateUserSessionReq) returns (EmptyResp)
+    
+    @handler GetUserSession
+    get /:id (GetUserSessionReq) returns (GetUserSessionResp)
+    
+    @handler ListUserSessions
+    get / (ListUserSessionsReq) returns (ListUserSessionsResp)
+    
+    @handler DeleteUserSession
+    delete /:id (DeleteUserSessionReq) returns (EmptyResp)
+}
+
+@server (
+    group: preference
+    prefix: /api/v1/preferences
+)
+service support {
+    @handler CreateUserPreference
+    post / (CreateUserPreferenceReq) returns (CreateUserPreferenceResp)
+    
+    @handler UpdateUserPreference
+    put /:id (UpdateUserPreferenceReq) returns (EmptyResp)
+    
+    @handler GetUserPreference
+    get /:id (GetUserPreferenceReq) returns (GetUserPreferenceResp)
+    
+    @handler ListUserPreferences
+    get / (ListUserPreferencesReq) returns (ListUserPreferencesResp)
+    
+    @handler DeleteUserPreference
+    delete /:id (DeleteUserPreferenceReq) returns (EmptyResp)
+}
+
+@server (
+    group: config
+    prefix: /api/v1/configs
+)
+service support {
+    @handler CreateSystemConfig
+    post / (CreateSystemConfigReq) returns (CreateSystemConfigResp)
+    
+    @handler UpdateSystemConfig
+    put /:id (UpdateSystemConfigReq) returns (EmptyResp)
+    
+    @handler GetSystemConfig
+    get /:id (GetSystemConfigReq) returns (GetSystemConfigResp)
+    
+    @handler ListSystemConfigs
+    get / (ListSystemConfigsReq) returns (ListSystemConfigsResp)
+    
+    @handler DeleteSystemConfig
+    delete /:id (DeleteSystemConfigReq) returns (EmptyResp)
+}
+
+@server (
+    group: notification
+    prefix: /api/v1/notifications
+)
+service support {
+    @handler CreateNotification
+    post / (CreateNotificationReq) returns (CreateNotificationResp)
+    
+    @handler UpdateNotification
+    put /:id (UpdateNotificationReq) returns (EmptyResp)
+    
+    @handler GetNotification
+    get /:id (GetNotificationReq) returns (GetNotificationResp)
+    
+    @handler ListNotifications
+    get / (ListNotificationsReq) returns (ListNotificationsResp)
+    
+    @handler DeleteNotification
+    delete /:id (DeleteNotificationReq) returns (EmptyResp)
+}
+
+@server (
+    group: quota
+    prefix: /api/v1/quotas
+)
+service support {
+    @handler CreateResourceQuota
+    post / (CreateResourceQuotaReq) returns (CreateResourceQuotaResp)
+    
+    @handler UpdateResourceQuota
+    put /:id (UpdateResourceQuotaReq) returns (EmptyResp)
+    
+    @handler GetResourceQuota
+    get /:id (GetResourceQuotaReq) returns (GetResourceQuotaResp)
+    
+    @handler ListResourceQuotas
+    get / (ListResourceQuotasReq) returns (ListResourceQuotasResp)
+    
+    @handler DeleteResourceQuota
+    delete /:id (DeleteResourceQuotaReq) returns (EmptyResp)
+}
+
+@server (
+    group: audit
+    prefix: /api/v1/audits
+)
+service support {
+    @handler CreateAuditLog
+    post / (CreateAuditLogReq) returns (CreateAuditLogResp)
+    
+    @handler GetAuditLog
+    get /:id (GetAuditLogReq) returns (GetAuditLogResp)
+    
+    @handler ListAuditLogs
+    get / (ListAuditLogsReq) returns (ListAuditLogsResp)
+}
+
+@server (
+    group: operation
+    prefix: /api/v1/operations
+)
+service support {
+    @handler CreateOperationLog
+    post / (CreateOperationLogReq) returns (CreateOperationLogResp)
+    
+    @handler GetOperationLog
+    get /:id (GetOperationLogReq) returns (GetOperationLogResp)
+    
+    @handler ListOperationLogs
+    get / (ListOperationLogsReq) returns (ListOperationLogsResp)
+}

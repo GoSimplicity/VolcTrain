@@ -1,1 +1,793 @@
 syntax = "v1"
+
+import "common.api"
+
+type MonitorMetric {
+    Id                        int64    `json:"id,optional"`
+    Name                      string   `json:"name"`
+    DisplayName               string   `json:"displayName,optional"`
+    Description               string   `json:"description,optional"`
+    MetricType                string   `json:"metricType"`
+    DataType                  string   `json:"dataType,optional"`
+    Category                  string   `json:"category,optional"`
+    Module                    string   `json:"module,optional"`
+    SourceType                string   `json:"sourceType,optional"`
+    Unit                      string   `json:"unit,optional"`
+    AggregationType           string   `json:"aggregationType,optional"`
+    CollectionIntervalSeconds int      `json:"collectionIntervalSeconds,optional"`
+    RetentionDays             int      `json:"retentionDays,optional"`
+    NormalRangeMin            float64  `json:"normalRangeMin,optional"`
+    NormalRangeMax            float64  `json:"normalRangeMax,optional"`
+    WarningThreshold          float64  `json:"warningThreshold,optional"`
+    CriticalThreshold         float64  `json:"criticalThreshold,optional"`
+    ThresholdCondition        string   `json:"thresholdCondition,optional"`
+    Status                    string   `json:"status,optional"`
+    IsBuiltin                 bool     `json:"isBuiltin,optional"`
+    IsCore                    bool     `json:"isCore,optional"`
+    DefaultLabels             interface{} `json:"defaultLabels,optional"`
+    Dimensions                interface{} `json:"dimensions,optional"`
+    Metadata                  interface{} `json:"metadata,optional"`
+    CreatedAt                 string   `json:"createdAt,optional"`
+    UpdatedAt                 string   `json:"updatedAt,optional"`
+}
+
+type CreateMonitorMetricReq {
+    Name                      string   `json:"name"`
+    DisplayName               string   `json:"displayName,optional"`
+    Description               string   `json:"description,optional"`
+    MetricType                string   `json:"metricType"`
+    DataType                  string   `json:"dataType,optional"`
+    Category                  string   `json:"category,optional"`
+    Module                    string   `json:"module,optional"`
+    SourceType                string   `json:"sourceType,optional"`
+    Unit                      string   `json:"unit,optional"`
+    AggregationType           string   `json:"aggregationType,optional"`
+    CollectionIntervalSeconds int      `json:"collectionIntervalSeconds,optional"`
+    RetentionDays             int      `json:"retentionDays,optional"`
+    NormalRangeMin            float64  `json:"normalRangeMin,optional"`
+    NormalRangeMax            float64  `json:"normalRangeMax,optional"`
+    WarningThreshold          float64  `json:"warningThreshold,optional"`
+    CriticalThreshold         float64  `json:"criticalThreshold,optional"`
+    ThresholdCondition        string   `json:"thresholdCondition,optional"`
+    Status                    string   `json:"status,optional"`
+    IsBuiltin                 bool     `json:"isBuiltin,optional"`
+    IsCore                    bool     `json:"isCore,optional"`
+    DefaultLabels             interface{} `json:"defaultLabels,optional"`
+    Dimensions                interface{} `json:"dimensions,optional"`
+    Metadata                  interface{} `json:"metadata,optional"`
+}
+
+type CreateMonitorMetricResp {
+    Id int64 `json:"id"`
+}
+
+type UpdateMonitorMetricReq {
+    Id                        int64    `json:"id"`
+    Name                      string   `json:"name,optional"`
+    DisplayName               string   `json:"displayName,optional"`
+    Description               string   `json:"description,optional"`
+    MetricType                string   `json:"metricType,optional"`
+    DataType                  string   `json:"dataType,optional"`
+    Category                  string   `json:"category,optional"`
+    Module                    string   `json:"module,optional"`
+    SourceType                string   `json:"sourceType,optional"`
+    Unit                      string   `json:"unit,optional"`
+    AggregationType           string   `json:"aggregationType,optional"`
+    CollectionIntervalSeconds int      `json:"collectionIntervalSeconds,optional"`
+    RetentionDays             int      `json:"retentionDays,optional"`
+    NormalRangeMin            float64  `json:"normalRangeMin,optional"`
+    NormalRangeMax            float64  `json:"normalRangeMax,optional"`
+    WarningThreshold          float64  `json:"warningThreshold,optional"`
+    CriticalThreshold         float64  `json:"criticalThreshold,optional"`
+    ThresholdCondition        string   `json:"thresholdCondition,optional"`
+    Status                    string   `json:"status,optional"`
+    IsBuiltin                 bool     `json:"isBuiltin,optional"`
+    IsCore                    bool     `json:"isCore,optional"`
+    DefaultLabels             interface{} `json:"defaultLabels,optional"`
+    Dimensions                interface{} `json:"dimensions,optional"`
+    Metadata                  interface{} `json:"metadata,optional"`
+}
+
+type GetMonitorMetricReq {
+    Id int64 `path:"id"`
+}
+
+type GetMonitorMetricResp {
+    Metric MonitorMetric `json:"metric"`
+}
+
+type DeleteMonitorMetricReq {
+    Id int64 `path:"id"`
+}
+
+type ListMonitorMetricsReq {
+    Page         int    `form:"page,optional,default=1"`
+    PageSize     int    `form:"pageSize,optional,default=20"`
+    Name         string `form:"name,optional"`
+    MetricType   string `form:"metricType,optional"`
+    Category     string `form:"category,optional"`
+    Module       string `form:"module,optional"`
+    SourceType   string `form:"sourceType,optional"`
+    Status       string `form:"status,optional"`
+    IsBuiltin    bool   `form:"isBuiltin,optional"`
+    IsCore       bool   `form:"isCore,optional"`
+}
+
+type ListMonitorMetricsResp {
+    List  []MonitorMetric `json:"list"`
+    Total int64           `json:"total"`
+}
+
+// ==================== 监控数据相关 ====================
+
+type MonitorData {
+    Id             int64   `json:"id,optional"`
+    MetricId       int64   `json:"metricId"`
+    ResourceType   string  `json:"resourceType,optional"`
+    ResourceId     int64   `json:"resourceId,optional"`
+    ResourceName   string  `json:"resourceName,optional"`
+    InstanceId     string  `json:"instanceId,optional"`
+    Labels         interface{} `json:"labels,optional"`
+    Value          float64 `json:"value"`
+    ValueInt       int64   `json:"valueInt,optional"`
+    ValueStr       string  `json:"valueStr,optional"`
+    ValueBool      bool    `json:"valueBool,optional"`
+    CountValue     int64   `json:"countValue,optional"`
+    SumValue       float64 `json:"sumValue,optional"`
+    MinValue       float64 `json:"minValue,optional"`
+    MaxValue       float64 `json:"maxValue,optional"`
+    AvgValue       float64 `json:"avgValue,optional"`
+    Timestamp      string  `json:"timestamp"`
+    CollectionTime string  `json:"collectionTime,optional"`
+    QualityScore   float64 `json:"qualityScore,optional"`
+    IsAnomaly      bool    `json:"isAnomaly,optional"`
+    Metadata       interface{} `json:"metadata,optional"`
+}
+
+type CreateMonitorDataReq {
+    MetricId       int64   `json:"metricId"`
+    ResourceType   string  `json:"resourceType,optional"`
+    ResourceId     int64   `json:"resourceId,optional"`
+    ResourceName   string  `json:"resourceName,optional"`
+    InstanceId     string  `json:"instanceId,optional"`
+    Labels         interface{} `json:"labels,optional"`
+    Value          float64 `json:"value"`
+    ValueInt       int64   `json:"valueInt,optional"`
+    ValueStr       string  `json:"valueStr,optional"`
+    ValueBool      bool    `json:"valueBool,optional"`
+    CountValue     int64   `json:"countValue,optional"`
+    SumValue       float64 `json:"sumValue,optional"`
+    MinValue       float64 `json:"minValue,optional"`
+    MaxValue       float64 `json:"maxValue,optional"`
+    AvgValue       float64 `json:"avgValue,optional"`
+    Timestamp      string  `json:"timestamp"`
+    QualityScore   float64 `json:"qualityScore,optional"`
+    IsAnomaly      bool    `json:"isAnomaly,optional"`
+    Metadata       interface{} `json:"metadata,optional"`
+}
+
+type CreateMonitorDataResp {
+    Id int64 `json:"id"`
+}
+
+type BatchCreateMonitorDataReq {
+    Data []CreateMonitorDataReq `json:"data"`
+}
+
+type BatchCreateMonitorDataResp {
+    SuccessCount int     `json:"successCount"`
+    FailCount    int     `json:"failCount"`
+    Ids          []int64 `json:"ids,optional"`
+}
+
+type GetMonitorDataReq {
+    Id int64 `path:"id"`
+}
+
+type GetMonitorDataResp {
+    Data MonitorData `json:"data"`
+}
+
+type QueryMonitorDataReq {
+    MetricId      int64  `form:"metricId,optional"`
+    ResourceType  string `form:"resourceType,optional"`
+    ResourceId    int64  `form:"resourceId,optional"`
+    InstanceId    string `form:"instanceId,optional"`
+    StartTime     string `form:"startTime"`
+    EndTime       string `form:"endTime"`
+    Page          int    `form:"page,optional,default=1"`
+    PageSize      int    `form:"pageSize,optional,default=100"`
+    IsAnomaly     bool   `form:"isAnomaly,optional"`
+}
+
+type QueryMonitorDataResp {
+    List  []MonitorData `json:"list"`
+    Total int64         `json:"total"`
+}
+
+// ==================== 通知模板相关 ====================
+
+type NotificationTemplate {
+    Id                int64  `json:"id,optional"`
+    Name              string `json:"name"`
+    DisplayName       string `json:"displayName,optional"`
+    Description       string `json:"description,optional"`
+    TemplateType      string `json:"templateType,optional"`
+    ChannelType       string `json:"channelType"`
+    SubjectTemplate   string `json:"subjectTemplate,optional"`
+    BodyTemplate      string `json:"bodyTemplate"`
+    HtmlTemplate      string `json:"htmlTemplate,optional"`
+    Variables         interface{} `json:"variables,optional"`
+    DefaultValues     interface{} `json:"defaultValues,optional"`
+    FormatType        string `json:"formatType,optional"`
+    Encoding          string `json:"encoding,optional"`
+    Locale            string `json:"locale,optional"`
+    Timezone          string `json:"timezone,optional"`
+    Status            string `json:"status,optional"`
+    IsDefault         bool   `json:"isDefault,optional"`
+    IsSystem          bool   `json:"isSystem,optional"`
+    Version           string `json:"version,optional"`
+    ParentTemplateId  int64  `json:"parentTemplateId,optional"`
+    Metadata          string `json:"metadata,optional"`
+    CreatedAt         string `json:"createdAt,optional"`
+    UpdatedAt         string `json:"updatedAt,optional"`
+}
+
+type CreateNotificationTemplateReq {
+    Name              string `json:"name"`
+    DisplayName       string `json:"displayName,optional"`
+    Description       string `json:"description,optional"`
+    TemplateType      string `json:"templateType,optional"`
+    ChannelType       string `json:"channelType"`
+    SubjectTemplate   string `json:"subjectTemplate,optional"`
+    BodyTemplate      string `json:"bodyTemplate"`
+    HtmlTemplate      string `json:"htmlTemplate,optional"`
+    Variables         interface{} `json:"variables,optional"`
+    DefaultValues     interface{} `json:"defaultValues,optional"`
+    FormatType        string `json:"formatType,optional"`
+    Encoding          string `json:"encoding,optional"`
+    Locale            string `json:"locale,optional"`
+    Timezone          string `json:"timezone,optional"`
+    Status            string `json:"status,optional"`
+    IsDefault         bool   `json:"isDefault,optional"`
+    IsSystem          bool   `json:"isSystem,optional"`
+    Version           string `json:"version,optional"`
+    ParentTemplateId  int64  `json:"parentTemplateId,optional"`
+    Metadata          string `json:"metadata,optional"`
+}
+
+type CreateNotificationTemplateResp {
+    Id int64 `json:"id"`
+}
+
+type UpdateNotificationTemplateReq {
+    Id                int64  `json:"id"`
+    Name              string `json:"name,optional"`
+    DisplayName       string `json:"displayName,optional"`
+    Description       string `json:"description,optional"`
+    TemplateType      string `json:"templateType,optional"`
+    ChannelType       string `json:"channelType,optional"`
+    SubjectTemplate   string `json:"subjectTemplate,optional"`
+    BodyTemplate      string `json:"bodyTemplate,optional"`
+    HtmlTemplate      string `json:"htmlTemplate,optional"`
+    Variables         interface{} `json:"variables,optional"`
+    DefaultValues     interface{} `json:"defaultValues,optional"`
+    FormatType        string `json:"formatType,optional"`
+    Encoding          string `json:"encoding,optional"`
+    Locale            string `json:"locale,optional"`
+    Timezone          string `json:"timezone,optional"`
+    Status            string `json:"status,optional"`
+    IsDefault         bool   `json:"isDefault,optional"`
+    IsSystem          bool   `json:"isSystem,optional"`
+    Version           string `json:"version,optional"`
+    ParentTemplateId  int64  `json:"parentTemplateId,optional"`
+    Metadata          string `json:"metadata,optional"`
+}
+
+type GetNotificationTemplateReq {
+    Id int64 `path:"id"`
+}
+
+type GetNotificationTemplateResp {
+    Template NotificationTemplate `json:"template"`
+}
+
+type DeleteNotificationTemplateReq {
+    Id int64 `path:"id"`
+}
+
+type ListNotificationTemplatesReq {
+    Page         int    `form:"page,optional,default=1"`
+    PageSize     int    `form:"pageSize,optional,default=20"`
+    Name         string `form:"name,optional"`
+    TemplateType string `form:"templateType,optional"`
+    ChannelType  string `form:"channelType,optional"`
+    Status       string `form:"status,optional"`
+    IsDefault    bool   `form:"isDefault,optional"`
+    IsSystem     bool   `form:"isSystem,optional"`
+}
+
+type ListNotificationTemplatesResp {
+    List  []NotificationTemplate `json:"list"`
+    Total int64                  `json:"total"`
+}
+
+// ==================== 通知渠道相关 ====================
+
+type NotificationChannel {
+    Id                    int64  `json:"id,optional"`
+    Name                  string `json:"name"`
+    DisplayName           string `json:"displayName,optional"`
+    Description           string `json:"description,optional"`
+    ChannelType           string `json:"channelType"`
+    Config                interface{} `json:"config"`
+    AuthConfig            interface{} `json:"authConfig,optional"`
+    TemplateConfig        interface{} `json:"templateConfig,optional"`
+    RateLimitPerMinute    int    `json:"rateLimitPerMinute,optional"`
+    RateLimitPerHour      int    `json:"rateLimitPerHour,optional"`
+    RateLimitPerDay       int    `json:"rateLimitPerDay,optional"`
+    RetryEnabled          bool   `json:"retryEnabled,optional"`
+    MaxRetryCount         int    `json:"maxRetryCount,optional"`
+    RetryIntervalSeconds  int    `json:"retryIntervalSeconds,optional"`
+    AlertLevelFilter      interface{} `json:"alertLevelFilter,optional"`
+    TimeFilter            interface{} `json:"timeFilter,optional"`
+    ContentFilter         interface{} `json:"contentFilter,optional"`
+    Status                string `json:"status,optional"`
+    LastUsedAt            string `json:"lastUsedAt,optional"`
+    SuccessCount          int    `json:"successCount,optional"`
+    ErrorCount            int    `json:"errorCount,optional"`
+    TotalSent             int    `json:"totalSent,optional"`
+    TestEnabled           bool   `json:"testEnabled,optional"`
+    LastTestAt            string `json:"lastTestAt,optional"`
+    TestResult            string `json:"testResult,optional"`
+    Metadata              string `json:"metadata,optional"`
+    CreatedAt             string `json:"createdAt,optional"`
+    UpdatedAt             string `json:"updatedAt,optional"`
+}
+
+type CreateNotificationChannelReq {
+    Name                  string `json:"name"`
+    DisplayName           string `json:"displayName,optional"`
+    Description           string `json:"description,optional"`
+    ChannelType           string `json:"channelType"`
+    Config                interface{} `json:"config"`
+    AuthConfig            interface{} `json:"authConfig,optional"`
+    TemplateConfig        interface{} `json:"templateConfig,optional"`
+    RateLimitPerMinute    int    `json:"rateLimitPerMinute,optional"`
+    RateLimitPerHour      int    `json:"rateLimitPerHour,optional"`
+    RateLimitPerDay       int    `json:"rateLimitPerDay,optional"`
+    RetryEnabled          bool   `json:"retryEnabled,optional"`
+    MaxRetryCount         int    `json:"maxRetryCount,optional"`
+    RetryIntervalSeconds  int    `json:"retryIntervalSeconds,optional"`
+    AlertLevelFilter      interface{} `json:"alertLevelFilter,optional"`
+    TimeFilter            interface{} `json:"timeFilter,optional"`
+    ContentFilter         interface{} `json:"contentFilter,optional"`
+    Status                string `json:"status,optional"`
+    TestEnabled           bool   `json:"testEnabled,optional"`
+    Metadata              string `json:"metadata,optional"`
+}
+
+type CreateNotificationChannelResp {
+    Id int64 `json:"id"`
+}
+
+type UpdateNotificationChannelReq {
+    Id                    int64  `json:"id"`
+    Name                  string `json:"name,optional"`
+    DisplayName           string `json:"displayName,optional"`
+    Description           string `json:"description,optional"`
+    ChannelType           string `json:"channelType,optional"`
+    Config                string `json:"config,optional"`
+    AuthConfig            string `json:"authConfig,optional"`
+    TemplateConfig        string `json:"templateConfig,optional"`
+    RateLimitPerMinute    int    `json:"rateLimitPerMinute,optional"`
+    RateLimitPerHour      int    `json:"rateLimitPerHour,optional"`
+    RateLimitPerDay       int    `json:"rateLimitPerDay,optional"`
+    RetryEnabled          bool   `json:"retryEnabled,optional"`
+    MaxRetryCount         int    `json:"maxRetryCount,optional"`
+    RetryIntervalSeconds  int    `json:"retryIntervalSeconds,optional"`
+    AlertLevelFilter      interface{} `json:"alertLevelFilter,optional"`
+    TimeFilter            interface{} `json:"timeFilter,optional"`
+    ContentFilter         interface{} `json:"contentFilter,optional"`
+    Status                string `json:"status,optional"`
+    TestEnabled           bool   `json:"testEnabled,optional"`
+    Metadata              string `json:"metadata,optional"`
+}
+
+type GetNotificationChannelReq {
+    Id int64 `path:"id"`
+}
+
+type GetNotificationChannelResp {
+    Channel NotificationChannel `json:"channel"`
+}
+
+type DeleteNotificationChannelReq {
+    Id int64 `path:"id"`
+}
+
+type ListNotificationChannelsReq {
+    Page        int    `form:"page,optional,default=1"`
+    PageSize    int    `form:"pageSize,optional,default=20"`
+    Name        string `form:"name,optional"`
+    ChannelType string `form:"channelType,optional"`
+    Status      string `form:"status,optional"`
+}
+
+type ListNotificationChannelsResp {
+    List  []NotificationChannel `json:"list"`
+    Total int64                 `json:"total"`
+}
+
+type TestNotificationChannelReq {
+    Id      int64  `json:"id"`
+    Message string `json:"message,optional"`
+}
+
+type TestNotificationChannelResp {
+    Success bool   `json:"success"`
+    Message string `json:"message,optional"`
+}
+
+// ==================== 告警规则相关 ====================
+
+type AlertRule {
+    Id                        int64   `json:"id,optional"`
+    Name                      string  `json:"name"`
+    DisplayName               string  `json:"displayName,optional"`
+    Description               string  `json:"description,optional"`
+    RuleType                  string  `json:"ruleType,optional"`
+    ConditionExpression       string  `json:"conditionExpression"`
+    QueryExpression           string  `json:"queryExpression,optional"`
+    WarningThreshold          float64 `json:"warningThreshold,optional"`
+    CriticalThreshold         float64 `json:"criticalThreshold,optional"`
+    ThresholdCondition        string  `json:"thresholdCondition,optional"`
+    EvaluationWindowSeconds   int     `json:"evaluationWindowSeconds,optional"`
+    EvaluationIntervalSeconds int     `json:"evaluationIntervalSeconds,optional"`
+    TriggerDurationSeconds    int     `json:"triggerDurationSeconds,optional"`
+    RecoveryDurationSeconds   int     `json:"recoveryDurationSeconds,optional"`
+    FilterLabels              interface{} `json:"filterLabels,optional"`
+    FilterResources           interface{} `json:"filterResources,optional"`
+    TimeRangeFilter           interface{} `json:"timeRangeFilter,optional"`
+    AlertLevel                string  `json:"alertLevel,optional"`
+    SeverityScore             int     `json:"severityScore,optional"`
+    NotificationChannels      interface{} `json:"notificationChannels,optional"`
+    NotificationThrottleMinutes int   `json:"notificationThrottleMinutes,optional"`
+    EscalationPolicy          interface{} `json:"escalationPolicy,optional"`
+    SilenceDurationSeconds    int     `json:"silenceDurationSeconds,optional"`
+    SuppressionRules          interface{} `json:"suppressionRules,optional"`
+    DependencyRules           interface{} `json:"dependencyRules,optional"`
+    WorkspaceIds              interface{} `json:"workspaceIds,optional"`
+    ResourceScope             interface{} `json:"resourceScope,optional"`
+    Status                    string  `json:"status,optional"`
+    TriggerCount              int     `json:"triggerCount,optional"`
+    LastEvaluationAt          string  `json:"lastEvaluationAt,optional"`
+    LastTriggerAt             string  `json:"lastTriggerAt,optional"`
+    Metadata                  string  `json:"metadata,optional"`
+    CreatedAt                 string  `json:"createdAt,optional"`
+    UpdatedAt                 string  `json:"updatedAt,optional"`
+}
+
+type CreateAlertRuleReq {
+    Name                      string  `json:"name"`
+    DisplayName               string  `json:"displayName,optional"`
+    Description               string  `json:"description,optional"`
+    RuleType                  string  `json:"ruleType,optional"`
+    ConditionExpression       string  `json:"conditionExpression"`
+    QueryExpression           string  `json:"queryExpression,optional"`
+    WarningThreshold          float64 `json:"warningThreshold,optional"`
+    CriticalThreshold         float64 `json:"criticalThreshold,optional"`
+    ThresholdCondition        string  `json:"thresholdCondition,optional"`
+    EvaluationWindowSeconds   int     `json:"evaluationWindowSeconds,optional"`
+    EvaluationIntervalSeconds int     `json:"evaluationIntervalSeconds,optional"`
+    TriggerDurationSeconds    int     `json:"triggerDurationSeconds,optional"`
+    RecoveryDurationSeconds   int     `json:"recoveryDurationSeconds,optional"`
+    FilterLabels              interface{} `json:"filterLabels,optional"`
+    FilterResources           interface{} `json:"filterResources,optional"`
+    TimeRangeFilter           interface{} `json:"timeRangeFilter,optional"`
+    AlertLevel                string  `json:"alertLevel,optional"`
+    SeverityScore             int     `json:"severityScore,optional"`
+    NotificationChannels      interface{} `json:"notificationChannels,optional"`
+    NotificationThrottleMinutes int   `json:"notificationThrottleMinutes,optional"`
+    EscalationPolicy          interface{} `json:"escalationPolicy,optional"`
+    SilenceDurationSeconds    int     `json:"silenceDurationSeconds,optional"`
+    SuppressionRules          interface{} `json:"suppressionRules,optional"`
+    DependencyRules           interface{} `json:"dependencyRules,optional"`
+    WorkspaceIds              interface{} `json:"workspaceIds,optional"`
+    ResourceScope             interface{} `json:"resourceScope,optional"`
+    Status                    string  `json:"status,optional"`
+    Metadata                  string  `json:"metadata,optional"`
+}
+
+type CreateAlertRuleResp {
+    Id int64 `json:"id"`
+}
+
+type UpdateAlertRuleReq {
+    Id                        int64   `json:"id"`
+    Name                      string  `json:"name,optional"`
+    DisplayName               string  `json:"displayName,optional"`
+    Description               string  `json:"description,optional"`
+    RuleType                  string  `json:"ruleType,optional"`
+    ConditionExpression       string  `json:"conditionExpression,optional"`
+    QueryExpression           string  `json:"queryExpression,optional"`
+    WarningThreshold          float64 `json:"warningThreshold,optional"`
+    CriticalThreshold         float64 `json:"criticalThreshold,optional"`
+    ThresholdCondition        string  `json:"thresholdCondition,optional"`
+    EvaluationWindowSeconds   int     `json:"evaluationWindowSeconds,optional"`
+    EvaluationIntervalSeconds int     `json:"evaluationIntervalSeconds,optional"`
+    TriggerDurationSeconds    int     `json:"triggerDurationSeconds,optional"`
+    RecoveryDurationSeconds   int     `json:"recoveryDurationSeconds,optional"`
+    FilterLabels              interface{} `json:"filterLabels,optional"`
+    FilterResources           interface{} `json:"filterResources,optional"`
+    TimeRangeFilter           interface{} `json:"timeRangeFilter,optional"`
+    AlertLevel                string  `json:"alertLevel,optional"`
+    SeverityScore             int     `json:"severityScore,optional"`
+    NotificationChannels      interface{} `json:"notificationChannels,optional"`
+    NotificationThrottleMinutes int   `json:"notificationThrottleMinutes,optional"`
+    EscalationPolicy          interface{} `json:"escalationPolicy,optional"`
+    SilenceDurationSeconds    int     `json:"silenceDurationSeconds,optional"`
+    SuppressionRules          interface{} `json:"suppressionRules,optional"`
+    DependencyRules           interface{} `json:"dependencyRules,optional"`
+    WorkspaceIds              interface{} `json:"workspaceIds,optional"`
+    ResourceScope             interface{} `json:"resourceScope,optional"`
+    Status                    string  `json:"status,optional"`
+    Metadata                  string  `json:"metadata,optional"`
+}
+
+type GetAlertRuleReq {
+    Id int64 `path:"id"`
+}
+
+type GetAlertRuleResp {
+    Rule AlertRule `json:"rule"`
+}
+
+type DeleteAlertRuleReq {
+    Id int64 `path:"id"`
+}
+
+type ListAlertRulesReq {
+    Page       int    `form:"page,optional,default=1"`
+    PageSize   int    `form:"pageSize,optional,default=20"`
+    Name       string `form:"name,optional"`
+    RuleType   string `form:"ruleType,optional"`
+    AlertLevel string `form:"alertLevel,optional"`
+    Status     string `form:"status,optional"`
+}
+
+type ListAlertRulesResp {
+    List  []AlertRule `json:"list"`
+    Total int64       `json:"total"`
+}
+
+// ==================== 告警记录相关 ====================
+
+type AlertRecord {
+    Id                   int64   `json:"id,optional"`
+    RuleId               int64   `json:"ruleId"`
+    AlertId              string  `json:"alertId"`
+    AlertName            string  `json:"alertName"`
+    AlertLevel           string  `json:"alertLevel,optional"`
+    SeverityScore        int     `json:"severityScore,optional"`
+    Message              string  `json:"message,optional"`
+    Summary              string  `json:"summary,optional"`
+    ResourceType         string  `json:"resourceType,optional"`
+    ResourceId           int64   `json:"resourceId,optional"`
+    ResourceName         string  `json:"resourceName,optional"`
+    InstanceId           string  `json:"instanceId,optional"`
+    TriggerValue         float64 `json:"triggerValue,optional"`
+    ThresholdValue       float64 `json:"thresholdValue,optional"`
+    ConditionExpression  string  `json:"conditionExpression,optional"`
+    EvaluationData       interface{} `json:"evaluationData,optional"`
+    TriggeredAt          string  `json:"triggeredAt,optional"`
+    FirstOccurrenceAt    string  `json:"firstOccurrenceAt,optional"`
+    LastOccurrenceAt     string  `json:"lastOccurrenceAt,optional"`
+    ResolvedAt           string  `json:"resolvedAt,optional"`
+    AcknowledgedAt       string  `json:"acknowledgedAt,optional"`
+    Status               string  `json:"status,optional"`
+    OccurrenceCount      int     `json:"occurrenceCount,optional"`
+    ResolutionNotes      string  `json:"resolutionNotes,optional"`
+    RootCause            string  `json:"rootCause,optional"`
+    NotificationSent     bool    `json:"notificationSent,optional"`
+    NotificationChannels interface{} `json:"notificationChannels,optional"`
+    NotificationCount    int     `json:"notificationCount,optional"`
+    LastNotificationAt   string  `json:"lastNotificationAt,optional"`
+    EscalationLevel      int     `json:"escalationLevel,optional"`
+    AlertGroupId         string  `json:"alertGroupId,optional"`
+    CorrelationId        string  `json:"correlationId,optional"`
+    Labels               interface{} `json:"labels,optional"`
+    Annotations          interface{} `json:"annotations,optional"`
+    Context              interface{} `json:"context,optional"`
+    Metadata             string  `json:"metadata,optional"`
+    CreatedAt            string  `json:"createdAt,optional"`
+    UpdatedAt            string  `json:"updatedAt,optional"`
+}
+
+type GetAlertRecordReq {
+    Id int64 `path:"id"`
+}
+
+type GetAlertRecordResp {
+    Record AlertRecord `json:"record"`
+}
+
+type ListAlertRecordsReq {
+    Page         int    `form:"page,optional,default=1"`
+    PageSize     int    `form:"pageSize,optional,default=20"`
+    RuleId       int64  `form:"ruleId,optional"`
+    AlertLevel   string `form:"alertLevel,optional"`
+    Status       string `form:"status,optional"`
+    ResourceType string `form:"resourceType,optional"`
+    ResourceId   int64  `form:"resourceId,optional"`
+    StartTime    string `form:"startTime,optional"`
+    EndTime      string `form:"endTime,optional"`
+}
+
+type ListAlertRecordsResp {
+    List  []AlertRecord `json:"list"`
+    Total int64         `json:"total"`
+}
+
+type AcknowledgeAlertReq {
+    Id    int64  `json:"id"`
+    Notes string `json:"notes,optional"`
+}
+
+type ResolveAlertReq {
+    Id            int64  `json:"id"`
+    ResolutionNotes string `json:"resolutionNotes,optional"`
+    RootCause       string `json:"rootCause,optional"`
+}
+
+// ==================== 监控关联相关 ====================
+
+type MonitorRelation {
+    Id                   int64  `json:"id,optional"`
+    EntityType           string `json:"entityType"`
+    EntityId             int64  `json:"entityId"`
+    RelationEntityType   string `json:"relationEntityType"`
+    RelationEntityId     int64  `json:"relationEntityId"`
+    RelationType         string `json:"relationType"`
+    Metadata             interface{} `json:"metadata,optional"`
+    CreatedAt            string `json:"createdAt,optional"`
+}
+
+type CreateMonitorRelationReq {
+    EntityType           string `json:"entityType"`
+    EntityId             int64  `json:"entityId"`
+    RelationEntityType   string `json:"relationEntityType"`
+    RelationEntityId     int64  `json:"relationEntityId"`
+    RelationType         string `json:"relationType"`
+    Metadata             interface{} `json:"metadata,optional"`
+}
+
+type CreateMonitorRelationResp {
+    Id int64 `json:"id"`
+}
+
+type DeleteMonitorRelationReq {
+    Id int64 `path:"id"`
+}
+
+type ListMonitorRelationsReq {
+    Page               int    `form:"page,optional,default=1"`
+    PageSize           int    `form:"pageSize,optional,default=20"`
+    EntityType         string `form:"entityType,optional"`
+    EntityId           int64  `form:"entityId,optional"`
+    RelationEntityType string `form:"relationEntityType,optional"`
+    RelationEntityId   int64  `form:"relationEntityId,optional"`
+    RelationType       string `form:"relationType,optional"`
+}
+
+type ListMonitorRelationsResp {
+    List  []MonitorRelation `json:"list"`
+    Total int64             `json:"total"`
+}
+
+// ==================== API路由定义 ====================
+
+service monitor-api {
+    // 监控指标定义
+    @handler CreateMonitorMetric
+    post /api/v1/monitor/metrics (CreateMonitorMetricReq) returns (CreateMonitorMetricResp)
+    
+    @handler UpdateMonitorMetric
+    put /api/v1/monitor/metrics (UpdateMonitorMetricReq) returns (EmptyResp)
+    
+    @handler GetMonitorMetric
+    get /api/v1/monitor/metrics/:id (GetMonitorMetricReq) returns (GetMonitorMetricResp)
+    
+    @handler DeleteMonitorMetric
+    delete /api/v1/monitor/metrics/:id (DeleteMonitorMetricReq) returns (EmptyResp)
+    
+    @handler ListMonitorMetrics
+    get /api/v1/monitor/metrics (ListMonitorMetricsReq) returns (ListMonitorMetricsResp)
+    
+    // 监控数据
+    @handler CreateMonitorData
+    post /api/v1/monitor/data (CreateMonitorDataReq) returns (CreateMonitorDataResp)
+    
+    @handler BatchCreateMonitorData
+    post /api/v1/monitor/data/batch (BatchCreateMonitorDataReq) returns (BatchCreateMonitorDataResp)
+    
+    @handler GetMonitorData
+    get /api/v1/monitor/data/:id (GetMonitorDataReq) returns (GetMonitorDataResp)
+    
+    @handler QueryMonitorData
+    get /api/v1/monitor/data (QueryMonitorDataReq) returns (QueryMonitorDataResp)
+    
+    // 通知模板
+    @handler CreateNotificationTemplate
+    post /api/v1/notification/templates (CreateNotificationTemplateReq) returns (CreateNotificationTemplateResp)
+    
+    @handler UpdateNotificationTemplate
+    put /api/v1/notification/templates (UpdateNotificationTemplateReq) returns (EmptyResp)
+    
+    @handler GetNotificationTemplate
+    get /api/v1/notification/templates/:id (GetNotificationTemplateReq) returns (GetNotificationTemplateResp)
+    
+    @handler DeleteNotificationTemplate
+    delete /api/v1/notification/templates/:id (DeleteNotificationTemplateReq) returns (EmptyResp)
+    
+    @handler ListNotificationTemplates
+    get /api/v1/notification/templates (ListNotificationTemplatesReq) returns (ListNotificationTemplatesResp)
+    
+    // 通知渠道
+    @handler CreateNotificationChannel
+    post /api/v1/notification/channels (CreateNotificationChannelReq) returns (CreateNotificationChannelResp)
+    
+    @handler UpdateNotificationChannel
+    put /api/v1/notification/channels (UpdateNotificationChannelReq) returns (EmptyResp)
+    
+    @handler GetNotificationChannel
+    get /api/v1/notification/channels/:id (GetNotificationChannelReq) returns (GetNotificationChannelResp)
+    
+    @handler DeleteNotificationChannel
+    delete /api/v1/notification/channels/:id (DeleteNotificationChannelReq) returns (EmptyResp)
+    
+    @handler ListNotificationChannels
+    get /api/v1/notification/channels (ListNotificationChannelsReq) returns (ListNotificationChannelsResp)
+    
+    @handler TestNotificationChannel
+    post /api/v1/notification/channels/test (TestNotificationChannelReq) returns (TestNotificationChannelResp)
+    
+    // 告警规则
+    @handler CreateAlertRule
+    post /api/v1/alert/rules (CreateAlertRuleReq) returns (CreateAlertRuleResp)
+    
+    @handler UpdateAlertRule
+    put /api/v1/alert/rules (UpdateAlertRuleReq) returns (EmptyResp)
+    
+    @handler GetAlertRule
+    get /api/v1/alert/rules/:id (GetAlertRuleReq) returns (GetAlertRuleResp)
+    
+    @handler DeleteAlertRule
+    delete /api/v1/alert/rules/:id (DeleteAlertRuleReq) returns (EmptyResp)
+    
+    @handler ListAlertRules
+    get /api/v1/alert/rules (ListAlertRulesReq) returns (ListAlertRulesResp)
+    
+    // 告警记录
+    @handler GetAlertRecord
+    get /api/v1/alert/records/:id (GetAlertRecordReq) returns (GetAlertRecordResp)
+    
+    @handler ListAlertRecords
+    get /api/v1/alert/records (ListAlertRecordsReq) returns (ListAlertRecordsResp)
+    
+    @handler AcknowledgeAlert
+    post /api/v1/alert/records/acknowledge (AcknowledgeAlertReq) returns (EmptyResp)
+    
+    @handler ResolveAlert
+    post /api/v1/alert/records/resolve (ResolveAlertReq) returns (EmptyResp)
+    
+    // 监控关联
+    @handler CreateMonitorRelation
+    post /api/v1/monitor/relations (CreateMonitorRelationReq) returns (CreateMonitorRelationResp)
+    
+    @handler DeleteMonitorRelation
+    delete /api/v1/monitor/relations/:id (DeleteMonitorRelationReq) returns (EmptyResp)
+    
+    @handler ListMonitorRelations
+    get /api/v1/monitor/relations (ListMonitorRelationsReq) returns (ListMonitorRelationsResp)
+}

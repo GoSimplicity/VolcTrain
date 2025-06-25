@@ -1,1 +1,122 @@
 syntax = "v1"
+
+import "common.api"
+
+
+
+@server(
+	group: gpu-cluster
+	prefix: /api/v1/gpu-clusters
+)
+service gpu-management {
+	@handler CreateGpuCluster
+	post / (CreateGpuClusterReq) returns (CreateGpuClusterResp)
+
+	@handler UpdateGpuCluster
+	put /:id (UpdateGpuClusterReq) returns (EmptyResp)
+
+	@handler GetGpuCluster
+	get /:id (GetGpuClusterReq) returns (GetGpuClusterResp)
+
+	@handler ListGpuClusters
+	get / (ListGpuClustersReq) returns (ListGpuClustersResp)
+
+	@handler DeleteGpuCluster
+	delete /:id (DeleteGpuClusterReq) returns (EmptyResp)
+
+	@handler ListClusterNodes
+	get /:clusterId/nodes (ListClusterNodesReq) returns (ListClusterNodesResp)
+
+	@handler AddNodeToCluster
+	post /nodes (AddNodeToClusterReq) returns (AddNodeToClusterResp)
+
+	@handler RemoveNodeFromCluster
+	delete /:clusterId/nodes/:nodeId (RemoveNodeFromClusterReq) returns (EmptyResp)
+}
+
+@server(
+	group: gpu-node
+	prefix: /api/v1/gpu-nodes
+)
+service gpu-management {
+	@handler CreateGpuNode
+	post / (CreateGpuNodeReq) returns (CreateGpuNodeResp)
+
+	@handler UpdateGpuNode
+	put /:id (UpdateGpuNodeReq) returns (EmptyResp)
+
+	@handler GetGpuNode
+	get /:id (GetGpuNodeReq) returns (GetGpuNodeResp)
+
+	@handler ListGpuNodes
+	get / (ListGpuNodesReq) returns (ListGpuNodesResp)
+
+	@handler DeleteGpuNode
+	delete /:id (DeleteGpuNodeReq) returns (EmptyResp)
+
+	@handler ListNodeDevices
+	get /:nodeId/devices (ListNodeDevicesReq) returns (ListNodeDevicesResp)
+
+	@handler AddDeviceToNode
+	post /devices (AddDeviceToNodeReq) returns (AddDeviceToNodeResp)
+
+	@handler RemoveDeviceFromNode
+	delete /:nodeId/devices/:deviceId (RemoveDeviceFromNodeReq) returns (EmptyResp)
+}
+
+@server(
+	group: gpu-device
+	prefix: /api/v1/gpu-devices
+)
+service gpu-management {
+	@handler CreateGpuDevice
+	post / (CreateGpuDeviceReq) returns (CreateGpuDeviceResp)
+
+	@handler UpdateGpuDevice
+	put /:id (UpdateGpuDeviceReq) returns (EmptyResp)
+
+	@handler GetGpuDevice
+	get /:id (GetGpuDeviceReq) returns (GetGpuDeviceResp)
+
+	@handler ListGpuDevices
+	get / (ListGpuDevicesReq) returns (ListGpuDevicesResp)
+
+	@handler DeleteGpuDevice
+	delete /:id (DeleteGpuDeviceReq) returns (EmptyResp)
+
+	@handler AllocateGpuDevice
+	post /allocations (AllocateGpuDeviceReq) returns (AllocateGpuDeviceResp)
+
+	@handler ReleaseGpuDevice
+	delete /allocations/:id (ReleaseGpuDeviceReq) returns (EmptyResp)
+
+	@handler ListGpuDeviceAllocations
+	get /allocations (ListGpuDeviceAllocationsReq) returns (ListGpuDeviceAllocationsResp)
+}
+
+@server(
+	group: gpu-usage
+	prefix: /api/v1/gpu-usage-records
+)
+service gpu-management {
+	@handler CreateGpuUsageRecord
+	post / (CreateGpuUsageRecordReq) returns (CreateGpuUsageRecordResp)
+
+	@handler UpdateGpuUsageRecord
+	put /:id (UpdateGpuUsageRecordReq) returns (EmptyResp)
+
+	@handler GetGpuUsageRecord
+	get /:id (GetGpuUsageRecordReq) returns (GetGpuUsageRecordResp)
+
+	@handler ListGpuUsageRecords
+	get / (ListGpuUsageRecordsReq) returns (ListGpuUsageRecordsResp)
+
+	@handler DeleteGpuUsageRecord
+	delete /:id (DeleteGpuUsageRecordReq) returns (EmptyResp)
+
+	@handler ListGpuUsageRelations
+	get /:usageRecordId/relations (ListGpuUsageRelationsReq) returns (ListGpuUsageRelationsResp)
+
+	@handler AddGpuUsageRelation
+	post /relations (AddGpuUsageRelationReq) returns (AddGpuUsageRelationResp)
+}
