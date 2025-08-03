@@ -515,7 +515,7 @@ type ListOperationLogsResp {
     group: apikey
     prefix: /api/v1/apikeys
 )
-service support {
+service common-api {
     @handler CreateApiKey
     post / (CreateApiKeyReq) returns (CreateApiKeyResp)
     
@@ -539,7 +539,7 @@ service support {
     group: session
     prefix: /api/v1/sessions
 )
-service support {
+service common-api {
     @handler CreateUserSession
     post / (CreateUserSessionReq) returns (CreateUserSessionResp)
     
@@ -560,7 +560,7 @@ service support {
     group: preference
     prefix: /api/v1/preferences
 )
-service support {
+service common-api {
     @handler CreateUserPreference
     post / (CreateUserPreferenceReq) returns (CreateUserPreferenceResp)
     
@@ -581,7 +581,7 @@ service support {
     group: config
     prefix: /api/v1/configs
 )
-service support {
+service common-api {
     @handler CreateSystemConfig
     post / (CreateSystemConfigReq) returns (CreateSystemConfigResp)
     
@@ -602,7 +602,7 @@ service support {
     group: notification
     prefix: /api/v1/notifications
 )
-service support {
+service common-api {
     @handler CreateNotification
     post / (CreateNotificationReq) returns (CreateNotificationResp)
     
@@ -623,7 +623,7 @@ service support {
     group: quota
     prefix: /api/v1/quotas
 )
-service support {
+service common-api {
     @handler CreateResourceQuota
     post / (CreateResourceQuotaReq) returns (CreateResourceQuotaResp)
     
@@ -644,7 +644,7 @@ service support {
     group: audit
     prefix: /api/v1/audits
 )
-service support {
+service common-api {
     @handler CreateAuditLog
     post / (CreateAuditLogReq) returns (CreateAuditLogResp)
     
@@ -659,7 +659,7 @@ service support {
     group: operation
     prefix: /api/v1/operations
 )
-service support {
+service common-api {
     @handler CreateOperationLog
     post / (CreateOperationLogReq) returns (CreateOperationLogResp)
     

@@ -1,0 +1,265 @@
+# 全局配置
+global:
+  # 镜像仓库
+  imageRegistry: ""
+  imagePullSecrets: []
+  
+  # 存储类
+  storageClass: ""
+
+# 镜像配置
+image:
+  backend:
+    registry: volctrain
+    repository: backend
+    tag: latest
+    pullPolicy: Always
+  frontend:
+    registry: volctrain
+    repository: frontend
+    tag: latest
+    pullPolicy: Always
+
+# 服务配置
+nameOverride: ""
+fullnameOverride: ""
+
+# 数据库配置
+database:
+  # 是否使用外部数据库
+  external: true
+  host: "mysql.example.com"
+  port: 3306
+  name: "volctraindb"
+  user: "volctrain_app"
+  password: "Abc@1234"
+  
+  # 内部MySQL配置（当external=false时）
+  internal:
+    enabled: false
+    persistence:
+      enabled: true
+      size: 20Gi
+      storageClass: ""
+    resources:
+      requests:
+        memory: 512Mi
+        cpu: 250m
+      limits:
+        memory: 1Gi
+        cpu: 500m
+
+# Redis配置
+redis:
+  # 是否使用外部Redis
+  external: true
+  host: "redis.example.com"
+  port: 6379
+  password: ""
+  
+  # 内部Redis配置（当external=false时）
+  internal:
+    enabled: false
+    persistence:
+      enabled: true
+      size: 8Gi
+      storageClass: ""
+    resources:
+      requests:
+        memory: 128Mi
+        cpu: 100m
+      limits:
+        memory: 256Mi
+        cpu: 200m
+
+# 后端API服务配置
+api:
+  enabled: true
+  replicaCount: 2
+  
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+  
+  service:
+    type: ClusterIP
+    port: 8888
+  
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+    targetMemoryUtilizationPercentage: 80
+
+# 监控服务配置
+monitoring:
+  enabled: true
+  replicaCount: 1
+  
+  resources:
+    requests:
+      memory: 256Mi
+      cpu: 250m
+    limits:
+      memory: 512Mi
+      cpu: 500m
+  
+  service:
+    type: ClusterIP
+    port: 8890
+    metricsPort: 9090
+  
+  prometheus:
+    enabled: true
+    scrapeInterval: 30s
+
+# 训练服务配置
+training:
+  enabled: true
+  replicaCount: 1
+  
+  resources:
+    requests:
+      memory: 512Mi
+      cpu: 500m
+    limits:
+      memory: 1Gi
+      cpu: 1000m
+  
+  service:
+    type: ClusterIP
+    port: 8891
+  
+  # Kubernetes配置
+  kubernetes:
+    enabled: true
+    namespace: volcano-system
+
+# 前端配置
+frontend:
+  enabled: true
+  replicaCount: 2
+  
+  resources:
+    requests:
+      memory: 64Mi
+      cpu: 100m
+    limits:
+      memory: 128Mi
+      cpu: 200m
+  
+  service:
+    type: ClusterIP
+    port: 80
+  
+  autoscaling:
+    enabled: false
+    minReplicas: 2
+    maxReplicas: 5
+    targetCPUUtilizationPercentage: 80
+
+# Ingress配置
+ingress:
+  enabled: true
+  className: "nginx"
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/proxy-body-size: "100m"
+    nginx.ingress.kubernetes.io/proxy-connect-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "600"
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "600"
+    cert-manager.io/cluster-issuer: "letsencrypt-prod"
+  
+  hosts:
+    - host: volctrain.example.com
+      paths:
+        - path: /api
+          pathType: Prefix
+          service: api
+        - path: /monitoring
+          pathType: Prefix
+          service: monitoring
+        - path: /
+          pathType: Prefix
+          service: frontend
+  
+  tls:
+    - secretName: volctrain-tls
+      hosts:
+        - volctrain.example.com
+
+# NodePort服务（用于测试）
+nodePort:
+  enabled: false
+  port: 30080
+
+# 安全配置
+security:
+  # Pod安全策略
+  podSecurityPolicy:
+    enabled: false
+  
+  # 网络策略
+  networkPolicy:
+    enabled: false
+  
+  # JWT密钥
+  jwtSecret: "volctrain-jwt-secret"
+
+# 日志配置
+logging:
+  level: info
+  persistence:
+    enabled: false
+    size: 10Gi
+    storageClass: ""
+
+# 监控告警配置
+alerting:
+  enabled: true
+  rules:
+    # CPU使用率告警
+    cpuUsage:
+      enabled: true
+      threshold: 80
+    # 内存使用率告警
+    memoryUsage:
+      enabled: true
+      threshold: 85
+    # 响应时间告警
+    responseTime:
+      enabled: true
+      threshold: 2000ms
+
+# 备份配置
+backup:
+  enabled: false
+  schedule: "0 2 * * *"
+  retention: 7
+  
+# 环境特定配置
+environment: production
+
+# 额外的环境变量
+extraEnvVars: {}
+
+# Pod注解
+podAnnotations: {}
+
+# Pod标签
+podLabels: {}
+
+# Service Account
+serviceAccount:
+  create: true
+  annotations: {}
+  name: ""
+
+# RBAC
+rbac:
+  create: true

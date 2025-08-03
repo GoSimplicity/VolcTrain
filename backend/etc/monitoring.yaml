@@ -1,0 +1,57 @@
+# 数据库配置
+database:
+  host: localhost
+  port: 3306
+  username: volctrain
+  password: volctrain123
+  database: volctrain
+  max_open_conns: 100
+  max_idle_conns: 10
+
+# 监控服务配置
+monitoring:
+  # 指标收集配置
+  metrics:
+    prometheus_url: "http://localhost:9090"
+    collect_interval: "30s"
+    system_metrics_enabled: true
+    business_metrics_enabled: true
+    prometheus_enabled: true
+    metrics_port: 9091
+    enable_builtin_metrics: true
+    max_retries: 3
+    timeout: "30s"
+
+  # 告警引擎配置
+  alerts:
+    evaluation_interval: "30s"
+    max_concurrent_rules: 10
+    alert_retention_days: 30
+    enable_grouping: true
+    enable_suppression: true
+    default_throttle_minutes: 5
+    anomaly_detection_enabled: true
+
+  # 通知管理配置
+  notifications:
+    max_queue_size: 1000
+    max_concurrent_senders: 5
+    retry_max_attempts: 3
+    retry_backoff_seconds: 5
+    rate_limit_per_minute: 60
+    timeout_seconds: 30
+    failed_retention_days: 7
+    enable_deduplication: true
+    deduplication_window: "5m"
+
+  # 系统配置
+  system:
+    enable_metrics: true
+    enable_alerts: true
+    enable_notifications: true
+    health_check_interval: "30s"
+    auto_restart: true
+    max_restart_attempts: 3
+
+# 服务端口
+port: 8080

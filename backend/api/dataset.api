@@ -397,7 +397,7 @@ type CloneDatasetResp {
 	group: dataset
 	prefix: /api/v1/datasets
 )
-service dataset-api {
+service common-api {
 	// 数据集管理
 	@handler CreateDataset
 	post / (CreateDatasetReq) returns (CreateDatasetResp)

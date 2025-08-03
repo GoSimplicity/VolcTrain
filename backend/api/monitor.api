@@ -687,7 +687,7 @@ type ListMonitorRelationsResp {
 
 // ==================== API路由定义 ====================
 
-service monitor-api {
+service common-api {
     // 监控指标定义
     @handler CreateMonitorMetric
     post /api/v1/monitor/metrics (CreateMonitorMetricReq) returns (CreateMonitorMetricResp)

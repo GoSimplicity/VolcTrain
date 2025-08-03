@@ -345,7 +345,7 @@ type ListProjectOwnersResp {
 @server(
     group: workspace
 )
-service workspace-api {
+service common-api {
     // 工作空间管理
     @handler CreateWorkspace
     post /api/v1/workspaces (CreateWorkspaceReq) returns (CreateWorkspaceResp)

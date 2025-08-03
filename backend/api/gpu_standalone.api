@@ -1,0 +1,474 @@
+syntax = "v1"
+
+type EmptyReq {}
+
+type EmptyResp {}
+
+// GPU集群相关类型定义
+type GpuClusterInfo {
+	ID             int64                  `json:"id"`
+	Name           string                 `json:"name"`
+	DisplayName    string                 `json:"display_name"`
+	Description    string                 `json:"description"`
+	ClusterType    string                 `json:"cluster_type"` // k8s, slurm, custom
+	Status         string                 `json:"status"` // active, inactive, maintenance
+	KubeConfig     string                 `json:"kube_config"` // Kubernetes配置
+	ApiEndpoint    string                 `json:"api_endpoint"` // API端点
+	Region         string                 `json:"region"` // 地域
+	Zone           string                 `json:"zone"` // 可用区
+	TotalNodes     int                    `json:"total_nodes"` // 总节点数
+	ActiveNodes    int                    `json:"active_nodes"` // 活跃节点数
+	TotalGpus      int                    `json:"total_gpus"` // 总GPU数
+	AvailableGpus  int                    `json:"available_gpus"` // 可用GPU数
+	AllocatedGpus  int                    `json:"allocated_gpus"` // 已分配GPU数
+	ResourceLabels map[string]string      `json:"resource_labels,omitempty"`
+	MetricsConfig  map[string]interface{} `json:"metrics_config,omitempty"`
+	CreatedAt      string                 `json:"created_at"`
+	UpdatedAt      string                 `json:"updated_at"`
+}
+
+type CreateGpuClusterReq {
+	Name           string                 `json:"name" validate:"required"`
+	DisplayName    string                 `json:"display_name"`
+	Description    string                 `json:"description"`
+	ClusterType    string                 `json:"cluster_type" validate:"required"`
+	KubeConfig     string                 `json:"kube_config"`
+	ApiEndpoint    string                 `json:"api_endpoint"`
+	Region         string                 `json:"region"`
+	Zone           string                 `json:"zone"`
+	ResourceLabels map[string]string      `json:"resource_labels,omitempty"`
+	MetricsConfig  map[string]interface{} `json:"metrics_config,omitempty"`
+}
+
+type CreateGpuClusterResp {
+	Cluster GpuClusterInfo `json:"cluster"`
+}
+
+type UpdateGpuClusterReq {
+	ID             int64                  `path:"id" validate:"required"`
+	DisplayName    string                 `json:"display_name,optional"`
+	Description    string                 `json:"description,optional"`
+	Status         string                 `json:"status,optional"`
+	KubeConfig     string                 `json:"kube_config,optional"`
+	ApiEndpoint    string                 `json:"api_endpoint,optional"`
+	Region         string                 `json:"region,optional"`
+	Zone           string                 `json:"zone,optional"`
+	ResourceLabels map[string]string      `json:"resource_labels,omitempty"`
+	MetricsConfig  map[string]interface{} `json:"metrics_config,omitempty"`
+}
+
+type GetGpuClusterReq {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type GetGpuClusterResp {
+	Cluster GpuClusterInfo `json:"cluster"`
+}
+
+type ListGpuClustersReq {
+	Page        int    `form:"page,default=1"`
+	PageSize    int    `form:"page_size,default=20"`
+	Status      string `form:"status,optional"`
+	ClusterType string `form:"cluster_type,optional"`
+	Region      string `form:"region,optional"`
+	Search      string `form:"search,optional"`
+}
+
+type ListGpuClustersResp {
+	Clusters []GpuClusterInfo `json:"clusters"`
+	Total    int64            `json:"total"`
+	Page     int              `json:"page"`
+	PageSize int              `json:"page_size"`
+}
+
+type DeleteGpuClusterReq {
+	ID int64 `path:"id" validate:"required"`
+}
+
+// GPU节点相关类型定义
+type GpuNodeInfo {
+	ID            int64                    `json:"id"`
+	ClusterId     int64                    `json:"cluster_id"`
+	ClusterName   string                   `json:"cluster_name"`
+	Name          string                   `json:"name"`
+	Hostname      string                   `json:"hostname"`
+	InternalIP    string                   `json:"internal_ip"`
+	ExternalIP    string                   `json:"external_ip"`
+	Status        string                   `json:"status"` // ready, not_ready, unknown, maintenance
+	NodeType      string                   `json:"node_type"` // master, worker, gpu
+	CpuCores      int                      `json:"cpu_cores"`
+	MemoryGb      int                      `json:"memory_gb"`
+	StorageGb     int                      `json:"storage_gb"`
+	GpuCount      int                      `json:"gpu_count"`
+	AvailableGpus int                      `json:"available_gpus"`
+	AllocatedGpus int                      `json:"allocated_gpus"`
+	OsImage       string                   `json:"os_image"`
+	KernelVersion string                   `json:"kernel_version"`
+	NodeLabels    map[string]string        `json:"node_labels,omitempty"`
+	NodeTaints    []map[string]interface{} `json:"node_taints,omitempty"`
+	LastHeartbeat string                   `json:"last_heartbeat"`
+	CreatedAt     string                   `json:"created_at"`
+	UpdatedAt     string                   `json:"updated_at"`
+}
+
+type CreateGpuNodeReq {
+	ClusterId  int64                    `json:"cluster_id" validate:"required"`
+	Name       string                   `json:"name" validate:"required"`
+	Hostname   string                   `json:"hostname" validate:"required"`
+	InternalIP string                   `json:"internal_ip" validate:"required"`
+	ExternalIP string                   `json:"external_ip"`
+	NodeType   string                   `json:"node_type" validate:"required"`
+	CpuCores   int                      `json:"cpu_cores" validate:"required"`
+	MemoryGb   int                      `json:"memory_gb" validate:"required"`
+	StorageGb  int                      `json:"storage_gb" validate:"required"`
+	NodeLabels map[string]string        `json:"node_labels,omitempty"`
+	NodeTaints []map[string]interface{} `json:"node_taints,omitempty"`
+}
+
+type CreateGpuNodeResp {
+	Node GpuNodeInfo `json:"node"`
+}
+
+type UpdateGpuNodeReq {
+	ID         int64                    `path:"id" validate:"required"`
+	Hostname   string                   `json:"hostname,optional"`
+	InternalIP string                   `json:"internal_ip,optional"`
+	ExternalIP string                   `json:"external_ip,optional"`
+	Status     string                   `json:"status,optional"`
+	NodeType   string                   `json:"node_type,optional"`
+	CpuCores   int                      `json:"cpu_cores,optional"`
+	MemoryGb   int                      `json:"memory_gb,optional"`
+	StorageGb  int                      `json:"storage_gb,optional"`
+	NodeLabels map[string]string        `json:"node_labels,omitempty"`
+	NodeTaints []map[string]interface{} `json:"node_taints,omitempty"`
+}
+
+type GetGpuNodeReq {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type GetGpuNodeResp {
+	Node GpuNodeInfo `json:"node"`
+}
+
+type ListGpuNodesReq {
+	Page      int    `form:"page,default=1"`
+	PageSize  int    `form:"page_size,default=20"`
+	ClusterId int64  `form:"cluster_id,optional"`
+	Status    string `form:"status,optional"`
+	NodeType  string `form:"node_type,optional"`
+	Search    string `form:"search,optional"`
+}
+
+type ListGpuNodesResp {
+	Nodes    []GpuNodeInfo `json:"nodes"`
+	Total    int64         `json:"total"`
+	Page     int           `json:"page"`
+	PageSize int           `json:"page_size"`
+}
+
+type DeleteGpuNodeReq {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type ListClusterNodesReq {
+	ClusterId int64  `path:"clusterId" validate:"required"`
+	Page      int    `form:"page,default=1"`
+	PageSize  int    `form:"page_size,default=20"`
+	Status    string `form:"status,optional"`
+	NodeType  string `form:"node_type,optional"`
+}
+
+type ListClusterNodesResp {
+	Nodes    []GpuNodeInfo `json:"nodes"`
+	Total    int64         `json:"total"`
+	Page     int           `json:"page"`
+	PageSize int           `json:"page_size"`
+}
+
+// GPU设备相关类型定义
+type GpuDeviceInfo {
+	ID              int64   `json:"id"`
+	ClusterId       int64   `json:"cluster_id"`
+	ClusterName     string  `json:"cluster_name"`
+	NodeId          int64   `json:"node_id"`
+	NodeName        string  `json:"node_name"`
+	DeviceIndex     int     `json:"device_index"` // GPU设备索引
+	DeviceUUID      string  `json:"device_uuid"` // GPU设备UUID
+	DeviceName      string  `json:"device_name"` // GPU设备名称
+	Brand           string  `json:"brand"` // 品牌: NVIDIA, AMD
+	Model           string  `json:"model"` // 型号: V100, A100, RTX4090
+	Architecture    string  `json:"architecture"` // 架构: Volta, Ampere, Turing
+	MemoryTotalMb   int     `json:"memory_total_mb"` // 显存总量(MB)
+	MemoryFreeMb    int     `json:"memory_free_mb"` // 显存可用(MB)
+	MemoryUsedMb    int     `json:"memory_used_mb"` // 显存已用(MB)
+	PowerDrawW      int     `json:"power_draw_w"` // 功耗(W)
+	PowerLimitW     int     `json:"power_limit_w"` // 功耗限制(W)
+	TemperatureC    int     `json:"temperature_c"` // 温度(℃)
+	UtilizationGpu  int     `json:"utilization_gpu"` // GPU使用率(%)
+	UtilizationMem  int     `json:"utilization_mem"` // 内存使用率(%)
+	Status          string  `json:"status"` // available, allocated, maintenance, error
+	HealthStatus    string  `json:"health_status"` // healthy, warning, critical
+	PcieBusId       string  `json:"pcie_bus_id"` // PCIe总线ID
+	CudaVersion     string  `json:"cuda_version"` // CUDA版本
+	DriverVersion   string  `json:"driver_version"` // 驱动版本
+	AllocationId    *int64  `json:"allocation_id,omitempty"` // 分配ID
+	AllocatedJobId  *int64  `json:"allocated_job_id,omitempty"` // 分配的作业ID
+	AllocatedUserId *int64  `json:"allocated_user_id,omitempty"` // 分配的用户ID
+	AllocatedAt     *string `json:"allocated_at,omitempty"` // 分配时间
+	LastHeartbeat   string  `json:"last_heartbeat"`
+	CreatedAt       string  `json:"created_at"`
+	UpdatedAt       string  `json:"updated_at"`
+}
+
+type CreateGpuDeviceReq {
+	ClusterId     int64  `json:"cluster_id" validate:"required"`
+	NodeId        int64  `json:"node_id" validate:"required"`
+	DeviceIndex   int    `json:"device_index" validate:"required"`
+	DeviceUUID    string `json:"device_uuid" validate:"required"`
+	DeviceName    string `json:"device_name" validate:"required"`
+	Brand         string `json:"brand" validate:"required"`
+	Model         string `json:"model" validate:"required"`
+	Architecture  string `json:"architecture"`
+	MemoryTotalMb int    `json:"memory_total_mb" validate:"required"`
+	PowerLimitW   int    `json:"power_limit_w"`
+	PcieBusId     string `json:"pcie_bus_id"`
+	CudaVersion   string `json:"cuda_version"`
+	DriverVersion string `json:"driver_version"`
+}
+
+type CreateGpuDeviceResp {
+	Device GpuDeviceInfo `json:"device"`
+}
+
+type UpdateGpuDeviceReq {
+	ID             int64  `path:"id" validate:"required"`
+	DeviceName     string `json:"device_name,optional"`
+	Architecture   string `json:"architecture,optional"`
+	MemoryTotalMb  int    `json:"memory_total_mb,optional"`
+	MemoryFreeMb   int    `json:"memory_free_mb,optional"`
+	MemoryUsedMb   int    `json:"memory_used_mb,optional"`
+	PowerDrawW     int    `json:"power_draw_w,optional"`
+	PowerLimitW    int    `json:"power_limit_w,optional"`
+	TemperatureC   int    `json:"temperature_c,optional"`
+	UtilizationGpu int    `json:"utilization_gpu,optional"`
+	UtilizationMem int    `json:"utilization_mem,optional"`
+	Status         string `json:"status,optional"`
+	HealthStatus   string `json:"health_status,optional"`
+	CudaVersion    string `json:"cuda_version,optional"`
+	DriverVersion  string `json:"driver_version,optional"`
+}
+
+type GetGpuDeviceReq {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type GetGpuDeviceResp {
+	Device GpuDeviceInfo `json:"device"`
+}
+
+type ListGpuDevicesReq {
+	Page         int    `form:"page,default=1"`
+	PageSize     int    `form:"page_size,default=20"`
+	ClusterId    int64  `form:"cluster_id,optional"`
+	NodeId       int64  `form:"node_id,optional"`
+	Status       string `form:"status,optional"`
+	Brand        string `form:"brand,optional"`
+	Model        string `form:"model,optional"`
+	HealthStatus string `form:"health_status,optional"`
+	Search       string `form:"search,optional"`
+}
+
+type ListGpuDevicesResp {
+	Devices  []GpuDeviceInfo `json:"devices"`
+	Total    int64           `json:"total"`
+	Page     int             `json:"page"`
+	PageSize int             `json:"page_size"`
+}
+
+type DeleteGpuDeviceReq {
+	ID int64 `path:"id" validate:"required"`
+}
+
+// GPU设备分配相关类型定义
+type AllocateGpuDeviceReq {
+	DeviceIds   []int64 `json:"device_ids" validate:"required"`
+	JobId       int64   `json:"job_id" validate:"required"`
+	UserId      int64   `json:"user_id" validate:"required"`
+	WorkspaceId int64   `json:"workspace_id"`
+	QueueName   string  `json:"queue_name" validate:"required"`
+	Priority    int     `json:"priority"`
+	ExpiresAt   *string `json:"expires_at,omitempty"`
+}
+
+type AllocateGpuDeviceResp {
+	Message string `json:"message"`
+}
+
+type ReleaseGpuDeviceReq {
+	ID int64 `path:"id" validate:"required"`
+}
+
+// GPU集群健康检查和发现功能
+type ClusterHealthCheckReq {
+	ClusterId int64 `path:"clusterId" validate:"required"`
+}
+
+type ClusterHealthCheckResp {
+	ClusterId     int64              `json:"cluster_id"`
+	ClusterName   string             `json:"cluster_name"`
+	Status        string             `json:"status"`
+	LastCheckTime string             `json:"last_check_time"`
+	NodesHealth   []NodeHealthInfo   `json:"nodes_health"`
+	GPUsHealth    []GPUHealthInfo    `json:"gpus_health"`
+	Metrics       ClusterMetricsInfo `json:"metrics"`
+}
+
+type NodeHealthInfo {
+	NodeId        int64   `json:"node_id"`
+	NodeName      string  `json:"node_name"`
+	Status        string  `json:"status"`
+	CPUUsage      float64 `json:"cpu_usage"`
+	MemoryUsage   float64 `json:"memory_usage"`
+	DiskUsage     float64 `json:"disk_usage"`
+	LastHeartbeat string  `json:"last_heartbeat"`
+}
+
+type GPUHealthInfo {
+	DeviceId    int64   `json:"device_id"`
+	DeviceUUID  string  `json:"device_uuid"`
+	NodeName    string  `json:"node_name"`
+	Status      string  `json:"status"`
+	Temperature int     `json:"temperature"`
+	MemoryUsage float64 `json:"memory_usage"`
+	GPUUsage    float64 `json:"gpu_usage"`
+	PowerDraw   int     `json:"power_draw"`
+}
+
+type ClusterMetricsInfo {
+	TotalNodes     int     `json:"total_nodes"`
+	HealthyNodes   int     `json:"healthy_nodes"`
+	TotalGPUs      int     `json:"total_gpus"`
+	HealthyGPUs    int     `json:"healthy_gpus"`
+	AllocatedGPUs  int     `json:"allocated_gpus"`
+	AvgCPUUsage    float64 `json:"avg_cpu_usage"`
+	AvgMemoryUsage float64 `json:"avg_memory_usage"`
+	AvgGPUUsage    float64 `json:"avg_gpu_usage"`
+}
+
+// 自动发现和注册节点
+type DiscoverNodesReq {
+	ClusterId int64 `path:"clusterId" validate:"required"`
+}
+
+type DiscoverNodesResp {
+	ClusterId       int64            `json:"cluster_id"`
+	DiscoveredNodes []DiscoveredNode `json:"discovered_nodes"`
+	Message         string           `json:"message"`
+}
+
+type DiscoveredNode {
+	Hostname      string            `json:"hostname"`
+	InternalIP    string            `json:"internal_ip"`
+	ExternalIP    string            `json:"external_ip"`
+	NodeType      string            `json:"node_type"`
+	CPUCores      int               `json:"cpu_cores"`
+	MemoryGB      int               `json:"memory_gb"`
+	StorageGB     int               `json:"storage_gb"`
+	OSImage       string            `json:"os_image"`
+	KernelVersion string            `json:"kernel_version"`
+	GPUDevices    []DiscoveredGPU   `json:"gpu_devices"`
+	NodeLabels    map[string]string `json:"node_labels"`
+}
+
+type DiscoveredGPU {
+	DeviceIndex   int    `json:"device_index"`
+	DeviceUUID    string `json:"device_uuid"`
+	DeviceName    string `json:"device_name"`
+	Brand         string `json:"brand"`
+	Model         string `json:"model"`
+	Architecture  string `json:"architecture"`
+	MemoryTotalMB int    `json:"memory_total_mb"`
+	PCIeBusId     string `json:"pcie_bus_id"`
+	CUDAVersion   string `json:"cuda_version"`
+	DriverVersion string `json:"driver_version"`
+}
+
+@server (
+	group:  gpu_cluster
+	prefix: /api/v1/gpuclusters
+)
+service gpu_api {
+	@handler CreateGpuCluster
+	post / (CreateGpuClusterReq) returns (CreateGpuClusterResp)
+
+	@handler UpdateGpuCluster
+	put /:id (UpdateGpuClusterReq) returns (EmptyResp)
+
+	@handler GetGpuCluster
+	get /:id (GetGpuClusterReq) returns (GetGpuClusterResp)
+
+	@handler ListGpuClusters
+	get / (ListGpuClustersReq) returns (ListGpuClustersResp)
+
+	@handler DeleteGpuCluster
+	delete /:id (DeleteGpuClusterReq) returns (EmptyResp)
+
+	@handler ListClusterNodes
+	get /:clusterId/nodes (ListClusterNodesReq) returns (ListClusterNodesResp)
+
+	@handler ClusterHealthCheck
+	get /:clusterId/health (ClusterHealthCheckReq) returns (ClusterHealthCheckResp)
+
+	@handler DiscoverNodes
+	post /:clusterId/discover (DiscoverNodesReq) returns (DiscoverNodesResp)
+}
+
+@server (
+	group:  gpu_node
+	prefix: /api/v1/gpunodes
+)
+service gpu_api {
+	@handler CreateGpuNode
+	post / (CreateGpuNodeReq) returns (CreateGpuNodeResp)
+
+	@handler UpdateGpuNode
+	put /:id (UpdateGpuNodeReq) returns (EmptyResp)
+
+	@handler GetGpuNode
+	get /:id (GetGpuNodeReq) returns (GetGpuNodeResp)
+
+	@handler ListGpuNodes
+	get / (ListGpuNodesReq) returns (ListGpuNodesResp)
+
+	@handler DeleteGpuNode
+	delete /:id (DeleteGpuNodeReq) returns (EmptyResp)
+}
+
+@server (
+	group:  gpu_device
+	prefix: /api/v1/gpudevices
+)
+service gpu_api {
+	@handler CreateGpuDevice
+	post / (CreateGpuDeviceReq) returns (CreateGpuDeviceResp)
+
+	@handler UpdateGpuDevice
+	put /:id (UpdateGpuDeviceReq) returns (EmptyResp)
+
+	@handler GetGpuDevice
+	get /:id (GetGpuDeviceReq) returns (GetGpuDeviceResp)
+
+	@handler ListGpuDevices
+	get / (ListGpuDevicesReq) returns (ListGpuDevicesResp)
+
+	@handler DeleteGpuDevice
+	delete /:id (DeleteGpuDeviceReq) returns (EmptyResp)
+
+	@handler AllocateGpuDevice
+	post /allocations (AllocateGpuDeviceReq) returns (AllocateGpuDeviceResp)
+
+	@handler ReleaseGpuDevice
+	delete /allocations/:id (ReleaseGpuDeviceReq) returns (EmptyResp)
+}
+

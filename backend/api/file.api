@@ -235,7 +235,7 @@ type FileStatsResp {
 	group: file
 	prefix: /api/v1/files
 )
-service file-api {
+service common-api {
 	@doc "文件上传"
 	@handler FileUpload
 	post /upload (FileUploadReq) returns (FileUploadResp)
@@ -273,7 +273,7 @@ service file-api {
 	group: file_relation
 	prefix: /api/v1/file-relations
 )
-service file-api {
+service common-api {
 	@doc "创建文件关联"
 	@handler FileRelationCreate
 	post / (FileRelationCreateReq) returns (FileRelationCreateResp)
@@ -291,7 +291,7 @@ service file-api {
 	group: file_access_log
 	prefix: /api/v1/file-access-logs
 )
-service file-api {
+service common-api {
 	@doc "文件访问日志查询"
 	@handler FileAccessLogList
 	get / (FileAccessLogListReq) returns (FileAccessLogListResp)

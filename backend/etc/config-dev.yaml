@@ -2,3 +2,38 @@ Name: volctrain
 Host: 0.0.0.0
 Port: 8888
 Timeout: 0
+
+# 数据库配置 - 开发环境
+MySQL:
+  Host: localhost
+  Port: 3306
+  User: volctrain_app
+  Password: "Abc@1234"
+  DBName: volctraindb
+  Charset: utf8mb4
+  ParseTime: true
+  Loc: "Asia/Shanghai"
+  MaxOpenConns: 100
+  MaxIdleConns: 10
+  MaxLifetime: 3600
+
+# Redis配置 - 开发环境
+Redis:
+  Host: localhost
+  Port: 6379
+  Password: "v6SxhWHyZC7S"
+  DB: 0
+  PoolSize: 100
+  MinIdleConns: 10
+
+# 日志配置
+Log:
+  ServiceName: volctrain-api
+  Mode: console
+  Level: info
+
+# JWT配置
+Auth:
+  AccessSecret: "volctrain-dev-secret-key"
+  AccessExpire: 86400
+  RefreshExpire: 604800

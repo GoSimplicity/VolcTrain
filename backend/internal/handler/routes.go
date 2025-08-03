@@ -6,6 +6,10 @@ package handler
 import (
 	"net/http"
 
+	gpu_cluster "api/internal/handler/gpu_cluster"
+	gpu_device "api/internal/handler/gpu_device"
+	gpu_node "api/internal/handler/gpu_node"
+	gpu_usage "api/internal/handler/gpu_usage"
 	"api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
@@ -15,10 +19,190 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	server.AddRoutes(
 		[]rest.Route{
 			{
+				// 健康检查
 				Method:  http.MethodGet,
-				Path:    "/from/:name",
-				Handler: ApiHandler(serverCtx),
+				Path:    "/health",
+				Handler: healthCheckHandler(serverCtx),
 			},
 		},
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/",
+				Handler: gpu_cluster.CreateGpuClusterHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/",
+				Handler: gpu_cluster.ListGpuClustersHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:clusterId/nodes",
+				Handler: gpu_cluster.ListClusterNodesHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/:clusterId/nodes/:nodeId",
+				Handler: gpu_cluster.RemoveNodeFromClusterHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/:id",
+				Handler: gpu_cluster.UpdateGpuClusterHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:id",
+				Handler: gpu_cluster.GetGpuClusterHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/:id",
+				Handler: gpu_cluster.DeleteGpuClusterHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/nodes",
+				Handler: gpu_cluster.AddNodeToClusterHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/gpuclusters"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/",
+				Handler: gpu_device.CreateGpuDeviceHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/",
+				Handler: gpu_device.ListGpuDevicesHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/:id",
+				Handler: gpu_device.UpdateGpuDeviceHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:id",
+				Handler: gpu_device.GetGpuDeviceHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/:id",
+				Handler: gpu_device.DeleteGpuDeviceHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/allocations",
+				Handler: gpu_device.AllocateGpuDeviceHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/allocations",
+				Handler: gpu_device.ListGpuDeviceAllocationsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/allocations/:id",
+				Handler: gpu_device.ReleaseGpuDeviceHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/gpudevices"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/",
+				Handler: gpu_node.CreateGpuNodeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/",
+				Handler: gpu_node.ListGpuNodesHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/:id",
+				Handler: gpu_node.UpdateGpuNodeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:id",
+				Handler: gpu_node.GetGpuNodeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/:id",
+				Handler: gpu_node.DeleteGpuNodeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:nodeId/devices",
+				Handler: gpu_node.ListNodeDevicesHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/:nodeId/devices/:deviceId",
+				Handler: gpu_node.RemoveDeviceFromNodeHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/devices",
+				Handler: gpu_node.AddDeviceToNodeHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/gpunodes"),
+	)
+
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/",
+				Handler: gpu_usage.CreateGpuUsageRecordHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/",
+				Handler: gpu_usage.ListGpuUsageRecordsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/:id",
+				Handler: gpu_usage.UpdateGpuUsageRecordHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:id",
+				Handler: gpu_usage.GetGpuUsageRecordHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/:id",
+				Handler: gpu_usage.DeleteGpuUsageRecordHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:usageRecordId/relations",
+				Handler: gpu_usage.ListGpuUsageRelationsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/relations",
+				Handler: gpu_usage.AddGpuUsageRelationHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/gpuusage"),
 	)
 }

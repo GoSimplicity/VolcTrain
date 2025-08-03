@@ -1,0 +1,144 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-service
+  namespace: volctrain
+spec:
+  type: ExternalName
+  externalName: ${MYSQL_HOST}  # 替换为实际的MySQL主机地址
+  ports:
+  - port: 3306
+    targetPort: 3306
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: redis-service
+  namespace: volctrain
+spec:
+  type: ExternalName
+  externalName: ${REDIS_HOST}  # 替换为实际的Redis主机地址
+  ports:
+  - port: 6379
+    targetPort: 6379
+---
+# 如果需要在集群内部署MySQL（开发环境）
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: mysql
+  namespace: volctrain
+spec:
+  serviceName: mysql-internal
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+      - name: mysql
+        image: mysql:8.0
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: volctrain-secrets
+              key: db-password
+        - name: MYSQL_DATABASE
+          value: volctraindb
+        - name: MYSQL_USER
+          value: volctrain_app
+        - name: MYSQL_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: volctrain-secrets
+              key: db-password
+        ports:
+        - containerPort: 3306
+          name: mysql
+        volumeMounts:
+        - name: mysql-storage
+          mountPath: /var/lib/mysql
+        - name: mysql-config
+          mountPath: /etc/mysql/conf.d
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "250m"
+          limits:
+            memory: "1Gi"
+            cpu: "500m"
+        livenessProbe:
+          exec:
+            command:
+            - mysqladmin
+            - ping
+            - -h
+            - localhost
+          initialDelaySeconds: 30
+          periodSeconds: 10
+          timeoutSeconds: 5
+          failureThreshold: 3
+        readinessProbe:
+          exec:
+            command:
+            - mysql
+            - -h
+            - 127.0.0.1
+            - -e
+            - SELECT 1
+          initialDelaySeconds: 5
+          periodSeconds: 2
+          timeoutSeconds: 1
+      volumes:
+      - name: mysql-config
+        configMap:
+          name: mysql-config
+  volumeClaimTemplates:
+  - metadata:
+      name: mysql-storage
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 20Gi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql-internal
+  namespace: volctrain
+spec:
+  selector:
+    app: mysql
+  ports:
+  - port: 3306
+    targetPort: 3306
+  type: ClusterIP
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: mysql-config
+  namespace: volctrain
+data:
+  mysql.cnf: |
+    [mysqld]
+    default-storage-engine=INNODB
+    character-set-server=utf8mb4
+    collation-server=utf8mb4_unicode_ci
+    max_connections=200
+    innodb_buffer_pool_size=256M
+    innodb_log_file_size=64M
+    innodb_file_per_table=1
+    innodb_flush_log_at_trx_commit=1
+    sync_binlog=1
+    slow_query_log=1
+    long_query_time=2
+    
+    [client]
+    default-character-set=utf8mb4

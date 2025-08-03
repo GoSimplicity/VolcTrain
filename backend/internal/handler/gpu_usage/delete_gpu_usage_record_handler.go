@@ -1,24 +1,24 @@
-package handler
+package gpu_usage
 
 import (
 	"net/http"
 
-	"api/internal/logic"
+	"api/internal/logic/gpu_usage"
 	"api/internal/svc"
 	"api/internal/types"
 	"github.com/zeromicro/go-zero/rest/httpx"
 )
 
-func ApiHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
+func DeleteGpuUsageRecordHandler(svcCtx *svc.ServiceContext) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		var req types.Request
+		var req types.DeleteGpuUsageRecordReq
 		if err := httpx.Parse(r, &req); err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 			return
 		}
 
-		l := logic.NewApiLogic(r.Context(), svcCtx)
-		resp, err := l.Api(&req)
+		l := gpu_usage.NewDeleteGpuUsageRecordLogic(r.Context(), svcCtx)
+		resp, err := l.DeleteGpuUsageRecord(&req)
 		if err != nil {
 			httpx.ErrorCtx(r.Context(), w, err)
 		} else {

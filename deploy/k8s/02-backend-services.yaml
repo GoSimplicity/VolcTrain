@@ -1,0 +1,213 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: volctrain-api
+  namespace: volctrain
+  labels:
+    app: volctrain-api
+    component: backend
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: volctrain-api
+  template:
+    metadata:
+      labels:
+        app: volctrain-api
+        component: backend
+    spec:
+      containers:
+      - name: volctrain-api
+        image: volctrain/backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8888
+          name: http
+        env:
+        - name: DB_HOST
+          value: "mysql-service"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "volctraindb"
+        - name: DB_USER
+          value: "volctrain_app"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: volctrain-secrets
+              key: db-password
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: SERVICE_NAME
+          value: "volctrain-api"
+        command: ["./docker-entrypoint.sh"]
+        args: ["api"]
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8888
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8888
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: config-volume
+          mountPath: /home/volctrain/etc/config.yaml
+          subPath: api-config.yaml
+        - name: logs
+          mountPath: /var/log/volctrain
+      volumes:
+      - name: config-volume
+        configMap:
+          name: volctrain-config
+      - name: logs
+        emptyDir: {}
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: volctrain-api-service
+  namespace: volctrain
+  labels:
+    app: volctrain-api
+spec:
+  selector:
+    app: volctrain-api
+  ports:
+  - name: http
+    port: 8888
+    targetPort: 8888
+    protocol: TCP
+  type: ClusterIP
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: volctrain-monitoring
+  namespace: volctrain
+  labels:
+    app: volctrain-monitoring
+    component: backend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: volctrain-monitoring
+  template:
+    metadata:
+      labels:
+        app: volctrain-monitoring
+        component: backend
+    spec:
+      containers:
+      - name: volctrain-monitoring
+        image: volctrain/backend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8890
+          name: http
+        - containerPort: 9090
+          name: metrics
+        env:
+        - name: DB_HOST
+          value: "mysql-service"
+        - name: DB_PORT
+          value: "3306"
+        - name: DB_NAME
+          value: "volctraindb"
+        - name: DB_USER
+          value: "volctrain_app"
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: volctrain-secrets
+              key: db-password
+        - name: REDIS_HOST
+          value: "redis-service"
+        - name: REDIS_PORT
+          value: "6379"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: SERVICE_NAME
+          value: "volctrain-monitoring"
+        command: ["./docker-entrypoint.sh"]
+        args: ["monitoring"]
+        resources:
+          requests:
+            memory: "256Mi"
+            cpu: "250m"
+          limits:
+            memory: "512Mi"
+            cpu: "500m"
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 8890
+          initialDelaySeconds: 30
+          periodSeconds: 30
+          timeoutSeconds: 10
+          failureThreshold: 3
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: 8890
+          initialDelaySeconds: 10
+          periodSeconds: 5
+          timeoutSeconds: 5
+          failureThreshold: 3
+        volumeMounts:
+        - name: config-volume
+          mountPath: /home/volctrain/etc/monitoring.yaml
+          subPath: monitoring-config.yaml
+        - name: logs
+          mountPath: /var/log/volctrain
+      volumes:
+      - name: config-volume
+        configMap:
+          name: volctrain-config
+      - name: logs
+        emptyDir: {}
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: volctrain-monitoring-service
+  namespace: volctrain
+  labels:
+    app: volctrain-monitoring
+spec:
+  selector:
+    app: volctrain-monitoring
+  ports:
+  - name: http
+    port: 8890
+    targetPort: 8890
+    protocol: TCP
+  - name: metrics
+    port: 9090
+    targetPort: 9090
+    protocol: TCP
+  type: ClusterIP

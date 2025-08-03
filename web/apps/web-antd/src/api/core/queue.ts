@@ -1,5 +1,3 @@
-import { requestClient } from '#/api/request';
-
 export enum JobStatus {
   PENDING = 'pending',
   RUNNING = 'running',

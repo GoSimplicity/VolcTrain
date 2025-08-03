@@ -1,0 +1,206 @@
+version: '3.8'
+
+services:
+  # MySQL数据库
+  mysql:
+    image: mysql:8.0
+    container_name: volctrain-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-Abc@1234}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-volctraindb}
+      MYSQL_USER: ${MYSQL_USER:-volctrain_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-Abc@1234}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./backend/sql:/docker-entrypoint-initdb.d:ro
+    networks:
+      - volctrain-network
+    restart: unless-stopped
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+
+  # Redis缓存
+  redis:
+    image: redis:7-alpine
+    container_name: volctrain-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - volctrain-network
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # 后端API服务
+  backend-api:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: volctrain-api
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-volctraindb}
+      DB_USER: ${MYSQL_USER:-volctrain_app}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-Abc@1234}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SERVICE_NAME: volctrain-api
+    ports:
+      - "8888:8888"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - volctrain-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    command: ["api"]
+
+  # 通用服务
+  backend-common:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: volctrain-common
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-volctraindb}
+      DB_USER: ${MYSQL_USER:-volctrain_app}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-Abc@1234}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SERVICE_NAME: volctrain-common
+    ports:
+      - "8889:8889"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - volctrain-network
+    restart: unless-stopped
+    command: ["common"]
+
+  # 监控服务
+  backend-monitoring:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: volctrain-monitoring
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-volctraindb}
+      DB_USER: ${MYSQL_USER:-volctrain_app}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-Abc@1234}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SERVICE_NAME: volctrain-monitoring
+    ports:
+      - "8890:8890"
+      - "9090:9090"  # Prometheus metrics
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - volctrain-network
+    restart: unless-stopped
+    command: ["monitoring"]
+
+  # 训练服务
+  backend-training:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: volctrain-training
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${MYSQL_DATABASE:-volctraindb}
+      DB_USER: ${MYSQL_USER:-volctrain_app}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-Abc@1234}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+      SERVICE_NAME: volctrain-training
+    ports:
+      - "8891:8891"
+    depends_on:
+      - mysql
+      - redis
+    networks:
+      - volctrain-network
+    restart: unless-stopped
+    command: ["training"]
+
+  # 前端Web服务
+  frontend:
+    build: 
+      context: ./web
+      dockerfile: Dockerfile
+    container_name: volctrain-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend-api
+    networks:
+      - volctrain-network
+    restart: unless-stopped
+
+  # Prometheus监控
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: volctrain-prometheus
+    ports:
+      - "9091:9090"
+    volumes:
+      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--storage.tsdb.retention.time=200h'
+      - '--web.enable-lifecycle'
+    networks:
+      - volctrain-network
+    restart: unless-stopped
+
+  # Grafana可视化
+  grafana:
+    image: grafana/grafana:latest
+    container_name: volctrain-grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_PASSWORD:-admin123}
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./deploy/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
+      - ./deploy/grafana/datasources:/etc/grafana/provisioning/datasources:ro
+    depends_on:
+      - prometheus
+    networks:
+      - volctrain-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+  redis_data:
+  prometheus_data:
+  grafana_data:
+
+networks:
+  volctrain-network:
+    driver: bridge

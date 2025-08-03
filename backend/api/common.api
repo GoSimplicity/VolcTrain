@@ -10,14 +10,37 @@ type LabelValue {
 }
 
 type ListReq {
-	Page      int    `form:"page,default=1"`             // 页码
-	PageSize  int    `form:"page_size,default=20"`       // 每页数量
-	Search    string `form:"search,omitempty"`           // 搜索关键词
+	Page      int    `form:"page,default=1"` // 页码
+	PageSize  int    `form:"page_size,default=20"` // 每页数量
+	Search    string `form:"search,omitempty"` // 搜索关键词
 	SortBy    string `form:"sort_by,default=created_at"` // 排序字段
-	SortOrder string `form:"sort_order,default=desc"`    // 排序顺序
+	SortOrder string `form:"sort_order,default=desc"` // 排序顺序
 }
 
 type ListResp {
 	Items []interface{} `json:"items"` // 数据列表
 	Total int64         `json:"total"` // 总记录数
 }
+
+// 健康检查相关结构
+type CheckStatus {
+	Service string `json:"service"`
+	Status  string `json:"status"`
+	Message string `json:"message"`
+	Latency string `json:"latency"`
+}
+
+type HealthResponse {
+	Status    string        `json:"status"`
+	Checks    []CheckStatus `json:"checks"`
+	Uptime    string        `json:"uptime"`
+	Version   string        `json:"version"`
+	Timestamp int64         `json:"timestamp"`
+}
+
+service common-api {
+	@doc "健康检查"
+	@handler healthCheck
+	get /health (EmptyReq) returns (HealthResponse)
+}
+

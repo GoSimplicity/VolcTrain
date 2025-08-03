@@ -1,0 +1,83 @@
+syntax = "v1"
+
+import (
+    "common.api"
+    "user.api"
+)
+
+// 登录请求
+type LoginReq {
+    Username string `json:"username"`
+    Password string `json:"password"`
+}
+
+// 登录响应
+type LoginResp {
+    AccessToken  string `json:"accessToken"`
+    RefreshToken string `json:"refreshToken"`
+    ExpiresIn    int64  `json:"expiresIn"`
+    TokenType    string `json:"tokenType"`
+    UserInfo     UserInfo `json:"userInfo"`
+}
+
+// 刷新Token请求
+type RefreshTokenReq {
+    RefreshToken string `json:"refreshToken"`
+}
+
+// 刷新Token响应
+type RefreshTokenResp {
+    AccessToken  string `json:"accessToken"`
+    RefreshToken string `json:"refreshToken"`
+    ExpiresIn    int64  `json:"expiresIn"`
+    TokenType    string `json:"tokenType"`
+}
+
+// 登出请求
+type LogoutReq {}
+
+// 登出响应
+type LogoutResp {}
+
+// 获取权限码响应
+type GetAccessCodesResp {
+    Codes []string `json:"codes"`
+}
+
+// 获取用户信息响应
+type GetUserInfoResp {
+    UserInfo UserInfo `json:"userInfo"`
+}
+
+// 认证服务定义
+@server(
+    group: auth
+    prefix: /auth
+)
+service common-api {
+    @doc "用户登录"
+    @handler Login
+    post /login (LoginReq) returns (LoginResp)
+    
+    @doc "刷新Token"
+    @handler RefreshToken
+    post /refresh (RefreshTokenReq) returns (RefreshTokenResp)
+    
+    @doc "用户登出"
+    @handler Logout
+    post /logout (LogoutReq) returns (LogoutResp)
+    
+    @doc "获取用户权限码"
+    @handler GetAccessCodes
+    get /codes (EmptyReq) returns (GetAccessCodesResp)
+}
+
+@server(
+    group: user
+    prefix: /user
+)
+service common-api {
+    @doc "获取用户信息"
+    @handler GetUserInfo
+    get /info (EmptyReq) returns (GetUserInfoResp)
+}

@@ -33,7 +33,7 @@
         <a-row :gutter="16" align="middle">
           <a-col :xs="24" :sm="12" :md="6" :lg="6">
             <a-select
-              v-model:value="filterType"
+              v-model:value="searchParams.type"
               placeholder="选择数据类型"
               allow-clear
               style="width: 100%"
@@ -49,7 +49,7 @@
           </a-col>
           <a-col :xs="24" :sm="12" :md="6" :lg="6">
             <a-select
-              v-model:value="filterStatus"
+              v-model:value="searchParams.status"
               placeholder="选择状态"
               allow-clear
               style="width: 100%"
@@ -64,7 +64,7 @@
           </a-col>
           <a-col :xs="24" :sm="16" :md="8" :lg="8">
             <a-input-search
-              v-model:value="searchKeyword"
+              v-model:value="searchParams.name"
               placeholder="搜索数据集名称或描述"
               allow-clear
               @search="handleSearch"
@@ -101,21 +101,21 @@
         >
           <!-- 数据类型列 -->
           <template #dataType="{ record }">
-            <a-tag :color="getTypeColor(record.dataType)" class="type-tag">
+            <a-tag :color="getDatasetTypeColor(record.dataType)" class="type-tag">
               <component :is="getTypeIcon(record.dataType)" class="type-icon" />
-              {{ getTypeText(record.dataType) }}
+              {{ getDatasetTypeText(record.dataType) }}
             </a-tag>
           </template>
 
           <!-- 状态列 -->
           <template #status="{ record }">
             <div class="status-wrapper">
-              <a-tag :color="getStatusColor(record.status)" class="status-tag">
+              <a-tag :color="getDatasetStatusColor(record.status)" class="status-tag">
                 <component
-                  :is="getStatusIcon(record.status)"
+                  :is="getDatasetStatusIcon(record.status)"
                   class="status-icon"
                 />
-                {{ getStatusText(record.status) }}
+                {{ getDatasetStatusText(record.status) }}
               </a-tag>
               <div
                 class="status-indicator"
@@ -213,7 +213,7 @@
     >
       <a-form
         ref="createFormRef"
-        :model="createForm"
+        :model="uploadForm"
         :rules="createFormRules"
         layout="vertical"
         class="create-form"
@@ -222,7 +222,7 @@
           <a-col :xs="24" :sm="12">
             <a-form-item label="数据集名称" name="name">
               <a-input
-                v-model:value="createForm.name"
+                v-model:value="uploadForm.name"
                 placeholder="请输入数据集名称"
                 class="form-input"
               />
@@ -231,7 +231,7 @@
           <a-col :xs="24" :sm="12">
             <a-form-item label="数据类型" name="dataType">
               <a-select
-                v-model:value="createForm.dataType"
+                v-model:value="uploadForm.type"
                 placeholder="选择数据类型"
                 class="form-select"
               >
@@ -246,7 +246,7 @@
 
         <a-form-item label="描述" name="description">
           <a-textarea
-            v-model:value="createForm.description"
+            v-model:value="uploadForm.description"
             placeholder="请输入数据集描述"
             :rows="3"
             class="form-textarea"
@@ -257,7 +257,7 @@
 
         <a-form-item label="数据来源方式" name="sourceType">
           <a-radio-group
-            v-model:value="createForm.sourceType"
+            v-model:value="uploadForm.sourceType"
             class="source-radio-group"
           >
             <a-radio value="upload">本地上传</a-radio>
@@ -267,10 +267,10 @@
         </a-form-item>
 
         <!-- 本地上传 -->
-        <div v-if="createForm.sourceType === 'upload'">
+        <div v-if="uploadForm.sourceType === 'upload'">
           <a-form-item label="文件上传" name="files">
             <a-upload-dragger
-              v-model:fileList="createForm.fileList"
+              v-model:fileList="uploadForm.fileList"
               multiple
               :before-upload="beforeUpload"
               class="upload-dragger"
@@ -287,10 +287,10 @@
         </div>
 
         <!-- URL 导入 -->
-        <div v-if="createForm.sourceType === 'url'">
+        <div v-if="uploadForm.sourceType === 'url'">
           <a-form-item label="数据 URL" name="dataUrl">
             <a-input
-              v-model:value="createForm.dataUrl"
+              v-model:value="uploadForm.dataUrl"
               placeholder="请输入数据 URL"
               class="form-input"
             />
@@ -298,12 +298,12 @@
         </div>
 
         <!-- S3 存储桶 -->
-        <div v-if="createForm.sourceType === 's3'">
+        <div v-if="uploadForm.sourceType === 's3'">
           <a-row :gutter="16">
             <a-col :xs="24" :sm="12">
               <a-form-item label="存储桶名称" name="s3Bucket">
                 <a-input
-                  v-model:value="createForm.s3Bucket"
+                  v-model:value="uploadForm.s3Bucket"
                   placeholder="请输入存储桶名称"
                   class="form-input"
                 />
@@ -312,7 +312,7 @@
             <a-col :xs="24" :sm="12">
               <a-form-item label="对象路径" name="s3Path">
                 <a-input
-                  v-model:value="createForm.s3Path"
+                  v-model:value="uploadForm.s3Path"
                   placeholder="请输入对象路径"
                   class="form-input"
                 />
@@ -325,7 +325,7 @@
 
         <a-form-item label="标签" name="tags">
           <a-select
-            v-model:value="createForm.tags"
+            v-model:value="uploadForm.tags"
             mode="tags"
             placeholder="添加标签"
             class="form-select"
@@ -337,7 +337,7 @@
         </a-form-item>
 
         <a-form-item label="访问权限" name="accessLevel">
-          <a-radio-group v-model:value="createForm.accessLevel">
+          <a-radio-group v-model:value="uploadForm.isPublic">
             <a-radio value="private">私有</a-radio>
             <a-radio value="team">团队共享</a-radio>
             <a-radio value="public">公开</a-radio>
@@ -364,28 +364,28 @@
             {{ selectedDataset.name }}
           </a-descriptions-item>
           <a-descriptions-item label="数据类型">
-            <a-tag :color="getTypeColor(selectedDataset.dataType)">
-              <component :is="getTypeIcon(selectedDataset.dataType)" />
-              {{ getTypeText(selectedDataset.dataType) }}
+            <a-tag :color="getDatasetTypeColor(selectedDataset.type)">
+              <component :is="getTypeIcon(selectedDataset.type)" />
+              {{ getDatasetTypeText(selectedDataset.type) }}
             </a-tag>
           </a-descriptions-item>
           <a-descriptions-item label="状态">
             <a-tag
-              :color="getStatusColor(selectedDataset.status)"
+              :color="getDatasetStatusColor(selectedDataset.status)"
               class="status-tag"
             >
-              <component :is="getStatusIcon(selectedDataset.status)" />
-              {{ getStatusText(selectedDataset.status) }}
+              <component :is="getDatasetStatusIcon(selectedDataset.status)" />
+              {{ getDatasetStatusText(selectedDataset.status) }}
             </a-tag>
           </a-descriptions-item>
           <a-descriptions-item label="创建者">
-            {{ selectedDataset.creator }}
+            {{ selectedDataset.creatorName }}
           </a-descriptions-item>
           <a-descriptions-item label="大小">
             {{ formatSize(selectedDataset.size) }}
           </a-descriptions-item>
           <a-descriptions-item label="文件数量">
-            {{ selectedDataset.fileCount }} 个
+            {{ selectedDataset.sampleCount }} 个
           </a-descriptions-item>
           <a-descriptions-item label="创建时间">
             {{ selectedDataset.createTime }}
@@ -636,490 +636,754 @@ import {
   VideoCameraOutlined,
   FolderOutlined,
   FileOutlined,
+  ShareAltOutlined,
+  BarChartOutlined,
+  HeartOutlined,
+  HeartFilled,
 } from '@ant-design/icons-vue';
+import type {
+  Dataset,
+  DatasetType,
+  DatasetFormat,
+  DatasetStatus,
+  DatasetListParams,
+  DatasetUploadRequest,
+} from '#/api/types';
+import {
+  getDatasetList,
+  getDatasetStatistics,
+  uploadDataset,
+  deleteDataset,
+  batchDeleteDatasets,
+  downloadDataset,
+  toggleDatasetFavorite,
+  getSupportedFormats,
+} from '#/api';
+import { formatDateTime, formatFileSize } from '#/utils/date';
 
-// ===== 类型定义 =====
-interface DatasetItem {
-  id: string;
-  name: string;
-  dataType: 'image' | 'text' | 'audio' | 'video';
-  status: 'ready' | 'processing' | 'error';
-  creator: string;
-  description?: string;
-  size: number;
-  fileCount: number;
-  createTime: string;
-  updateTime: string;
-  version: string;
-  tags: string[];
-  accessLevel: 'private' | 'team' | 'public';
-}
+defineOptions({ name: 'DatasetManagement' });
 
-interface CreateForm {
+// 响应式数据
+const loading = ref<boolean>(false);
+const datasetList = ref<Dataset[]>([]);
+const selectedRowKeys = ref<string[]>([]);
+const createModalVisible = ref<boolean>(false);
+const detailDrawerVisible = ref<boolean>(false);
+const versionDrawerVisible = ref<boolean>(false);
+const selectedDataset = ref<Dataset | null>(null);
+const supportedFormats = ref<string[]>([]);
+const createLoading = ref<boolean>(false);
+const previewActiveKey = ref<string>('structure');
+const dataStructure = ref<any[]>([]);
+const sampleData = ref<any[]>([]);
+
+// 统计数据
+const datasetStats = ref({
+  totalDatasets: 0,
+  publicDatasets: 0,
+  privateDatasets: 0,
+  totalSize: 0,
+  totalSamples: 0,
+  labeledDatasets: 0,
+});
+
+// 搜索和筛选参数
+const searchParams = reactive<DatasetListParams>({
+  name: '',
+  type: undefined,
+  format: undefined,
+  status: undefined,
+  isPublic: undefined,
+  isLabeled: undefined,
+  page: 1,
+  pageSize: 20,
+  sortBy: 'createTime',
+  sortOrder: 'desc',
+});
+
+// 上传表单
+interface UploadForm {
   name: string;
-  dataType: 'image' | 'text' | 'audio' | 'video' | '';
   description: string;
+  type: DatasetType;
+  format: DatasetFormat;
+  workspaceId: string;
+  tags: string[];
+  isPublic: boolean;
+  files: File[];
+  labelFiles: File[];
   sourceType: 'upload' | 'url' | 's3';
-  fileList: UploadFile[];
+  fileList: any[];
   dataUrl: string;
   s3Bucket: string;
   s3Path: string;
-  tags: string[];
-  accessLevel: 'private' | 'team' | 'public';
 }
 
-interface EditForm {
-  name: string;
-  description: string;
-  tags: string[];
-  accessLevel: 'private' | 'team' | 'public';
-}
-
-interface VersionItem {
-  id: string;
-  version: string;
-  description: string;
-  createTime: string;
-  creator: string;
-  fileCount: number;
-  size: number;
-  current: boolean;
-}
-
-interface FileItem {
-  name: string;
-  path: string;
-  type: string;
-  size: number;
-  preview?: string;
-}
-
-interface TreeNode {
-  title: string;
-  key: string;
-  icon?: any;
-  children?: TreeNode[];
-}
-
-// ===== 响应式数据 =====
-const loading = ref<boolean>(false);
-const createModalVisible = ref<boolean>(false);
-const detailModalVisible = ref<boolean>(false);
-const editModalVisible = ref<boolean>(false);
-const versionModalVisible = ref<boolean>(false);
-const createLoading = ref<boolean>(false);
-const editLoading = ref<boolean>(false);
-
-const filterType = ref<string>('');
-const filterStatus = ref<string>('');
-const searchKeyword = ref<string>('');
-
-const selectedDataset = ref<DatasetItem | null>(null);
-const previewActiveKey = ref<string>('structure');
-
-// ===== 表单引用 =====
-const createFormRef = ref<FormInstance>();
-const editFormRef = ref<FormInstance>();
-
-// ===== 表单数据 =====
-const createForm = reactive<CreateForm>({
+const uploadForm = reactive<UploadForm>({
   name: '',
-  dataType: '',
   description: '',
+  type: DatasetType.IMAGE,
+  format: DatasetFormat.CUSTOM,
+  workspaceId: 'workspace-001', // 默认工作空间
+  tags: [],
+  isPublic: false,
+  files: [],
+  labelFiles: [],
   sourceType: 'upload',
   fileList: [],
   dataUrl: '',
   s3Bucket: '',
   s3Path: '',
-  tags: [],
-  accessLevel: 'private',
 });
 
-const editForm = reactive<EditForm>({
-  name: '',
-  description: '',
-  tags: [],
-  accessLevel: 'private',
-});
+const createFormRef = ref<FormInstance>();
 
-// ===== 配置数据 =====
-const TYPE_CONFIG = {
-  image: { color: 'blue', text: '图像', icon: FileImageOutlined },
-  text: { color: 'green', text: '文本', icon: FileTextOutlined },
-  audio: { color: 'orange', text: '音频', icon: SoundOutlined },
-  video: { color: 'purple', text: '视频', icon: VideoCameraOutlined },
-} as const;
-
-const STATUS_CONFIG = {
-  ready: { color: 'success', text: '就绪', icon: CheckCircleOutlined },
-  processing: {
-    color: 'processing',
-    text: '处理中',
-    icon: ClockCircleOutlined,
-  },
-  error: { color: 'error', text: '错误', icon: CloseCircleOutlined },
-} as const;
-
-// ===== 模拟数据 =====
-const datasets = ref<DatasetItem[]>([
+// 模拟数据
+const mockDatasets: Dataset[] = [
   {
-    id: 'ds-001',
-    name: 'imagenet-subset',
-    dataType: 'image',
-    status: 'ready',
-    creator: 'admin',
-    description: 'ImageNet 数据集子集，包含1000个类别的图像数据',
+    id: 'dataset-001',
+    name: 'imagenet-2012-subset',
+    description: 'ImageNet 2012数据集子集，包含1000个类别的图像分类数据',
+    type: DatasetType.IMAGE,
+    format: DatasetFormat.IMAGENET,
     size: 5368709120, // 5GB
-    fileCount: 50000,
-    createTime: '2024-06-20 14:30:00',
-    updateTime: '2024-06-23 10:15:00',
-    version: '1.2',
-    tags: ['训练', '分类', '大规模'],
-    accessLevel: 'team',
-  },
-  {
-    id: 'ds-002',
-    name: 'text-sentiment-analysis',
-    dataType: 'text',
-    status: 'ready',
-    creator: 'researcher',
-    description: '情感分析文本数据集，包含正面、负面、中性情感标注',
-    size: 1073741824, // 1GB
-    fileCount: 100000,
-    createTime: '2024-06-19 09:20:00',
-    updateTime: '2024-06-22 16:45:00',
-    version: '2.0',
-    tags: ['文本', '情感分析', '标注'],
-    accessLevel: 'public',
-  },
-  {
-    id: 'ds-003',
-    name: 'speech-recognition-corpus',
-    dataType: 'audio',
-    status: 'processing',
-    creator: 'developer',
-    description: '语音识别语料库，多语言音频数据',
-    size: 10737418240, // 10GB
-    fileCount: 25000,
-    createTime: '2024-06-21 11:00:00',
-    updateTime: '2024-06-23 08:30:00',
-    version: '1.0',
-    tags: ['语音识别', '多语言'],
-    accessLevel: 'private',
-  },
-  {
-    id: 'ds-004',
-    name: 'video-action-recognition',
-    dataType: 'video',
-    status: 'ready',
-    creator: 'admin',
-    description: '视频动作识别数据集，包含多种人体动作标注',
-    size: 21474836480, // 20GB
-    fileCount: 5000,
-    createTime: '2024-06-18 16:15:00',
-    updateTime: '2024-06-21 14:20:00',
-    version: '1.1',
-    tags: ['视频', '动作识别', '标注'],
-    accessLevel: 'team',
-  },
-  {
-    id: 'ds-005',
-    name: 'medical-image-segmentation',
-    dataType: 'image',
-    status: 'error',
-    creator: 'researcher',
-    description: '医学图像分割数据集，CT扫描图像及标注',
-    size: 3221225472, // 3GB
-    fileCount: 1500,
-    createTime: '2024-06-22 10:30:00',
-    updateTime: '2024-06-23 09:00:00',
-    version: '1.0',
-    tags: ['医学', '图像分割'],
-    accessLevel: 'private',
-  },
-]);
-
-const versions = ref<VersionItem[]>([
-  {
-    id: 'v-001',
-    version: '1.2',
-    description: '添加了新的数据类别，修复了标注错误',
-    createTime: '2024-06-23 10:15:00',
-    creator: 'admin',
-    fileCount: 50000,
-    size: 5368709120,
-    current: true,
-  },
-  {
-    id: 'v-002',
-    version: '1.1',
-    description: '优化了数据质量，增加了数据验证',
-    createTime: '2024-06-20 16:30:00',
-    creator: 'admin',
-    fileCount: 45000,
-    size: 4831838208,
-    current: false,
-  },
-  {
-    id: 'v-003',
-    version: '1.0',
-    description: '初始版本',
-    createTime: '2024-06-20 14:30:00',
-    creator: 'admin',
-    fileCount: 40000,
-    size: 4294967296,
-    current: false,
-  },
-]);
-
-const dataStructure = ref<TreeNode[]>([
-  {
-    title: 'imagenet-subset',
-    key: 'root',
-    icon: FolderOutlined,
-    children: [
-      {
-        title: 'train',
-        key: 'train',
-        icon: FolderOutlined,
-        children: [
-          { title: 'class_001', key: 'train-class_001', icon: FolderOutlined },
-          { title: 'class_002', key: 'train-class_002', icon: FolderOutlined },
-          { title: '...', key: 'train-more', icon: FolderOutlined },
-        ],
-      },
-      {
-        title: 'val',
-        key: 'val',
-        icon: FolderOutlined,
-        children: [
-          { title: 'class_001', key: 'val-class_001', icon: FolderOutlined },
-          { title: 'class_002', key: 'val-class_002', icon: FolderOutlined },
-        ],
-      },
-      {
-        title: 'test',
-        key: 'test',
-        icon: FolderOutlined,
-        children: [
-          { title: 'images', key: 'test-images', icon: FolderOutlined },
-        ],
-      },
-      { title: 'labels.json', key: 'labels', icon: FileOutlined },
-      { title: 'metadata.json', key: 'metadata', icon: FileOutlined },
-    ],
-  },
-]);
-
-const sampleData = ref<FileItem[]>([
-  {
-    name: 'image_001.jpg',
-    path: '/train/class_001/image_001.jpg',
-    type: 'image',
-    size: 204800,
-    preview: 'https://via.placeholder.com/40x40?text=IMG',
-  },
-  {
-    name: 'image_002.jpg',
-    path: '/train/class_001/image_002.jpg',
-    type: 'image',
-    size: 187392,
-    preview: 'https://via.placeholder.com/40x40?text=IMG',
-  },
-  {
-    name: 'image_003.jpg',
-    path: '/train/class_002/image_003.jpg',
-    type: 'image',
-    size: 225280,
-    preview: 'https://via.placeholder.com/40x40?text=IMG',
-  },
-  {
-    name: 'labels.json',
-    path: '/labels.json',
-    type: 'json',
-    size: 1024,
-  },
-]);
-
-// ===== 表单验证规则 =====
-const createFormRules = {
-  name: [
-    { required: true, message: '请输入数据集名称', trigger: 'blur' },
-    { min: 3, max: 50, message: '名称长度在 3 到 50 个字符', trigger: 'blur' },
-    {
-      pattern: /^[a-z0-9]([-a-z0-9]*[a-z0-9])?$/,
-      message: '名称只能包含小写字母、数字和连字符',
-      trigger: 'blur',
+    sampleCount: 50000,
+    filePath: '/datasets/imagenet-2012-subset',
+    downloadUrl: 'https://datasets.example.com/imagenet-2012-subset.tar.gz',
+    creatorId: 'user-001',
+    creatorName: '张三',
+    workspaceId: 'workspace-001',
+    workspaceName: '默认工作空间',
+    schema: {
+      type: 'image_classification',
+      classes: 1000,
+      imageSize: [224, 224, 3],
     },
-  ],
-  dataType: [{ required: true, message: '请选择数据类型', trigger: 'change' }],
-  sourceType: [
-    { required: true, message: '请选择数据来源方式', trigger: 'change' },
-  ],
-  dataUrl: [
-    { required: true, message: '请输入数据 URL', trigger: 'blur' },
-    { type: 'url', message: '请输入有效的 URL', trigger: 'blur' },
-  ],
-  s3Bucket: [{ required: true, message: '请输入存储桶名称', trigger: 'blur' }],
-  s3Path: [{ required: true, message: '请输入对象路径', trigger: 'blur' }],
-  accessLevel: [
-    { required: true, message: '请选择访问权限', trigger: 'change' },
-  ],
-};
-
-const editFormRules = {
-  name: [
-    { required: true, message: '请输入数据集名称', trigger: 'blur' },
-    { min: 3, max: 50, message: '名称长度在 3 到 50 个字符', trigger: 'blur' },
-  ],
-  accessLevel: [
-    { required: true, message: '请选择访问权限', trigger: 'change' },
-  ],
-};
-
-// ===== 表格列配置 =====
-const columns: TableColumnsType<DatasetItem> = [
-  {
-    title: '名称',
-    dataIndex: 'name',
-    key: 'name',
-    width: 200,
-    ellipsis: true,
+    statistics: {
+      meanImageSize: 204800,
+      classDistribution: 'balanced',
+    },
+    isLabeled: true,
+    labelFormat: 'imagenet',
+    labelCount: 50000,
+    status: DatasetStatus.AVAILABLE,
+    isPublic: true,
+    downloadCount: 1258,
+    useCount: 89,
+    version: '1.2.0',
+    parentDatasetId: null,
+    versionHistory: [
+      {
+        version: '1.2.0',
+        description: '优化数据质量，增加新类别',
+        changeLog: '- 修复标注错误\n- 增加100个新类别\n- 优化图像质量',
+        size: 5368709120,
+        sampleCount: 50000,
+        createTime: '2024-01-20 14:30:00',
+        creatorId: 'user-001',
+        creatorName: '张三',
+      },
+    ],
+    tags: ['imagenet', 'classification', 'computer-vision', 'benchmark'],
+    labels: {
+      category: 'computer-vision',
+      difficulty: 'medium',
+      quality: 'high',
+    },
+    createTime: '2024-01-15 10:30:00',
+    updateTime: '2024-01-20 14:30:00',
   },
   {
-    title: '数据类型',
-    key: 'dataType',
+    id: 'dataset-002',
+    name: 'sentiment-analysis-chinese',
+    description: '中文情感分析数据集，包含电商评论的情感标注',
+    type: DatasetType.TEXT,
+    format: DatasetFormat.JSON,
+    size: 1073741824, // 1GB
+    sampleCount: 100000,
+    filePath: '/datasets/sentiment-analysis-chinese',
+    creatorId: 'user-002',
+    creatorName: '李四',
+    workspaceId: 'workspace-002',
+    workspaceName: 'NLP研究室',
+    schema: {
+      type: 'text_classification',
+      fields: ['text', 'sentiment', 'score'],
+      sentiments: ['positive', 'negative', 'neutral'],
+    },
+    isLabeled: true,
+    labelFormat: 'json',
+    labelCount: 100000,
+    status: DatasetStatus.AVAILABLE,
+    isPublic: false,
+    downloadCount: 456,
+    useCount: 23,
+    version: '2.1.0',
+    parentDatasetId: null,
+    versionHistory: [
+      {
+        version: '2.1.0',
+        description: '增加更多评论数据',
+        changeLog: '- 新增20000条评论\n- 优化标注质量\n- 修复数据格式问题',
+        size: 1073741824,
+        sampleCount: 100000,
+        createTime: '2024-01-18 16:45:00',
+        creatorId: 'user-002',
+        creatorName: '李四',
+      },
+    ],
+    tags: ['sentiment', 'chinese', 'nlp', 'ecommerce'],
+    createTime: '2024-01-12 09:15:00',
+    updateTime: '2024-01-18 16:45:00',
+  },
+  {
+    id: 'dataset-003',
+    name: 'speech-recognition-mandarin',
+    description: '普通话语音识别数据集，多说话人录音',
+    type: DatasetType.AUDIO,
+    format: DatasetFormat.CUSTOM,
+    size: 10737418240, // 10GB
+    sampleCount: 25000,
+    filePath: '/datasets/speech-recognition-mandarin',
+    creatorId: 'user-003',
+    creatorName: '王五',
+    workspaceId: 'workspace-003',
+    workspaceName: '语音实验室',
+    schema: {
+      type: 'speech_recognition',
+      sampleRate: 16000,
+      channels: 1,
+      format: 'wav',
+    },
+    isLabeled: true,
+    labelFormat: 'txt',
+    labelCount: 25000,
+    status: DatasetStatus.PROCESSING,
+    isPublic: true,
+    downloadCount: 234,
+    useCount: 12,
+    version: '1.0.0',
+    parentDatasetId: null,
+    versionHistory: [
+      {
+        version: '1.0.0',
+        description: '初始版本',
+        changeLog: '- 收集25000条语音数据\n- 完成文本标注\n- 数据质量检查',
+        size: 10737418240,
+        sampleCount: 25000,
+        createTime: '2024-01-20 11:00:00',
+        creatorId: 'user-003',
+        creatorName: '王五',
+      },
+    ],
+    tags: ['speech', 'mandarin', 'asr', 'multi-speaker'],
+    createTime: '2024-01-20 11:00:00',
+    updateTime: '2024-01-20 15:30:00',
+  },
+];
+
+// 表格列定义
+const columns: TableColumnsType<Dataset> = [
+  {
+    title: '数据集信息',
+    key: 'datasetInfo',
+    slots: { customRender: 'datasetInfo' },
+    width: 300,
+  },
+  {
+    title: '类型',
+    key: 'type',
+    slots: { customRender: 'type' },
     width: 120,
-    slots: { customRender: 'dataType' },
+  },
+  {
+    title: '格式',
+    key: 'format',
+    slots: { customRender: 'format' },
+    width: 100,
   },
   {
     title: '状态',
     key: 'status',
-    width: 120,
     slots: { customRender: 'status' },
-  },
-  {
-    title: '创建者',
-    dataIndex: 'creator',
-    key: 'creator',
     width: 100,
   },
   {
-    title: '大小',
-    key: 'size',
-    width: 150,
-    slots: { customRender: 'size' },
+    title: '样本数',
+    key: 'sampleCount',
+    slots: { customRender: 'sampleCount' },
+    width: 100,
   },
   {
-    title: '版本',
-    dataIndex: 'version',
-    key: 'version',
-    width: 80,
-    slots: { customRender: 'version' },
+    title: '创建者',
+    key: 'creator',
+    slots: { customRender: 'creator' },
+    width: 120,
   },
   {
     title: '创建时间',
     key: 'createTime',
-    width: 150,
     slots: { customRender: 'createTime' },
+    width: 150,
   },
   {
     title: '操作',
     key: 'action',
-    width: 180,
-    fixed: 'right',
     slots: { customRender: 'action' },
+    width: 200,
+    fixed: 'right' as const,
   },
 ];
 
-// ===== 分页配置 =====
-const paginationConfig = {
-  total: computed(() => filteredDatasets.value.length),
-  pageSize: 10,
-  showSizeChanger: true,
-  showQuickJumper: true,
-  showTotal: (total: number, range: [number, number]) =>
-    `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-};
-
-// ===== 计算属性 =====
+// 计算属性
 const filteredDatasets = computed(() => {
-  let result = datasets.value;
-
-  if (filterType.value) {
-    result = result.filter((item) => item.dataType === filterType.value);
-  }
-
-  if (filterStatus.value) {
-    result = result.filter((item) => item.status === filterStatus.value);
-  }
-
-  if (searchKeyword.value) {
-    const keyword = searchKeyword.value.toLowerCase();
-    result = result.filter(
-      (item) =>
-        item.name.toLowerCase().includes(keyword) ||
-        (item.description && item.description.toLowerCase().includes(keyword)),
+  let filtered = datasetList.value;
+  
+  // 名称搜索
+  if (searchParams.name) {
+    filtered = filtered.filter(dataset => 
+      dataset.name.toLowerCase().includes(searchParams.name!.toLowerCase()) ||
+      dataset.description?.toLowerCase().includes(searchParams.name!.toLowerCase())
     );
   }
-
-  return result;
+  
+  // 类型筛选
+  if (searchParams.type) {
+    filtered = filtered.filter(dataset => dataset.type === searchParams.type);
+  }
+  
+  // 格式筛选
+  if (searchParams.format) {
+    filtered = filtered.filter(dataset => dataset.format === searchParams.format);
+  }
+  
+  // 状态筛选
+  if (searchParams.status) {
+    filtered = filtered.filter(dataset => dataset.status === searchParams.status);
+  }
+  
+  // 公开性筛选
+  if (searchParams.isPublic !== undefined) {
+    filtered = filtered.filter(dataset => dataset.isPublic === searchParams.isPublic);
+  }
+  
+  // 标注状态筛选
+  if (searchParams.isLabeled !== undefined) {
+    filtered = filtered.filter(dataset => dataset.isLabeled === searchParams.isLabeled);
+  }
+  
+  return filtered;
 });
 
-// ===== 工具函数 =====
-const getTypeColor = (type: string): string => {
-  return TYPE_CONFIG[type as keyof typeof TYPE_CONFIG]?.color || 'default';
-};
-
-const getTypeIcon = (type: string) => {
-  return TYPE_CONFIG[type as keyof typeof TYPE_CONFIG]?.icon || FileOutlined;
-};
-
-const getTypeText = (type: string): string => {
-  return TYPE_CONFIG[type as keyof typeof TYPE_CONFIG]?.text || type;
-};
-
-const getStatusColor = (status: string): string => {
-  return (
-    STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.color || 'default'
-  );
-};
-
-const getStatusIcon = (status: string) => {
-  return (
-    STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.icon ||
-    ClockCircleOutlined
-  );
-};
-
-const getStatusText = (status: string): string => {
-  return STATUS_CONFIG[status as keyof typeof STATUS_CONFIG]?.text || status;
-};
-
-const getAccessLevelText = (level: string): string => {
-  const levelMap = {
-    private: '私有',
-    team: '团队共享',
-    public: '公开',
+// 工具方法
+const getDatasetTypeText = (type: DatasetType) => {
+  const types = {
+    [DatasetType.IMAGE]: '图像',
+    [DatasetType.TEXT]: '文本',
+    [DatasetType.AUDIO]: '音频',
+    [DatasetType.VIDEO]: '视频',
+    [DatasetType.TABULAR]: '表格',
+    [DatasetType.TIME_SERIES]: '时间序列',
+    [DatasetType.GRAPH]: '图网络',
+    [DatasetType.CUSTOM]: '自定义',
   };
-  return levelMap[level as keyof typeof levelMap] || level;
+  return types[type] || type;
 };
 
-const getFileIcon = (type: string) => {
-  const iconMap = {
-    image: FileImageOutlined,
-    json: FileTextOutlined,
-    text: FileTextOutlined,
+const getDatasetTypeColor = (type: DatasetType) => {
+  const colors = {
+    [DatasetType.IMAGE]: 'blue',
+    [DatasetType.TEXT]: 'green',
+    [DatasetType.AUDIO]: 'orange',
+    [DatasetType.VIDEO]: 'purple',
+    [DatasetType.TABULAR]: 'cyan',
+    [DatasetType.TIME_SERIES]: 'magenta',
+    [DatasetType.GRAPH]: 'volcano',
+    [DatasetType.CUSTOM]: 'default',
   };
-  return iconMap[type as keyof typeof iconMap] || FileOutlined;
+  return colors[type] || 'default';
 };
 
+const getDatasetFormatText = (format: DatasetFormat) => {
+  const formats = {
+    [DatasetFormat.CSV]: 'CSV',
+    [DatasetFormat.JSON]: 'JSON',
+    [DatasetFormat.PARQUET]: 'Parquet',
+    [DatasetFormat.COCO]: 'COCO',
+    [DatasetFormat.YOLO]: 'YOLO',
+    [DatasetFormat.PASCAL_VOC]: 'Pascal VOC',
+    [DatasetFormat.IMAGENET]: 'ImageNet',
+    [DatasetFormat.CUSTOM]: '自定义',
+  };
+  return formats[format] || format;
+};
+
+const getDatasetStatusText = (status: DatasetStatus) => {
+  const statuses = {
+    [DatasetStatus.UPLOADING]: '上传中',
+    [DatasetStatus.PROCESSING]: '处理中',
+    [DatasetStatus.AVAILABLE]: '可用',
+    [DatasetStatus.ERROR]: '错误',
+    [DatasetStatus.DELETED]: '已删除',
+  };
+  return statuses[status] || status;
+};
+
+const getDatasetStatusColor = (status: DatasetStatus) => {
+  const colors = {
+    [DatasetStatus.UPLOADING]: 'processing',
+    [DatasetStatus.PROCESSING]: 'processing',
+    [DatasetStatus.AVAILABLE]: 'success',
+    [DatasetStatus.ERROR]: 'error',
+    [DatasetStatus.DELETED]: 'default',
+  };
+  return colors[status] || 'default';
+};
+
+const getTypeIcon = (type: DatasetType) => {
+  const icons = {
+    [DatasetType.IMAGE]: FileImageOutlined,
+    [DatasetType.TEXT]: FileTextOutlined,
+    [DatasetType.AUDIO]: SoundOutlined,
+    [DatasetType.VIDEO]: VideoCameraOutlined,
+    [DatasetType.TABULAR]: FileTextOutlined,
+    [DatasetType.TIME_SERIES]: BarChartOutlined,
+    [DatasetType.GRAPH]: ShareAltOutlined,
+    [DatasetType.CUSTOM]: FileOutlined,
+  };
+  return icons[type] || FileOutlined;
+};
+
+const getDatasetStatusIcon = (status: DatasetStatus) => {
+  const icons = {
+    [DatasetStatus.UPLOADING]: ReloadOutlined,
+    [DatasetStatus.PROCESSING]: ReloadOutlined,
+    [DatasetStatus.AVAILABLE]: CheckCircleOutlined,
+    [DatasetStatus.ERROR]: CloseCircleOutlined,
+    [DatasetStatus.DELETED]: DeleteOutlined,
+  };
+  return icons[status] || CheckCircleOutlined;
+};
+
+const getAccessLevelText = (level: string) => {
+  const levels = {
+    'private': '私有',
+    'team': '团队',
+    'public': '公开'
+  };
+  return levels[level as keyof typeof levels] || level;
+};
+
+const getFileIcon = (fileName: string) => {
+  const ext = fileName.split('.').pop()?.toLowerCase();
+  if (['jpg', 'jpeg', 'png', 'gif'].includes(ext || '')) return FileImageOutlined;
+  if (['txt', 'csv', 'json'].includes(ext || '')) return FileTextOutlined;
+  return FileOutlined;
+};
+
+// 数据加载
+const loadDatasets = async () => {
+  try {
+    loading.value = true;
+    // const response = await getDatasetList(searchParams);
+    // datasetList.value = response.data.items;
+    
+    // 模拟API调用
+    await new Promise(resolve => setTimeout(resolve, 500));
+    datasetList.value = mockDatasets;
+    
+    updateStats();
+  } catch (error) {
+    message.error('加载数据集列表失败');
+  } finally {
+    loading.value = false;
+  }
+};
+
+const loadStatistics = async () => {
+  try {
+    // const response = await getDatasetStatistics();
+    // datasetStats.value = response.data;
+    
+    // 模拟统计数据
+    datasetStats.value = {
+      totalDatasets: mockDatasets.length,
+      publicDatasets: mockDatasets.filter(d => d.isPublic).length,
+      privateDatasets: mockDatasets.filter(d => !d.isPublic).length,
+      totalSize: mockDatasets.reduce((sum, d) => sum + d.size, 0),
+      totalSamples: mockDatasets.reduce((sum, d) => sum + d.sampleCount, 0),
+      labeledDatasets: mockDatasets.filter(d => d.isLabeled).length,
+    };
+  } catch (error) {
+    message.error('加载统计信息失败');
+  }
+};
+
+const loadFormats = async () => {
+  try {
+    // const response = await getSupportedFormats();
+    // supportedFormats.value = response.data;
+    
+    // 模拟格式数据
+    supportedFormats.value = Object.values(DatasetFormat);
+  } catch (error) {
+    message.error('加载格式列表失败');
+  }
+};
+
+const updateStats = () => {
+  const stats = {
+    totalDatasets: datasetList.value.length,
+    publicDatasets: datasetList.value.filter(d => d.isPublic).length,
+    privateDatasets: datasetList.value.filter(d => !d.isPublic).length,
+    totalSize: datasetList.value.reduce((sum, d) => sum + d.size, 0),
+    totalSamples: datasetList.value.reduce((sum, d) => sum + d.sampleCount, 0),
+    labeledDatasets: datasetList.value.filter(d => d.isLabeled).length,
+  };
+  datasetStats.value = stats;
+};
+
+const refreshData = async () => {
+  await Promise.all([
+    loadDatasets(),
+    loadStatistics(),
+  ]);
+};
+
+const viewDetails = (record: Dataset) => {
+  selectedDataset.value = record;
+  detailDrawerVisible.value = true;
+};
+
+// 事件处理
+const handleFilterChange = () => {
+  // 筛选变化时可以重新加载数据
+};
+
+const handleSearch = () => {
+  loadDatasets();
+};
+
+const handleSearchChange = () => {
+  // 搜索输入变化时的处理逻辑
+};
+
+const resetFilters = () => {
+  Object.assign(searchParams, {
+    name: '',
+    type: undefined,
+    format: undefined,
+    status: undefined,
+    isPublic: undefined,
+    isLabeled: undefined,
+  });
+  loadDatasets();
+};
+
+const showCreateModal = () => {
+  createModalVisible.value = true;
+  resetUploadForm();
+};
+
+const resetUploadForm = () => {
+  Object.assign(uploadForm, {
+    name: '',
+    description: '',
+    type: DatasetType.IMAGE,
+    format: DatasetFormat.CUSTOM,
+    workspaceId: 'workspace-001',
+    tags: [],
+    isPublic: false,
+    files: [],
+    labelFiles: [],
+  });
+};
+
+const handleCreateSubmit = async () => {
+  try {
+    await createFormRef.value?.validate();
+    
+    if (uploadForm.files.length === 0) {
+      message.error('请选择数据文件');
+      return;
+    }
+    
+    createLoading.value = true;
+    
+    const request: DatasetUploadRequest = {
+      name: uploadForm.name,
+      description: uploadForm.description,
+      type: uploadForm.type,
+      format: uploadForm.format,
+      workspaceId: uploadForm.workspaceId,
+      tags: uploadForm.tags,
+      isPublic: uploadForm.isPublic,
+      files: uploadForm.files,
+      labelFiles: uploadForm.labelFiles,
+    };
+    
+    // const response = await uploadDataset(request);
+    
+    // 模拟上传成功
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    message.success('数据集上传成功');
+    createModalVisible.value = false;
+    loadDatasets();
+  } catch (error) {
+    message.error('上传失败');
+  } finally {
+    createLoading.value = false;
+  }
+};
+
+const handleCreateCancel = () => {
+  createModalVisible.value = false;
+};
+
+const beforeUpload = (file: File, fileList: File[]) => {
+  uploadForm.files = [...uploadForm.files, file];
+  if (!uploadForm.name) {
+    uploadForm.name = file.name.replace(/\.[^/.]+$/, '');
+  }
+  return false; // 阻止自动上传
+};
+
+const beforeLabelUpload = (file: File, fileList: File[]) => {
+  uploadForm.labelFiles = [...uploadForm.labelFiles, file];
+  return false; // 阻止自动上传
+};
+
+// 数据集操作
+const viewDatasetDetail = (dataset: Dataset) => {
+  selectedDataset.value = dataset;
+  detailDrawerVisible.value = true;
+};
+
+const viewDatasetVersions = (dataset: Dataset) => {
+  selectedDataset.value = dataset;
+  versionDrawerVisible.value = true;
+};
+
+const downloadDatasetFile = async (dataset: Dataset) => {
+  try {
+    // const blob = await downloadDataset(dataset.id);
+    // const url = window.URL.createObjectURL(blob);
+    // const link = document.createElement('a');
+    // link.href = url;
+    // link.download = `${dataset.name}-${dataset.version}.tar.gz`;
+    // link.click();
+    // window.URL.revokeObjectURL(url);
+    
+    // 模拟下载
+    message.success('数据集下载中...');
+  } catch (error) {
+    message.error('下载失败');
+  }
+};
+
+const toggleFavorite = async (dataset: Dataset) => {
+  try {
+    // await toggleDatasetFavorite(dataset.id, !dataset.isFavorite);
+    
+    // 模拟切换收藏状态
+    message.success(dataset.isFavorite ? '已取消收藏' : '已收藏');
+    loadDatasets();
+  } catch (error) {
+    message.error('操作失败');
+  }
+};
+
+const editDataset = (dataset: Dataset) => {
+  message.info('编辑功能开发中');
+};
+
+const deleteDatasetItem = async (dataset: Dataset) => {
+  import('ant-design-vue').then(({ Modal }) => {
+    Modal.confirm({
+      title: '确认删除',
+      content: `确定要删除数据集 "${dataset.name}" 吗？此操作不可恢复。`,
+      okText: '确认',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          // await deleteDataset(dataset.id);
+          
+          // 模拟删除
+          message.success('数据集删除成功');
+          loadDatasets();
+        } catch (error) {
+          message.error('删除失败');
+        }
+      },
+    });
+  });
+};
+
+const batchDelete = async () => {
+  if (selectedRowKeys.value.length === 0) {
+    message.warning('请选择要删除的数据集');
+    return;
+  }
+  
+  import('ant-design-vue').then(({ Modal }) => {
+    Modal.confirm({
+      title: '批量删除',
+      content: `确定要删除选中的 ${selectedRowKeys.value.length} 个数据集吗？此操作不可恢复。`,
+      okText: '确认',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          // await batchDeleteDatasets(selectedRowKeys.value);
+          
+          // 模拟批量删除
+          message.success('批量删除成功');
+          selectedRowKeys.value = [];
+          loadDatasets();
+        } catch (error) {
+          message.error('批量删除失败');
+        }
+      },
+    });
+  });
+};
+
+// 菜单操作处理
+const handleMenuAction = (key: string, record: Dataset) => {
+  const actions = {
+    preview: () => viewDatasetDetail(record),
+    edit: () => editDataset(record),
+    copy: () => message.info('复制功能开发中'),
+    version: () => viewDatasetVersions(record),
+    delete: () => deleteDatasetItem(record),
+  };
+
+  const action = actions[key as keyof typeof actions];
+  if (action) {
+    action();
+  }
+};
+
+// 表单验证规则
+const createFormRules = {
+  name: [
+    { required: true, message: '请输入数据集名称', trigger: 'blur' },
+    { min: 3, max: 50, message: '名称长度在 3 到 50 个字符', trigger: 'blur' },
+  ],
+  type: [
+    { required: true, message: '请选择数据类型', trigger: 'change' },
+  ],
+  format: [
+    { required: true, message: '请选择数据格式', trigger: 'change' },
+  ],
+  workspaceId: [
+    { required: true, message: '请选择工作空间', trigger: 'change' },
+  ],
+};
+
+// 格式化方法
 const formatSize = (bytes: number): string => {
-  if (bytes === 0) return '0 B';
-  const k = 1024;
-  const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+  return formatFileSize(bytes);
 };
 
 const formatRelativeTime = (time: string): string => {
@@ -1139,250 +1403,20 @@ const formatRelativeTime = (time: string): string => {
   }
 };
 
-const beforeUpload = (): boolean => {
-  return false; // 阻止自动上传
+// 分页配置
+const paginationConfig = {
+  total: computed(() => filteredDatasets.value.length),
+  pageSize: 20,
+  showSizeChanger: true,
+  showQuickJumper: true,
+  showTotal: (total: number, range: [number, number]) =>
+    `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
 };
 
-// ===== 事件处理函数 =====
-const showCreateModal = (): void => {
-  createModalVisible.value = true;
-};
-
-const handleCreateSubmit = async (): Promise<void> => {
-  try {
-    await createFormRef.value?.validate();
-    createLoading.value = true;
-
-    // 模拟 API 调用
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    const newDataset: DatasetItem = {
-      id: `ds-${Date.now()}`,
-      name: createForm.name,
-      dataType: createForm.dataType as 'image' | 'text' | 'audio' | 'video',
-      status: 'processing',
-      creator: 'current-user',
-      description: createForm.description,
-      size: Math.floor(Math.random() * 10000000000), // 随机大小
-      fileCount: Math.floor(Math.random() * 50000) + 1000,
-      createTime: new Date().toLocaleString(),
-      updateTime: new Date().toLocaleString(),
-      version: '1.0',
-      tags: createForm.tags,
-      accessLevel: createForm.accessLevel,
-    };
-
-    datasets.value.unshift(newDataset);
-    createModalVisible.value = false;
-    message.success('数据集创建成功');
-
-    // 重置表单
-    createFormRef.value?.resetFields();
-    Object.assign(createForm, {
-      name: '',
-      dataType: '',
-      description: '',
-      sourceType: 'upload',
-      fileList: [],
-      dataUrl: '',
-      s3Bucket: '',
-      s3Path: '',
-      tags: [],
-      accessLevel: 'private',
-    });
-  } catch (error) {
-    message.error('表单验证失败');
-  } finally {
-    createLoading.value = false;
-  }
-};
-
-const handleCreateCancel = (): void => {
-  createModalVisible.value = false;
-  createFormRef.value?.resetFields();
-};
-
-const downloadDataset = (record: DatasetItem): void => {
-  message.info(`开始下载数据集: ${record.name}`);
-  // 模拟下载逻辑
-};
-
-const viewDetails = (record: DatasetItem): void => {
-  selectedDataset.value = record;
-  detailModalVisible.value = true;
-  previewActiveKey.value = 'structure';
-};
-
-const handleMenuAction = (key: string, record: DatasetItem): void => {
-  const actions = {
-    preview: () => handlePreview(record),
-    edit: () => handleEdit(record),
-    copy: () => handleCopy(record),
-    version: () => handleVersionManagement(record),
-    delete: () => handleDelete(record),
-  };
-
-  const action = actions[key as keyof typeof actions];
-  if (action) {
-    action();
-  }
-};
-
-const handlePreview = (record: DatasetItem): void => {
-  viewDetails(record);
-  previewActiveKey.value = 'sample';
-};
-
-const handleEdit = (record: DatasetItem): void => {
-  editForm.name = record.name;
-  editForm.description = record.description || '';
-  editForm.tags = [...record.tags];
-  editForm.accessLevel = record.accessLevel;
-  selectedDataset.value = record;
-  editModalVisible.value = true;
-};
-
-const handleEditSubmit = async (): Promise<void> => {
-  try {
-    await editFormRef.value?.validate();
-    editLoading.value = true;
-
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-
-    if (selectedDataset.value) {
-      const index = datasets.value.findIndex(
-        (item) => item.id === selectedDataset.value!.id,
-      );
-      if (index !== -1) {
-        datasets.value[index] = {
-          ...datasets.value[index]!,
-          name: editForm.name,
-          description: editForm.description,
-          tags: [...editForm.tags],
-          accessLevel: editForm.accessLevel,
-          updateTime: new Date().toLocaleString(),
-        };
-      }
-    }
-
-    editModalVisible.value = false;
-    message.success('数据集更新成功');
-  } catch (error) {
-    message.error('表单验证失败');
-  } finally {
-    editLoading.value = false;
-  }
-};
-
-const handleEditCancel = (): void => {
-  editModalVisible.value = false;
-  editFormRef.value?.resetFields();
-};
-
-const handleCopy = async (record: DatasetItem): Promise<void> => {
-  loading.value = true;
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 1500));
-
-    const copiedDataset: DatasetItem = {
-      ...record,
-      id: `ds-${Date.now()}`,
-      name: `${record.name}-copy`,
-      status: 'processing',
-      createTime: new Date().toLocaleString(),
-      updateTime: new Date().toLocaleString(),
-      version: '1.0',
-    };
-
-    datasets.value.unshift(copiedDataset);
-    message.success('数据集复制成功');
-  } catch (error) {
-    message.error('复制失败');
-  } finally {
-    loading.value = false;
-  }
-};
-
-const handleVersionManagement = (record: DatasetItem): void => {
-  selectedDataset.value = record;
-  versionModalVisible.value = true;
-};
-
-const createVersion = (): void => {
-  message.info('创建新版本功能暂未实现');
-};
-
-const switchVersion = (version: VersionItem): void => {
-  message.success(`已切换到版本 v${version.version}`);
-  versions.value.forEach((v) => (v.current = false));
-  version.current = true;
-};
-
-const deleteVersion = (version: VersionItem): void => {
-  import('ant-design-vue').then(({ Modal }) => {
-    Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除版本 v${version.version} 吗？`,
-      okText: '确认',
-      cancelText: '取消',
-      type: 'warning',
-      onOk: () => {
-        const index = versions.value.findIndex((v) => v.id === version.id);
-        if (index !== -1) {
-          versions.value.splice(index, 1);
-          message.success('版本删除成功');
-        }
-      },
-    });
-  });
-};
-
-const handleDelete = (record: DatasetItem): void => {
-  import('ant-design-vue').then(({ Modal }) => {
-    Modal.confirm({
-      title: '确认删除',
-      content: `确定要删除数据集 "${record.name}" 吗？此操作不可恢复。`,
-      okText: '确认',
-      cancelText: '取消',
-      type: 'warning',
-      onOk: () => {
-        const index = datasets.value.findIndex((item) => item.id === record.id);
-        if (index !== -1) {
-          datasets.value.splice(index, 1);
-          message.success('数据集删除成功');
-        }
-      },
-    });
-  });
-};
-
-const refreshData = async (): Promise<void> => {
-  loading.value = true;
-  try {
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    message.success('数据刷新成功');
-  } catch (error) {
-    message.error('刷新失败');
-  } finally {
-    loading.value = false;
-  }
-};
-
-const handleFilterChange = (): void => {
-  // 筛选变化时的处理逻辑
-};
-
-const handleSearch = (): void => {
-  // 搜索处理逻辑
-};
-
-const handleSearchChange = (): void => {
-  // 搜索输入变化时的处理逻辑
-};
-
-// ===== 生命周期 =====
+// 初始化
 onMounted(() => {
   refreshData();
+  loadFormats();
 });
 </script>
 

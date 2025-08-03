@@ -601,7 +601,7 @@ type GetModelStatsResp {
     group: model
     prefix: /api/v1/models
 )
-service ModelService {
+service common-api {
     @doc "创建模型"
     @handler CreateModel
     post / (CreateModelReq) returns (CreateModelResp)

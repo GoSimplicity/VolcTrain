@@ -1,14 +1,13 @@
 syntax = "v1"
 
 import (
+    "api/auth.api"
     "api/common.api"
     "api/dataset.api"
-    "api/gpu_cluster.api"
     "api/gpu.api"
     "api/model.api"
-    "api/training.api"
     "api/user.api"
     "api/workspace.api"
-    "api/role.api"
     "api/monitor.api"
+    "api/system.api"
 )

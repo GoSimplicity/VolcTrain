@@ -471,7 +471,7 @@ type ListDepartmentManagersResp {
     group: user
     prefix: /api/v1/users
 )
-service user-api {
+service common-api {
     @handler CreateUser
     post / (CreateUserReq) returns (CreateUserResp)
     
@@ -498,7 +498,7 @@ service user-api {
     group: department
     prefix: /api/v1/departments
 )
-service user-api {
+service common-api {
     @handler CreateDepartment
     post / (CreateDepartmentReq) returns (CreateDepartmentResp)
     
@@ -519,7 +519,7 @@ service user-api {
     group: permission
     prefix: /api/v1/permissions
 )
-service user-api {
+service common-api {
     @handler CreatePermission
     post / (CreatePermissionReq) returns (CreatePermissionResp)
     
@@ -540,7 +540,7 @@ service user-api {
     group: role
     prefix: /api/v1/roles
 )
-service user-api {
+service common-api {
     @handler CreateRole
     post / (CreateRoleReq) returns (CreateRoleResp)
     
@@ -561,7 +561,7 @@ service user-api {
     group: userRole
     prefix: /api/v1/user-roles
 )
-service user-api {
+service common-api {
     @handler AssignUserRole
     post /assign (AssignUserRoleReq) returns (EmptyResp)
     
@@ -576,7 +576,7 @@ service user-api {
     group: userDepartment
     prefix: /api/v1/user-departments
 )
-service user-api {
+service common-api {
     @handler AssignUserDepartment
     post /assign (AssignUserDepartmentReq) returns (EmptyResp)
     
@@ -591,7 +591,7 @@ service user-api {
     group: departmentManager
     prefix: /api/v1/department-managers
 )
-service user-api {
+service common-api {
     @handler AssignDepartmentManager
     post /assign (AssignDepartmentManagerReq) returns (EmptyResp)
     

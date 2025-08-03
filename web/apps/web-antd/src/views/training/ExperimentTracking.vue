@@ -1589,7 +1589,7 @@ const metricsCompareColumns = computed(() => {
   const columns = [
     { title: '指标', key: 'metric', slots: { customRender: 'metric' } },
   ];
-  compareExperiments.value.forEach((exp, index) => {
+  compareExperiments.value.forEach((_exp, index) => {
     columns.push({
       title: `实验${index + 1}`,
       key: `exp${index}`,
@@ -1635,7 +1635,7 @@ const hyperparamsCompareColumns = computed(() => {
   const columns = [
     { title: '超参数', key: 'param', slots: { customRender: 'param' } },
   ];
-  compareExperiments.value.forEach((exp, index) => {
+  compareExperiments.value.forEach((_exp, index) => {
     columns.push({
       title: `实验${index + 1}`,
       key: `exp${index}`,

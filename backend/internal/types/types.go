@@ -3,10 +3,1236 @@
 
 package types
 
-type Request struct {
-	Name string `path:"name,options=you|me"`
+type AddDeviceToNodeReq struct {
+	NodeId        int64  `json:"node_id" validate:"required"`
+	DeviceIndex   int    `json:"device_index" validate:"required"`
+	DeviceUUID    string `json:"device_uuid" validate:"required"`
+	DeviceName    string `json:"device_name" validate:"required"`
+	Brand         string `json:"brand" validate:"required"`
+	Model         string `json:"model" validate:"required"`
+	Architecture  string `json:"architecture"`
+	MemoryTotalMb int    `json:"memory_total_mb" validate:"required"`
+	PowerLimitW   int    `json:"power_limit_w"`
+	PcieBusId     string `json:"pcie_bus_id"`
+	CudaVersion   string `json:"cuda_version"`
+	DriverVersion string `json:"driver_version"`
 }
 
-type Response struct {
+type AddDeviceToNodeResp struct {
+	Device GpuDeviceInfo `json:"device"`
+}
+
+type AddGpuUsageRelationReq struct {
+	UsageRecordId   int64  `json:"usage_record_id" validate:"required"`
+	RelatedRecordId int64  `json:"related_record_id" validate:"required"`
+	RelationType    string `json:"relation_type" validate:"required"`
+}
+
+type AddGpuUsageRelationResp struct {
+	Relation GpuUsageRelationInfo `json:"relation"`
+}
+
+type AddNodeToClusterReq struct {
+	ClusterId  int64  `json:"cluster_id" validate:"required"`
+	Name       string `json:"name" validate:"required"`
+	Hostname   string `json:"hostname" validate:"required"`
+	InternalIP string `json:"internal_ip" validate:"required"`
+	ExternalIP string `json:"external_ip"`
+	NodeType   string `json:"node_type" validate:"required"`
+	CpuCores   int    `json:"cpu_cores" validate:"required"`
+	MemoryGb   int    `json:"memory_gb" validate:"required"`
+	StorageGb  int    `json:"storage_gb" validate:"required"`
+}
+
+type AddNodeToClusterResp struct {
+	Node GpuNodeInfo `json:"node"`
+}
+
+type AllocateGpuDeviceReq struct {
+	DeviceIds   []int64 `json:"device_ids" validate:"required"`
+	JobId       int64   `json:"job_id" validate:"required"`
+	UserId      int64   `json:"user_id" validate:"required"`
+	WorkspaceId int64   `json:"workspace_id"`
+	QueueName   string  `json:"queue_name" validate:"required"`
+	Priority    int     `json:"priority"`
+	ExpiresAt   *string `json:"expires_at,omitempty"`
+}
+
+type AllocateGpuDeviceResp struct {
+	Allocations []GpuAllocationInfo `json:"allocations"`
+}
+
+type CheckStatus struct {
+	Service string `json:"service"`
+	Status  string `json:"status"`
 	Message string `json:"message"`
+	Latency string `json:"latency"`
+}
+
+type CreateGpuClusterReq struct {
+	Name           string                 `json:"name" validate:"required"`
+	DisplayName    string                 `json:"display_name"`
+	Description    string                 `json:"description"`
+	ClusterType    string                 `json:"cluster_type" validate:"required"`
+	KubeConfig     string                 `json:"kube_config"`
+	ApiEndpoint    string                 `json:"api_endpoint"`
+	Region         string                 `json:"region"`
+	Zone           string                 `json:"zone"`
+	ResourceLabels map[string]string      `json:"resource_labels,omitempty"`
+	MetricsConfig  map[string]interface{} `json:"metrics_config,omitempty"`
+}
+
+type CreateGpuClusterResp struct {
+	Cluster GpuClusterInfo `json:"cluster"`
+}
+
+type CreateGpuDeviceReq struct {
+	ClusterId     int64  `json:"cluster_id" validate:"required"`
+	NodeId        int64  `json:"node_id" validate:"required"`
+	DeviceIndex   int    `json:"device_index" validate:"required"`
+	DeviceUUID    string `json:"device_uuid" validate:"required"`
+	DeviceName    string `json:"device_name" validate:"required"`
+	Brand         string `json:"brand" validate:"required"`
+	Model         string `json:"model" validate:"required"`
+	Architecture  string `json:"architecture"`
+	MemoryTotalMb int    `json:"memory_total_mb" validate:"required"`
+	PowerLimitW   int    `json:"power_limit_w"`
+	PcieBusId     string `json:"pcie_bus_id"`
+	CudaVersion   string `json:"cuda_version"`
+	DriverVersion string `json:"driver_version"`
+}
+
+type CreateGpuDeviceResp struct {
+	Device GpuDeviceInfo `json:"device"`
+}
+
+type CreateGpuNodeReq struct {
+	ClusterId  int64                    `json:"cluster_id" validate:"required"`
+	Name       string                   `json:"name" validate:"required"`
+	Hostname   string                   `json:"hostname" validate:"required"`
+	InternalIP string                   `json:"internal_ip" validate:"required"`
+	ExternalIP string                   `json:"external_ip"`
+	NodeType   string                   `json:"node_type" validate:"required"`
+	CpuCores   int                      `json:"cpu_cores" validate:"required"`
+	MemoryGb   int                      `json:"memory_gb" validate:"required"`
+	StorageGb  int                      `json:"storage_gb" validate:"required"`
+	NodeLabels map[string]string        `json:"node_labels,omitempty"`
+	NodeTaints []map[string]interface{} `json:"node_taints,omitempty"`
+}
+
+type CreateGpuNodeResp struct {
+	Node GpuNodeInfo `json:"node"`
+}
+
+type CreateGpuUsageRecordReq struct {
+	AllocationId       int64   `json:"allocation_id" validate:"required"`
+	DeviceId           int64   `json:"device_id" validate:"required"`
+	JobId              int64   `json:"job_id" validate:"required"`
+	UserId             int64   `json:"user_id" validate:"required"`
+	WorkspaceId        int64   `json:"workspace_id"`
+	QueueName          string  `json:"queue_name" validate:"required"`
+	StartTime          string  `json:"start_time" validate:"required"`
+	UtilizationAvg     float64 `json:"utilization_avg"`
+	UtilizationMax     float64 `json:"utilization_max"`
+	MemoryUsageAvgMb   int     `json:"memory_usage_avg_mb"`
+	MemoryUsageMaxMb   int     `json:"memory_usage_max_mb"`
+	PowerConsumptionWh float64 `json:"power_consumption_wh"`
+	CostAmount         float64 `json:"cost_amount"`
+	BillingUnit        string  `json:"billing_unit"`
+}
+
+type CreateGpuUsageRecordResp struct {
+	UsageRecord GpuUsageRecordInfo `json:"usage_record"`
+}
+
+type DeleteGpuClusterReq struct {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type DeleteGpuDeviceReq struct {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type DeleteGpuNodeReq struct {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type DeleteGpuUsageRecordReq struct {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type EmptyReq struct {
+}
+
+type EmptyResp struct {
+}
+
+type GetGpuClusterReq struct {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type GetGpuClusterResp struct {
+	Cluster GpuClusterInfo `json:"cluster"`
+}
+
+type GetGpuDeviceReq struct {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type GetGpuDeviceResp struct {
+	Device GpuDeviceInfo `json:"device"`
+}
+
+type GetGpuNodeReq struct {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type GetGpuNodeResp struct {
+	Node GpuNodeInfo `json:"node"`
+}
+
+type GetGpuUsageRecordReq struct {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type GetGpuUsageRecordResp struct {
+	UsageRecord GpuUsageRecordInfo `json:"usage_record"`
+}
+
+type GpuAllocationInfo struct {
+	ID            int64   `json:"id"`
+	DeviceId      int64   `json:"device_id"`
+	DeviceUUID    string  `json:"device_uuid"`
+	DeviceName    string  `json:"device_name"`
+	NodeName      string  `json:"node_name"`
+	ClusterName   string  `json:"cluster_name"`
+	JobId         int64   `json:"job_id"`
+	JobName       string  `json:"job_name"`
+	UserId        int64   `json:"user_id"`
+	Username      string  `json:"username"`
+	WorkspaceId   int64   `json:"workspace_id"`
+	WorkspaceName string  `json:"workspace_name"`
+	QueueName     string  `json:"queue_name"`
+	Status        string  `json:"status"`               // allocated, released, expired
+	Priority      int     `json:"priority"`             // 分配优先级
+	ExpiresAt     *string `json:"expires_at,omitempty"` // 过期时间
+	AllocatedAt   string  `json:"allocated_at"`
+	ReleasedAt    *string `json:"released_at,omitempty"`
+	CreatedAt     string  `json:"created_at"`
+	UpdatedAt     string  `json:"updated_at"`
+}
+
+type GpuClusterInfo struct {
+	ID             int64                  `json:"id"`
+	Name           string                 `json:"name"`
+	DisplayName    string                 `json:"display_name"`
+	Description    string                 `json:"description"`
+	ClusterType    string                 `json:"cluster_type"`   // k8s, slurm, custom
+	Status         string                 `json:"status"`         // active, inactive, maintenance
+	KubeConfig     string                 `json:"kube_config"`    // Kubernetes配置
+	ApiEndpoint    string                 `json:"api_endpoint"`   // API端点
+	Region         string                 `json:"region"`         // 地域
+	Zone           string                 `json:"zone"`           // 可用区
+	TotalNodes     int                    `json:"total_nodes"`    // 总节点数
+	ActiveNodes    int                    `json:"active_nodes"`   // 活跃节点数
+	TotalGpus      int                    `json:"total_gpus"`     // 总GPU数
+	AvailableGpus  int                    `json:"available_gpus"` // 可用GPU数
+	AllocatedGpus  int                    `json:"allocated_gpus"` // 已分配GPU数
+	ResourceLabels map[string]string      `json:"resource_labels,omitempty"`
+	MetricsConfig  map[string]interface{} `json:"metrics_config,omitempty"`
+	CreatedAt      string                 `json:"created_at"`
+	UpdatedAt      string                 `json:"updated_at"`
+}
+
+type GpuDeviceInfo struct {
+	ID              int64   `json:"id"`
+	ClusterId       int64   `json:"cluster_id"`
+	ClusterName     string  `json:"cluster_name"`
+	NodeId          int64   `json:"node_id"`
+	NodeName        string  `json:"node_name"`
+	DeviceIndex     int     `json:"device_index"`                // GPU设备索引
+	DeviceUUID      string  `json:"device_uuid"`                 // GPU设备UUID
+	DeviceName      string  `json:"device_name"`                 // GPU设备名称
+	Brand           string  `json:"brand"`                       // 品牌: NVIDIA, AMD
+	Model           string  `json:"model"`                       // 型号: V100, A100, RTX4090
+	Architecture    string  `json:"architecture"`                // 架构: Volta, Ampere, Turing
+	MemoryTotalMb   int     `json:"memory_total_mb"`             // 显存总量(MB)
+	MemoryFreeMb    int     `json:"memory_free_mb"`              // 显存可用(MB)
+	MemoryUsedMb    int     `json:"memory_used_mb"`              // 显存已用(MB)
+	PowerDrawW      int     `json:"power_draw_w"`                // 功耗(W)
+	PowerLimitW     int     `json:"power_limit_w"`               // 功耗限制(W)
+	TemperatureC    int     `json:"temperature_c"`               // 温度(℃)
+	UtilizationGpu  int     `json:"utilization_gpu"`             // GPU使用率(%)
+	UtilizationMem  int     `json:"utilization_mem"`             // 内存使用率(%)
+	Status          string  `json:"status"`                      // available, allocated, maintenance, error
+	HealthStatus    string  `json:"health_status"`               // healthy, warning, critical
+	PcieBusId       string  `json:"pcie_bus_id"`                 // PCIe总线ID
+	CudaVersion     string  `json:"cuda_version"`                // CUDA版本
+	DriverVersion   string  `json:"driver_version"`              // 驱动版本
+	AllocationId    *int64  `json:"allocation_id,omitempty"`     // 分配ID
+	AllocatedJobId  *int64  `json:"allocated_job_id,omitempty"`  // 分配的作业ID
+	AllocatedUserId *int64  `json:"allocated_user_id,omitempty"` // 分配的用户ID
+	AllocatedAt     *string `json:"allocated_at,omitempty"`      // 分配时间
+	LastHeartbeat   string  `json:"last_heartbeat"`
+	CreatedAt       string  `json:"created_at"`
+	UpdatedAt       string  `json:"updated_at"`
+}
+
+type GpuNodeInfo struct {
+	ID            int64                    `json:"id"`
+	ClusterId     int64                    `json:"cluster_id"`
+	ClusterName   string                   `json:"cluster_name"`
+	Name          string                   `json:"name"`
+	Hostname      string                   `json:"hostname"`
+	InternalIP    string                   `json:"internal_ip"`
+	ExternalIP    string                   `json:"external_ip"`
+	Status        string                   `json:"status"`    // ready, not_ready, unknown, maintenance
+	NodeType      string                   `json:"node_type"` // master, worker, gpu
+	CpuCores      int                      `json:"cpu_cores"`
+	MemoryGb      int                      `json:"memory_gb"`
+	StorageGb     int                      `json:"storage_gb"`
+	GpuCount      int                      `json:"gpu_count"`
+	AvailableGpus int                      `json:"available_gpus"`
+	AllocatedGpus int                      `json:"allocated_gpus"`
+	OsImage       string                   `json:"os_image"`
+	KernelVersion string                   `json:"kernel_version"`
+	NodeLabels    map[string]string        `json:"node_labels,omitempty"`
+	NodeTaints    []map[string]interface{} `json:"node_taints,omitempty"`
+	LastHeartbeat string                   `json:"last_heartbeat"`
+	CreatedAt     string                   `json:"created_at"`
+	UpdatedAt     string                   `json:"updated_at"`
+}
+
+type GpuUsageRecordInfo struct {
+	ID                 int64   `json:"id"`
+	AllocationId       int64   `json:"allocation_id"`
+	DeviceId           int64   `json:"device_id"`
+	DeviceUUID         string  `json:"device_uuid"`
+	DeviceName         string  `json:"device_name"`
+	NodeName           string  `json:"node_name"`
+	ClusterName        string  `json:"cluster_name"`
+	JobId              int64   `json:"job_id"`
+	JobName            string  `json:"job_name"`
+	UserId             int64   `json:"user_id"`
+	Username           string  `json:"username"`
+	WorkspaceId        int64   `json:"workspace_id"`
+	WorkspaceName      string  `json:"workspace_name"`
+	QueueName          string  `json:"queue_name"`
+	StartTime          string  `json:"start_time"`
+	EndTime            *string `json:"end_time,omitempty"`
+	DurationSeconds    int     `json:"duration_seconds"`
+	UtilizationAvg     float64 `json:"utilization_avg"`      // 平均GPU使用率
+	UtilizationMax     float64 `json:"utilization_max"`      // 最大GPU使用率
+	MemoryUsageAvgMb   int     `json:"memory_usage_avg_mb"`  // 平均显存使用(MB)
+	MemoryUsageMaxMb   int     `json:"memory_usage_max_mb"`  // 最大显存使用(MB)
+	PowerConsumptionWh float64 `json:"power_consumption_wh"` // 功耗(Wh)
+	CostAmount         float64 `json:"cost_amount"`          // 成本金额
+	BillingUnit        string  `json:"billing_unit"`         // 计费单位
+	Status             string  `json:"status"`               // running, completed, cancelled, error
+	CreatedAt          string  `json:"created_at"`
+	UpdatedAt          string  `json:"updated_at"`
+}
+
+type GpuUsageRelationInfo struct {
+	ID              int64  `json:"id"`
+	UsageRecordId   int64  `json:"usage_record_id"`
+	RelatedRecordId int64  `json:"related_record_id"`
+	RelationType    string `json:"relation_type"` // gang, distributed, pipeline
+	CreatedAt       string `json:"created_at"`
+}
+
+type HealthResponse struct {
+	Status    string        `json:"status"`
+	Checks    []CheckStatus `json:"checks"`
+	Uptime    string        `json:"uptime"`
+	Version   string        `json:"version"`
+	Timestamp int64         `json:"timestamp"`
+}
+
+type LabelValue struct {
+	Label string `json:"label"`
+	Value string `json:"value"`
+}
+
+type ListClusterNodesReq struct {
+	ClusterId int64  `path:"clusterId" validate:"required"`
+	Page      int    `form:"page,default=1"`
+	PageSize  int    `form:"page_size,default=20"`
+	Status    string `form:"status,optional"`
+	NodeType  string `form:"node_type,optional"`
+}
+
+type ListClusterNodesResp struct {
+	Nodes    []GpuNodeInfo `json:"nodes"`
+	Total    int64         `json:"total"`
+	Page     int           `json:"page"`
+	PageSize int           `json:"page_size"`
+}
+
+type ListGpuClustersReq struct {
+	Page        int    `form:"page,default=1"`
+	PageSize    int    `form:"page_size,default=20"`
+	Status      string `form:"status,optional"`
+	ClusterType string `form:"cluster_type,optional"`
+	Region      string `form:"region,optional"`
+	Search      string `form:"search,optional"`
+}
+
+type ListGpuClustersResp struct {
+	Clusters []GpuClusterInfo `json:"clusters"`
+	Total    int64            `json:"total"`
+	Page     int              `json:"page"`
+	PageSize int              `json:"page_size"`
+}
+
+type ListGpuDeviceAllocationsReq struct {
+	Page        int    `form:"page,default=1"`
+	PageSize    int    `form:"page_size,default=20"`
+	DeviceId    int64  `form:"device_id,optional"`
+	JobId       int64  `form:"job_id,optional"`
+	UserId      int64  `form:"user_id,optional"`
+	WorkspaceId int64  `form:"workspace_id,optional"`
+	Status      string `form:"status,optional"`
+	QueueName   string `form:"queue_name,optional"`
+}
+
+type ListGpuDeviceAllocationsResp struct {
+	Allocations []GpuAllocationInfo `json:"allocations"`
+	Total       int64               `json:"total"`
+	Page        int                 `json:"page"`
+	PageSize    int                 `json:"page_size"`
+}
+
+type ListGpuDevicesReq struct {
+	Page         int    `form:"page,default=1"`
+	PageSize     int    `form:"page_size,default=20"`
+	ClusterId    int64  `form:"cluster_id,optional"`
+	NodeId       int64  `form:"node_id,optional"`
+	Status       string `form:"status,optional"`
+	Brand        string `form:"brand,optional"`
+	Model        string `form:"model,optional"`
+	HealthStatus string `form:"health_status,optional"`
+	Search       string `form:"search,optional"`
+}
+
+type ListGpuDevicesResp struct {
+	Devices  []GpuDeviceInfo `json:"devices"`
+	Total    int64           `json:"total"`
+	Page     int             `json:"page"`
+	PageSize int             `json:"page_size"`
+}
+
+type ListGpuNodesReq struct {
+	Page      int    `form:"page,default=1"`
+	PageSize  int    `form:"page_size,default=20"`
+	ClusterId int64  `form:"cluster_id,optional"`
+	Status    string `form:"status,optional"`
+	NodeType  string `form:"node_type,optional"`
+	Search    string `form:"search,optional"`
+}
+
+type ListGpuNodesResp struct {
+	Nodes    []GpuNodeInfo `json:"nodes"`
+	Total    int64         `json:"total"`
+	Page     int           `json:"page"`
+	PageSize int           `json:"page_size"`
+}
+
+type ListGpuUsageRecordsReq struct {
+	Page        int    `form:"page,default=1"`
+	PageSize    int    `form:"page_size,default=20"`
+	DeviceId    int64  `form:"device_id,optional"`
+	JobId       int64  `form:"job_id,optional"`
+	UserId      int64  `form:"user_id,optional"`
+	WorkspaceId int64  `form:"workspace_id,optional"`
+	Status      string `form:"status,optional"`
+	QueueName   string `form:"queue_name,optional"`
+	StartDate   string `form:"start_date,optional"`
+	EndDate     string `form:"end_date,optional"`
+}
+
+type ListGpuUsageRecordsResp struct {
+	UsageRecords []GpuUsageRecordInfo `json:"usage_records"`
+	Total        int64                `json:"total"`
+	Page         int                  `json:"page"`
+	PageSize     int                  `json:"page_size"`
+}
+
+type ListGpuUsageRelationsReq struct {
+	UsageRecordId int64  `path:"usageRecordId" validate:"required"`
+	Page          int    `form:"page,default=1"`
+	PageSize      int    `form:"page_size,default=20"`
+	RelationType  string `form:"relation_type,optional"`
+}
+
+type ListGpuUsageRelationsResp struct {
+	Relations []GpuUsageRelationInfo `json:"relations"`
+	Total     int64                  `json:"total"`
+	Page      int                    `json:"page"`
+	PageSize  int                    `json:"page_size"`
+}
+
+type ListNodeDevicesReq struct {
+	NodeId   int64  `path:"nodeId" validate:"required"`
+	Page     int    `form:"page,default=1"`
+	PageSize int    `form:"page_size,default=20"`
+	Status   string `form:"status,optional"`
+}
+
+type ListNodeDevicesResp struct {
+	Devices  []GpuDeviceInfo `json:"devices"`
+	Total    int64           `json:"total"`
+	Page     int             `json:"page"`
+	PageSize int             `json:"page_size"`
+}
+
+type ListReq struct {
+	Page      int    `form:"page,default=1"`             // 页码
+	PageSize  int    `form:"page_size,default=20"`       // 每页数量
+	Search    string `form:"search,omitempty"`           // 搜索关键词
+	SortBy    string `form:"sort_by,default=created_at"` // 排序字段
+	SortOrder string `form:"sort_order,default=desc"`    // 排序顺序
+}
+
+type ListResp struct {
+	Items []interface{} `json:"items"` // 数据列表
+	Total int64         `json:"total"` // 总记录数
+}
+
+type ReleaseGpuDeviceReq struct {
+	ID int64 `path:"id" validate:"required"`
+}
+
+type RemoveDeviceFromNodeReq struct {
+	NodeId   int64 `path:"nodeId" validate:"required"`
+	DeviceId int64 `path:"deviceId" validate:"required"`
+}
+
+type RemoveNodeFromClusterReq struct {
+	ClusterId int64 `path:"clusterId" validate:"required"`
+	NodeId    int64 `path:"nodeId" validate:"required"`
+}
+
+type UpdateGpuClusterReq struct {
+	ID             int64                  `path:"id" validate:"required"`
+	DisplayName    string                 `json:"display_name,optional"`
+	Description    string                 `json:"description,optional"`
+	Status         string                 `json:"status,optional"`
+	KubeConfig     string                 `json:"kube_config,optional"`
+	ApiEndpoint    string                 `json:"api_endpoint,optional"`
+	Region         string                 `json:"region,optional"`
+	Zone           string                 `json:"zone,optional"`
+	ResourceLabels map[string]string      `json:"resource_labels,omitempty"`
+	MetricsConfig  map[string]interface{} `json:"metrics_config,omitempty"`
+}
+
+type UpdateGpuDeviceReq struct {
+	ID             int64  `path:"id" validate:"required"`
+	DeviceName     string `json:"device_name,optional"`
+	Architecture   string `json:"architecture,optional"`
+	MemoryTotalMb  int    `json:"memory_total_mb,optional"`
+	MemoryFreeMb   int    `json:"memory_free_mb,optional"`
+	MemoryUsedMb   int    `json:"memory_used_mb,optional"`
+	PowerDrawW     int    `json:"power_draw_w,optional"`
+	PowerLimitW    int    `json:"power_limit_w,optional"`
+	TemperatureC   int    `json:"temperature_c,optional"`
+	UtilizationGpu int    `json:"utilization_gpu,optional"`
+	UtilizationMem int    `json:"utilization_mem,optional"`
+	Status         string `json:"status,optional"`
+	HealthStatus   string `json:"health_status,optional"`
+	CudaVersion    string `json:"cuda_version,optional"`
+	DriverVersion  string `json:"driver_version,optional"`
+}
+
+type UpdateGpuNodeReq struct {
+	ID         int64                    `path:"id" validate:"required"`
+	Hostname   string                   `json:"hostname,optional"`
+	InternalIP string                   `json:"internal_ip,optional"`
+	ExternalIP string                   `json:"external_ip,optional"`
+	Status     string                   `json:"status,optional"`
+	NodeType   string                   `json:"node_type,optional"`
+	CpuCores   int                      `json:"cpu_cores,optional"`
+	MemoryGb   int                      `json:"memory_gb,optional"`
+	StorageGb  int                      `json:"storage_gb,optional"`
+	NodeLabels map[string]string        `json:"node_labels,omitempty"`
+	NodeTaints []map[string]interface{} `json:"node_taints,omitempty"`
+}
+
+type UpdateGpuUsageRecordReq struct {
+	ID                 int64   `path:"id" validate:"required"`
+	EndTime            *string `json:"end_time,omitempty"`
+	DurationSeconds    int     `json:"duration_seconds,optional"`
+	UtilizationAvg     float64 `json:"utilization_avg,optional"`
+	UtilizationMax     float64 `json:"utilization_max,optional"`
+	MemoryUsageAvgMb   int     `json:"memory_usage_avg_mb,optional"`
+	MemoryUsageMaxMb   int     `json:"memory_usage_max_mb,optional"`
+	PowerConsumptionWh float64 `json:"power_consumption_wh,optional"`
+	CostAmount         float64 `json:"cost_amount,optional"`
+	Status             string  `json:"status,optional"`
+}
+
+type CancelTrainingJobReq struct {
+	Id int64 `path:"id"`
+}
+
+type CreateCheckpointReq struct {
+	JobId            int64  `json:"jobId"`
+	CheckpointName   string `json:"checkpointName"`
+	CheckpointType   string `json:"checkpointType,default=auto"`
+	CheckpointFormat string `json:"checkpointFormat,optional"`
+	Step             int64  `json:"step,optional"`
+	Epoch            int64  `json:"epoch,optional"`
+	GlobalStep       int64  `json:"globalStep,optional"`
+	StoragePath      string `json:"storagePath"`
+	CompressionType  string `json:"compressionType,default=none"`
+	Metrics          string `json:"metrics,optional"`
+	LossValue        string `json:"lossValue,optional"`
+	Accuracy         string `json:"accuracy,optional"`
+	ValidationScore  string `json:"validationScore,optional"`
+	ModelConfig      string `json:"modelConfig,optional"`
+	OptimizerState   string `json:"optimizerState,optional"`
+	SchedulerState   string `json:"schedulerState,optional"`
+	IsBest           bool   `json:"isBest,default=false"`
+	IsLatest         bool   `json:"isLatest,default=false"`
+	Tags             string `json:"tags,optional"`
+	Metadata         string `json:"metadata,optional"`
+	Description      string `json:"description,optional"`
+}
+
+type CreateCheckpointResp struct {
+	Id int64 `json:"id"`
+}
+
+type CreateJobLogReq struct {
+	JobId         int64  `json:"jobId"`
+	InstanceId    int64  `json:"instanceId,optional"`
+	LogLevel      string `json:"logLevel,default=INFO"`
+	LogSource     string `json:"logSource,optional"`
+	LogContent    string `json:"logContent"`
+	LogFormat     string `json:"logFormat,default=text"`
+	FileName      string `json:"fileName,optional"`
+	LineNumber    int64  `json:"lineNumber,optional"`
+	FunctionName  string `json:"functionName,optional"`
+	ThreadId      string `json:"threadId,optional"`
+	ProcessId     string `json:"processId,optional"`
+	Context       string `json:"context,optional"`
+	CorrelationId string `json:"correlationId,optional"`
+	Category      string `json:"category,optional"`
+	Tags          string `json:"tags,optional"`
+}
+
+type CreateJobLogResp struct {
+	Id int64 `json:"id"`
+}
+
+type CreateJobMetricReq struct {
+	JobId               int64  `json:"jobId"`
+	InstanceId          int64  `json:"instanceId,optional"`
+	MetricName          string `json:"metricName"`
+	MetricType          string `json:"metricType,default=scalar"`
+	MetricValue         string `json:"metricValue,optional"`
+	MetricData          string `json:"metricData,optional"`
+	Step                int64  `json:"step,optional"`
+	Epoch               int64  `json:"epoch,optional"`
+	GlobalStep          int64  `json:"globalStep,optional"`
+	BatchIdx            int64  `json:"batchIdx,optional"`
+	Tag                 string `json:"tag,optional"`
+	Category            string `json:"category,optional"`
+	Phase               string `json:"phase,optional"`
+	WallTime            string `json:"wallTime,optional"`
+	RelativeTimeSeconds string `json:"relativeTimeSeconds,optional"`
+}
+
+type CreateJobMetricResp struct {
+	Id int64 `json:"id"`
+}
+
+type CreateJobRelationReq struct {
+	JobId        int64  `json:"jobId"`
+	EntityType   string `json:"entityType"`
+	EntityId     int64  `json:"entityId"`
+	RelationType string `json:"relationType"`
+	IsPrimary    bool   `json:"isPrimary,default=false"`
+	SortOrder    int64  `json:"sortOrder,default=0"`
+	Metadata     string `json:"metadata,optional"`
+}
+
+type CreateJobRelationResp struct {
+	Id int64 `json:"id"`
+}
+
+type CreateTrainingJobReq struct {
+	Name                      string `json:"name"`
+	DisplayName               string `json:"displayName,optional"`
+	Description               string `json:"description,optional"`
+	JobType                   string `json:"jobType,default=single"`
+	Framework                 string `json:"framework"`
+	FrameworkVersion          string `json:"frameworkVersion,optional"`
+	PythonVersion             string `json:"pythonVersion,default=3.8"`
+	CodeSourceType            string `json:"codeSourceType,default=upload"`
+	CodeSourceConfig          string `json:"codeSourceConfig,optional"`
+	EntryPoint                string `json:"entryPoint"`
+	WorkingDir                string `json:"workingDir,default=/workspace"`
+	Image                     string `json:"image"`
+	ImagePullPolicy           string `json:"imagePullPolicy,default=IfNotPresent"`
+	ImagePullSecrets          string `json:"imagePullSecrets,optional"`
+	DatasetMountConfigs       string `json:"datasetMountConfigs,optional"`
+	DataSourceConfig          string `json:"dataSourceConfig,optional"`
+	ModelConfig               string `json:"modelConfig,optional"`
+	OutputModelName           string `json:"outputModelName,optional"`
+	ModelSaveStrategy         string `json:"modelSaveStrategy,default=best"`
+	CpuCores                  string `json:"cpuCores,optional"`
+	MemoryGb                  string `json:"memoryGb,optional"`
+	GpuCount                  int64  `json:"gpuCount,default=0"`
+	GpuType                   string `json:"gpuType,optional"`
+	GpuMemoryGb               string `json:"gpuMemoryGb,optional"`
+	StorageGb                 string `json:"storageGb,optional"`
+	SharedMemoryGb            string `json:"sharedMemoryGb,optional"`
+	WorkerCount               int64  `json:"workerCount,default=1"`
+	PsCount                   int64  `json:"psCount,default=0"`
+	MasterCount               int64  `json:"masterCount,default=1"`
+	EnvVars                   string `json:"envVars,optional"`
+	CommandArgs               string `json:"commandArgs,optional"`
+	Secrets                   string `json:"secrets,optional"`
+	ConfigMaps                string `json:"configMaps,optional"`
+	VolumeMounts              string `json:"volumeMounts,optional"`
+	QueueName                 string `json:"queueName,default=default"`
+	Priority                  int64  `json:"priority,default=0"`
+	NodeSelector              string `json:"nodeSelector,optional"`
+	Tolerations               string `json:"tolerations,optional"`
+	Affinity                  string `json:"affinity,optional"`
+	MaxRuntimeSeconds         int64  `json:"maxRuntimeSeconds,default=86400"`
+	MaxIdleSeconds            int64  `json:"maxIdleSeconds,default=3600"`
+	AutoRestart               bool   `json:"autoRestart,default=false"`
+	MaxRetryCount             int64  `json:"maxRetryCount,default=3"`
+	MinAvailable              int64  `json:"minAvailable,default=1"`
+	Hyperparameters           string `json:"hyperparameters,optional"`
+	TrainingConfig            string `json:"trainingConfig,optional"`
+	OptimizerConfig           string `json:"optimizerConfig,optional"`
+	SchedulerConfig           string `json:"schedulerConfig,optional"`
+	EnableTensorboard         bool   `json:"enableTensorboard,default=true"`
+	EnableProfiling           bool   `json:"enableProfiling,default=false"`
+	MetricsCollectionInterval int64  `json:"metricsCollectionInterval,default=60"`
+	NotificationConfig        string `json:"notificationConfig,optional"`
+	Tags                      string `json:"tags,optional"`
+	Annotations               string `json:"annotations,optional"`
+	Metadata                  string `json:"metadata,optional"`
+}
+
+type CreateTrainingJobResp struct {
+	Id int64 `json:"id"`
+}
+
+type CreateTrainingQueueReq struct {
+	Name                string `json:"name"`
+	DisplayName         string `json:"displayName,optional"`
+	Description         string `json:"description,optional"`
+	QueueType           string `json:"queueType,default=default"`
+	Priority            int64  `json:"priority,default=0"`
+	MaxConcurrentJobs   int64  `json:"maxConcurrentJobs,default=10"`
+	MaxQueueSize        int64  `json:"maxQueueSize,default=100"`
+	MaxJobDurationHours int64  `json:"maxJobDurationHours,default=168"`
+	ResourceQuota       string `json:"resourceQuota,optional"`
+	GpuQuota            int64  `json:"gpuQuota,optional"`
+	CpuQuota            string `json:"cpuQuota,optional"`
+	MemoryQuotaGb       int64  `json:"memoryQuotaGb,optional"`
+	StorageQuotaGb      int64  `json:"storageQuotaGb,optional"`
+	SchedulingPolicy    string `json:"schedulingPolicy,default=fifo"`
+	PreemptionEnabled   bool   `json:"preemptionEnabled,default=false"`
+	GangScheduling      bool   `json:"gangScheduling,default=false"`
+	WorkspaceIds        string `json:"workspaceIds,optional"`
+	UserIds             string `json:"userIds,optional"`
+	DepartmentIds       string `json:"departmentIds,optional"`
+	ClusterIds          string `json:"clusterIds,optional"`
+	NodeSelector        string `json:"nodeSelector,optional"`
+	Tolerations         string `json:"tolerations,optional"`
+}
+
+type CreateTrainingQueueResp struct {
+	Id int64 `json:"id"`
+}
+
+type DeleteCheckpointReq struct {
+	Id int64 `path:"id"`
+}
+
+type DeleteJobRelationReq struct {
+	Id int64 `path:"id"`
+}
+
+type DeleteTrainingJobReq struct {
+	Id int64 `path:"id"`
+}
+
+type DeleteTrainingQueueReq struct {
+	Id int64 `path:"id"`
+}
+
+type GetCheckpointReq struct {
+	Id int64 `path:"id"`
+}
+
+type GetCheckpointResp struct {
+	Checkpoint TrainingCheckpointInfo `json:"checkpoint"`
+}
+
+type GetJobCheckpointsReq struct {
+	JobId          int64  `path:"jobId"`
+	CheckpointType string `form:"checkpointType,optional"`
+	Status         string `form:"status,optional"`
+	IsBest         bool   `form:"isBest,optional"`
+	IsLatest       bool   `form:"isLatest,optional"`
+	Page           int64  `form:"page,default=1"`
+	PageSize       int64  `form:"pageSize,default=10"`
+}
+
+type GetJobCheckpointsResp struct {
+	Total       int64                    `json:"total"`
+	Checkpoints []TrainingCheckpointInfo `json:"checkpoints"`
+}
+
+type GetJobInstanceLogsReq struct {
+	Id        int64 `path:"id"`
+	Lines     int64 `form:"lines,default=100"`
+	Follow    bool  `form:"follow,default=false"`
+	Timestamp bool  `form:"timestamp,default=true"`
+}
+
+type GetJobInstanceLogsResp struct {
+	Logs string `json:"logs"`
+}
+
+type GetJobInstanceReq struct {
+	Id int64 `path:"id"`
+}
+
+type GetJobInstanceResp struct {
+	Instance TrainingJobInstanceInfo `json:"instance"`
+}
+
+type GetJobInstancesReq struct {
+	JobId int64 `path:"jobId"`
+}
+
+type GetJobInstancesResp struct {
+	Instances []TrainingJobInstanceInfo `json:"instances"`
+}
+
+type GetJobLogsReq struct {
+	JobId     int64  `path:"jobId"`
+	Level     string `form:"level,optional"`
+	Source    string `form:"source,optional"`
+	Category  string `form:"category,optional"`
+	StartTime string `form:"startTime,optional"`
+	EndTime   string `form:"endTime,optional"`
+	Search    string `form:"search,optional"`
+	Page      int64  `form:"page,default=1"`
+	PageSize  int64  `form:"pageSize,default=100"`
+}
+
+type GetJobLogsResp struct {
+	Total int64             `json:"total"`
+	Logs  []TrainingLogInfo `json:"logs"`
+}
+
+type GetJobMetricsReq struct {
+	JobId      int64  `path:"jobId"`
+	MetricName string `form:"metricName,optional"`
+	Phase      string `form:"phase,optional"`
+	Category   string `form:"category,optional"`
+	StartStep  int64  `form:"startStep,optional"`
+	EndStep    int64  `form:"endStep,optional"`
+	StartTime  string `form:"startTime,optional"`
+	EndTime    string `form:"endTime,optional"`
+	Page       int64  `form:"page,default=1"`
+	PageSize   int64  `form:"pageSize,default=100"`
+}
+
+type GetJobMetricsResp struct {
+	Total   int64                `json:"total"`
+	Metrics []TrainingMetricInfo `json:"metrics"`
+}
+
+type GetJobOptionsResp struct {
+	JobTypes            []LabelValue `json:"jobTypes"`
+	Frameworks          []LabelValue `json:"frameworks"`
+	CodeSourceTypes     []LabelValue `json:"codeSourceTypes"`
+	ModelSaveStrategies []LabelValue `json:"modelSaveStrategies"`
+	StatusOptions       []LabelValue `json:"statusOptions"`
+	PhaseOptions        []LabelValue `json:"phaseOptions"`
+}
+
+type GetJobRelationsReq struct {
+	JobId        int64  `path:"jobId"`
+	EntityType   string `form:"entityType,optional"`
+	RelationType string `form:"relationType,optional"`
+	Status       string `form:"status,optional"`
+}
+
+type GetJobRelationsResp struct {
+	Relations []TrainingJobRelationInfo `json:"relations"`
+}
+
+type GetQueueOptionsResp struct {
+	QueueTypes         []LabelValue `json:"queueTypes"`
+	SchedulingPolicies []LabelValue `json:"schedulingPolicies"`
+	StatusOptions      []LabelValue `json:"statusOptions"`
+}
+
+type GetTrainingJobReq struct {
+	Id int64 `path:"id"`
+}
+
+type GetTrainingJobResp struct {
+	Job TrainingJobInfo `json:"job"`
+}
+
+type GetTrainingQueueReq struct {
+	Id int64 `path:"id"`
+}
+
+type GetTrainingQueueResp struct {
+	Queue TrainingQueueInfo `json:"queue"`
+}
+
+type ListTrainingJobsReq struct {
+	Page      int64  `form:"page,default=1"`
+	PageSize  int64  `form:"pageSize,default=10"`
+	Status    string `form:"status,optional"`
+	Framework string `form:"framework,optional"`
+	QueueName string `form:"queueName,optional"`
+	JobType   string `form:"jobType,optional"`
+	Search    string `form:"search,optional"`
+	StartTime string `form:"startTime,optional"`
+	EndTime   string `form:"endTime,optional"`
+}
+
+type ListTrainingJobsResp struct {
+	Total int64             `json:"total"`
+	Jobs  []TrainingJobInfo `json:"jobs"`
+}
+
+type ListTrainingQueuesReq struct {
+	Page      int64  `form:"page,default=1"`
+	PageSize  int64  `form:"pageSize,default=10"`
+	QueueType string `form:"queueType,optional"`
+	Status    string `form:"status,optional"`
+	Search    string `form:"search,optional"`
+}
+
+type ListTrainingQueuesResp struct {
+	Total  int64               `json:"total"`
+	Queues []TrainingQueueInfo `json:"queues"`
+}
+
+type RestartTrainingJobReq struct {
+	Id int64 `path:"id"`
+}
+
+type ResumeTrainingJobReq struct {
+	Id int64 `path:"id"`
+}
+
+type SuspendTrainingJobReq struct {
+	Id int64 `path:"id"`
+}
+
+type TrainingCheckpointInfo struct {
+	Id               int64  `json:"id"`
+	JobId            int64  `json:"jobId"`
+	CheckpointName   string `json:"checkpointName"`
+	CheckpointType   string `json:"checkpointType"`
+	CheckpointFormat string `json:"checkpointFormat,optional"`
+	Step             int64  `json:"step,optional"`
+	Epoch            int64  `json:"epoch,optional"`
+	GlobalStep       int64  `json:"globalStep,optional"`
+	StoragePath      string `json:"storagePath"`
+	FileSize         int64  `json:"fileSize,optional"`
+	Checksum         string `json:"checksum,optional"`
+	CompressionType  string `json:"compressionType"`
+	Metrics          string `json:"metrics,optional"`
+	LossValue        string `json:"lossValue,optional"`
+	Accuracy         string `json:"accuracy,optional"`
+	ValidationScore  string `json:"validationScore,optional"`
+	ModelConfig      string `json:"modelConfig,optional"`
+	OptimizerState   string `json:"optimizerState,optional"`
+	SchedulerState   string `json:"schedulerState,optional"`
+	Status           string `json:"status"`
+	IsBest           bool   `json:"isBest"`
+	IsLatest         bool   `json:"isLatest"`
+	Tags             string `json:"tags,optional"`
+	Metadata         string `json:"metadata,optional"`
+	Description      string `json:"description,optional"`
+	CreatedAt        string `json:"createdAt"`
+	UpdatedAt        string `json:"updatedAt"`
+	SavedAt          string `json:"savedAt,optional"`
+}
+
+type TrainingJobInfo struct {
+	Id                        int64  `json:"id"`
+	Name                      string `json:"name"`
+	DisplayName               string `json:"displayName,optional"`
+	Description               string `json:"description,optional"`
+	JobType                   string `json:"jobType"`
+	Framework                 string `json:"framework"`
+	FrameworkVersion          string `json:"frameworkVersion,optional"`
+	PythonVersion             string `json:"pythonVersion"`
+	CodeSourceType            string `json:"codeSourceType"`
+	CodeSourceConfig          string `json:"codeSourceConfig,optional"`
+	EntryPoint                string `json:"entryPoint"`
+	WorkingDir                string `json:"workingDir"`
+	Image                     string `json:"image"`
+	ImagePullPolicy           string `json:"imagePullPolicy"`
+	ImagePullSecrets          string `json:"imagePullSecrets,optional"`
+	DatasetMountConfigs       string `json:"datasetMountConfigs,optional"`
+	DataSourceConfig          string `json:"dataSourceConfig,optional"`
+	ModelConfig               string `json:"modelConfig,optional"`
+	OutputModelName           string `json:"outputModelName,optional"`
+	ModelSaveStrategy         string `json:"modelSaveStrategy"`
+	CpuCores                  string `json:"cpuCores,optional"`
+	MemoryGb                  string `json:"memoryGb,optional"`
+	GpuCount                  int64  `json:"gpuCount"`
+	GpuType                   string `json:"gpuType,optional"`
+	GpuMemoryGb               string `json:"gpuMemoryGb,optional"`
+	StorageGb                 string `json:"storageGb,optional"`
+	SharedMemoryGb            string `json:"sharedMemoryGb,optional"`
+	WorkerCount               int64  `json:"workerCount"`
+	PsCount                   int64  `json:"psCount"`
+	MasterCount               int64  `json:"masterCount"`
+	EnvVars                   string `json:"envVars,optional"`
+	CommandArgs               string `json:"commandArgs,optional"`
+	Secrets                   string `json:"secrets,optional"`
+	ConfigMaps                string `json:"configMaps,optional"`
+	VolumeMounts              string `json:"volumeMounts,optional"`
+	QueueName                 string `json:"queueName"`
+	Priority                  int64  `json:"priority"`
+	NodeSelector              string `json:"nodeSelector,optional"`
+	Tolerations               string `json:"tolerations,optional"`
+	Affinity                  string `json:"affinity,optional"`
+	MaxRuntimeSeconds         int64  `json:"maxRuntimeSeconds"`
+	MaxIdleSeconds            int64  `json:"maxIdleSeconds"`
+	AutoRestart               bool   `json:"autoRestart"`
+	MaxRetryCount             int64  `json:"maxRetryCount"`
+	VolcanoJobName            string `json:"volcanoJobName,optional"`
+	VolcanoQueue              string `json:"volcanoQueue,optional"`
+	MinAvailable              int64  `json:"minAvailable"`
+	Status                    string `json:"status"`
+	Phase                     string `json:"phase"`
+	Namespace                 string `json:"namespace,optional"`
+	ClusterName               string `json:"clusterName,optional"`
+	ErrorMessage              string `json:"errorMessage,optional"`
+	ErrorCode                 string `json:"errorCode,optional"`
+	ExitCode                  int64  `json:"exitCode,optional"`
+	FailureReason             string `json:"failureReason,optional"`
+	SubmittedAt               string `json:"submittedAt"`
+	QueuedAt                  string `json:"queuedAt,optional"`
+	ScheduledAt               string `json:"scheduledAt,optional"`
+	StartTime                 string `json:"startTime,optional"`
+	EndTime                   string `json:"endTime,optional"`
+	DurationSeconds           int64  `json:"durationSeconds,optional"`
+	ActualCpuUsage            string `json:"actualCpuUsage,optional"`
+	ActualMemoryUsageGb       string `json:"actualMemoryUsageGb,optional"`
+	ActualGpuUsage            string `json:"actualGpuUsage,optional"`
+	PeakMemoryUsageGb         string `json:"peakMemoryUsageGb,optional"`
+	TotalGpuHours             string `json:"totalGpuHours,optional"`
+	WorkspacePath             string `json:"workspacePath,optional"`
+	LogsPath                  string `json:"logsPath,optional"`
+	OutputPath                string `json:"outputPath,optional"`
+	CheckpointPath            string `json:"checkpointPath,optional"`
+	TensorboardPath           string `json:"tensorboardPath,optional"`
+	Hyperparameters           string `json:"hyperparameters,optional"`
+	TrainingConfig            string `json:"trainingConfig,optional"`
+	OptimizerConfig           string `json:"optimizerConfig,optional"`
+	SchedulerConfig           string `json:"schedulerConfig,optional"`
+	EnableTensorboard         bool   `json:"enableTensorboard"`
+	EnableProfiling           bool   `json:"enableProfiling"`
+	MetricsCollectionInterval int64  `json:"metricsCollectionInterval"`
+	NotificationConfig        string `json:"notificationConfig,optional"`
+	Tags                      string `json:"tags,optional"`
+	Annotations               string `json:"annotations,optional"`
+	Metadata                  string `json:"metadata,optional"`
+	CreatedAt                 string `json:"createdAt"`
+	UpdatedAt                 string `json:"updatedAt"`
+}
+
+type TrainingJobInstanceInfo struct {
+	Id                  int64  `json:"id"`
+	JobId               int64  `json:"jobId"`
+	InstanceName        string `json:"instanceName"`
+	InstanceType        string `json:"instanceType"`
+	InstanceIndex       int64  `json:"instanceIndex"`
+	ReplicaIndex        int64  `json:"replicaIndex,optional"`
+	PodName             string `json:"podName,optional"`
+	Namespace           string `json:"namespace,optional"`
+	NodeName            string `json:"nodeName,optional"`
+	NodeIp              string `json:"nodeIp,optional"`
+	PodIp               string `json:"podIp,optional"`
+	ContainerId         string `json:"containerId,optional"`
+	AllocatedCpuCores   string `json:"allocatedCpuCores,optional"`
+	AllocatedMemoryGb   string `json:"allocatedMemoryGb,optional"`
+	AllocatedGpuDevices string `json:"allocatedGpuDevices,optional"`
+	AllocatedStorageGb  string `json:"allocatedStorageGb,optional"`
+	Status              string `json:"status"`
+	Phase               string `json:"phase,optional"`
+	Reason              string `json:"reason,optional"`
+	Message             string `json:"message,optional"`
+	Ready               bool   `json:"ready"`
+	CreatedAt           string `json:"createdAt"`
+	UpdatedAt           string `json:"updatedAt"`
+	ScheduledAt         string `json:"scheduledAt,optional"`
+	StartTime           string `json:"startTime,optional"`
+	EndTime             string `json:"endTime,optional"`
+	LastTransitionTime  string `json:"lastTransitionTime,optional"`
+	RestartCount        int64  `json:"restartCount"`
+	LastRestartTime     string `json:"lastRestartTime,optional"`
+	ExitCode            int64  `json:"exitCode,optional"`
+	TerminationReason   string `json:"terminationReason,optional"`
+	CpuUsagePercent     string `json:"cpuUsagePercent"`
+	MemoryUsagePercent  string `json:"memoryUsagePercent"`
+	GpuUsagePercent     string `json:"gpuUsagePercent"`
+	LogsPath            string `json:"logsPath,optional"`
+	Labels              string `json:"labels,optional"`
+	Annotations         string `json:"annotations,optional"`
+}
+
+type TrainingJobRelationInfo struct {
+	Id           int64  `json:"id"`
+	JobId        int64  `json:"jobId"`
+	EntityType   string `json:"entityType"`
+	EntityId     int64  `json:"entityId"`
+	RelationType string `json:"relationType"`
+	IsPrimary    bool   `json:"isPrimary"`
+	SortOrder    int64  `json:"sortOrder"`
+	Status       string `json:"status"`
+	Metadata     string `json:"metadata,optional"`
+	CreatedAt    string `json:"createdAt"`
+	UpdatedAt    string `json:"updatedAt"`
+}
+
+type TrainingLogInfo struct {
+	Id            int64  `json:"id"`
+	JobId         int64  `json:"jobId"`
+	InstanceId    int64  `json:"instanceId,optional"`
+	LogLevel      string `json:"logLevel"`
+	LogSource     string `json:"logSource,optional"`
+	LogContent    string `json:"logContent"`
+	LogFormat     string `json:"logFormat"`
+	LogTime       string `json:"logTime"`
+	CreatedAt     string `json:"createdAt"`
+	FileName      string `json:"fileName,optional"`
+	LineNumber    int64  `json:"lineNumber,optional"`
+	FunctionName  string `json:"functionName,optional"`
+	ThreadId      string `json:"threadId,optional"`
+	ProcessId     string `json:"processId,optional"`
+	Context       string `json:"context,optional"`
+	CorrelationId string `json:"correlationId,optional"`
+	Category      string `json:"category,optional"`
+	Tags          string `json:"tags,optional"`
+}
+
+type TrainingMetricInfo struct {
+	Id                  int64  `json:"id"`
+	JobId               int64  `json:"jobId"`
+	InstanceId          int64  `json:"instanceId,optional"`
+	MetricName          string `json:"metricName"`
+	MetricType          string `json:"metricType"`
+	MetricValue         string `json:"metricValue,optional"`
+	MetricData          string `json:"metricData,optional"`
+	Step                int64  `json:"step,optional"`
+	Epoch               int64  `json:"epoch,optional"`
+	GlobalStep          int64  `json:"globalStep,optional"`
+	BatchIdx            int64  `json:"batchIdx,optional"`
+	Tag                 string `json:"tag,optional"`
+	Category            string `json:"category,optional"`
+	Phase               string `json:"phase,optional"`
+	MetricTime          string `json:"metricTime"`
+	WallTime            string `json:"wallTime,optional"`
+	RelativeTimeSeconds string `json:"relativeTimeSeconds,optional"`
+	MinValue            string `json:"minValue,optional"`
+	MaxValue            string `json:"maxValue,optional"`
+	AvgValue            string `json:"avgValue,optional"`
+	StdValue            string `json:"stdValue,optional"`
+	CreatedAt           string `json:"createdAt"`
+}
+
+type TrainingQueueInfo struct {
+	Id                  int64  `json:"id"`
+	Name                string `json:"name"`
+	DisplayName         string `json:"displayName,optional"`
+	Description         string `json:"description,optional"`
+	QueueType           string `json:"queueType"`
+	Priority            int64  `json:"priority"`
+	MaxConcurrentJobs   int64  `json:"maxConcurrentJobs"`
+	MaxQueueSize        int64  `json:"maxQueueSize"`
+	MaxJobDurationHours int64  `json:"maxJobDurationHours"`
+	ResourceQuota       string `json:"resourceQuota,optional"`
+	GpuQuota            int64  `json:"gpuQuota,optional"`
+	CpuQuota            string `json:"cpuQuota,optional"`
+	MemoryQuotaGb       int64  `json:"memoryQuotaGb,optional"`
+	StorageQuotaGb      int64  `json:"storageQuotaGb,optional"`
+	SchedulingPolicy    string `json:"schedulingPolicy"`
+	PreemptionEnabled   bool   `json:"preemptionEnabled"`
+	GangScheduling      bool   `json:"gangScheduling"`
+	WorkspaceIds        string `json:"workspaceIds,optional"`
+	UserIds             string `json:"userIds,optional"`
+	DepartmentIds       string `json:"departmentIds,optional"`
+	ClusterIds          string `json:"clusterIds,optional"`
+	NodeSelector        string `json:"nodeSelector,optional"`
+	Tolerations         string `json:"tolerations,optional"`
+	Status              string `json:"status"`
+	CurrentJobs         int64  `json:"currentJobs"`
+	PendingJobs         int64  `json:"pendingJobs"`
+	CreatedAt           string `json:"createdAt"`
+	UpdatedAt           string `json:"updatedAt"`
+}
+
+type UpdateCheckpointReq struct {
+	Id             int64  `json:"id"`
+	CheckpointType string `json:"checkpointType,optional"`
+	IsBest         bool   `json:"isBest,optional"`
+	IsLatest       bool   `json:"isLatest,optional"`
+	Tags           string `json:"tags,optional"`
+	Metadata       string `json:"metadata,optional"`
+	Description    string `json:"description,optional"`
+}
+
+type UpdateTrainingJobReq struct {
+	Id                 int64  `json:"id"`
+	DisplayName        string `json:"displayName,optional"`
+	Description        string `json:"description,optional"`
+	Priority           int64  `json:"priority,optional"`
+	MaxRuntimeSeconds  int64  `json:"maxRuntimeSeconds,optional"`
+	MaxIdleSeconds     int64  `json:"maxIdleSeconds,optional"`
+	AutoRestart        bool   `json:"autoRestart,optional"`
+	MaxRetryCount      int64  `json:"maxRetryCount,optional"`
+	NotificationConfig string `json:"notificationConfig,optional"`
+	Tags               string `json:"tags,optional"`
+	Annotations        string `json:"annotations,optional"`
+	Metadata           string `json:"metadata,optional"`
+}
+
+type UpdateTrainingQueueReq struct {
+	Id                  int64  `json:"id"`
+	DisplayName         string `json:"displayName,optional"`
+	Description         string `json:"description,optional"`
+	QueueType           string `json:"queueType,optional"`
+	Priority            int64  `json:"priority,optional"`
+	MaxConcurrentJobs   int64  `json:"maxConcurrentJobs,optional"`
+	MaxQueueSize        int64  `json:"maxQueueSize,optional"`
+	MaxJobDurationHours int64  `json:"maxJobDurationHours,optional"`
+	ResourceQuota       string `json:"resourceQuota,optional"`
+	GpuQuota            int64  `json:"gpuQuota,optional"`
+	CpuQuota            string `json:"cpuQuota,optional"`
+	MemoryQuotaGb       int64  `json:"memoryQuotaGb,optional"`
+	StorageQuotaGb      int64  `json:"storageQuotaGb,optional"`
+	SchedulingPolicy    string `json:"schedulingPolicy,optional"`
+	PreemptionEnabled   bool   `json:"preemptionEnabled,optional"`
+	GangScheduling      bool   `json:"gangScheduling,optional"`
+	WorkspaceIds        string `json:"workspaceIds,optional"`
+	UserIds             string `json:"userIds,optional"`
+	DepartmentIds       string `json:"departmentIds,optional"`
+	ClusterIds          string `json:"clusterIds,optional"`
+	NodeSelector        string `json:"nodeSelector,optional"`
+	Tolerations         string `json:"tolerations,optional"`
+	Status              string `json:"status,optional"`
 }

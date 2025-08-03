@@ -80,22 +80,28 @@ onMounted(() => {
   console.log('组件已加载，初始化图表');
 });
 
-const handleChangeGpu = (value) => {
-  selectedGpu.value = value;
-  // 在实际应用中，这里应该获取选中GPU的监控数据
-  console.log('切换到GPU:', value);
+const handleChangeGpu = (value: string | undefined) => {
+  if (value) {
+    selectedGpu.value = value;
+    // 在实际应用中，这里应该获取选中GPU的监控数据
+    console.log('切换到GPU:', value);
+  }
 };
 
-const handleChangeMetric = (value) => {
-  selectedMetric.value = value;
-  // 切换监控指标后重新渲染图表
-  console.log('切换监控指标:', value);
+const handleChangeMetric = (value: string | undefined) => {
+  if (value) {
+    selectedMetric.value = value;
+    // 切换监控指标后重新渲染图表
+    console.log('切换监控指标:', value);
+  }
 };
 
-const handleChangeTimeRange = (value) => {
-  timeRange.value = value;
-  // 切换时间范围后重新获取数据
-  console.log('切换时间范围:', value);
+const handleChangeTimeRange = (value: string | undefined) => {
+  if (value) {
+    timeRange.value = value;
+    // 切换时间范围后重新获取数据
+    console.log('切换时间范围:', value);
+  }
 };
 
 const refreshData = () => {
@@ -104,7 +110,7 @@ const refreshData = () => {
 };
 
 // 获取当前选中指标的单位
-const getMetricUnit = (metric) => {
+const getMetricUnit = (metric: string) => {
   switch (metric) {
     case 'usage':
     case 'memory':
@@ -119,7 +125,7 @@ const getMetricUnit = (metric) => {
 };
 
 // 获取当前选中指标的名称
-const getMetricName = (metric) => {
+const getMetricName = (metric: string) => {
   switch (metric) {
     case 'usage':
       return 'GPU使用率';
@@ -244,7 +250,7 @@ const getMetricName = (metric) => {
               <div class="chart-placeholder">
                 <p>这里应该是一个动态图表，显示{{ getMetricName(selectedMetric) }}随时间变化的趋势</p>
                 <p>时间范围: {{ timeRangeOptions.find(t => t.value === timeRange)?.label }}</p>
-                <p>数据点: {{ chartData[selectedMetric].join(', ') }} {{ getMetricUnit(selectedMetric) }}</p>
+                <p>数据点: {{ chartData[selectedMetric as keyof typeof chartData].join(', ') }} {{ getMetricUnit(selectedMetric) }}</p>
               </div>
             </Card>
           </div>

@@ -1,0 +1,84 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: volctrain
+  labels:
+    name: volctrain
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: volctrain-config
+  namespace: volctrain
+data:
+  # API服务配置
+  api-config.yaml: |
+    Name: volctrain-api
+    Host: 0.0.0.0
+    Port: 8888
+    Mode: production
+    Timeout: 30000
+    
+    DataSource:
+      Host: ${DB_HOST}
+      Port: ${DB_PORT}
+      User: ${DB_USER}
+      Password: ${DB_PASSWORD}
+      DBName: ${DB_NAME}
+      MaxOpenConns: 20
+      MaxIdleConns: 10
+      ConnMaxLifetime: 3600
+    
+    Cache:
+      Host: ${REDIS_HOST}
+      Port: ${REDIS_PORT}
+      Type: node
+      Pass: ${REDIS_PASSWORD}
+    
+    Log:
+      ServiceName: volctrain-api
+      Mode: file
+      Path: /var/log/volctrain
+      Level: info
+      Compress: true
+      KeepDays: 7
+      StackCooldownMillis: 500
+  
+  # 监控配置
+  monitoring-config.yaml: |
+    Name: volctrain-monitoring
+    Host: 0.0.0.0
+    Port: 8890
+    Mode: production
+    
+    DataSource:
+      Host: ${DB_HOST}
+      Port: ${DB_PORT}
+      User: ${DB_USER}
+      Password: ${DB_PASSWORD}
+      DBName: ${DB_NAME}
+    
+    Monitoring:
+      MetricsPort: 9090
+      PrometheusEnabled: true
+      CollectInterval: 30s
+      AlertEvaluationInterval: 30s
+    
+    Log:
+      ServiceName: volctrain-monitoring
+      Mode: file
+      Path: /var/log/volctrain
+      Level: info
+
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: volctrain-secrets
+  namespace: volctrain
+type: Opaque
+data:
+  # 这些值应该用base64编码，在部署时替换
+  db-password: QWJjQDEyMzQ=  # Abc@1234
+  redis-password: ""
+  jwt-secret: dm9sY3RyYWluLWp3dC1zZWNyZXQ=  # volctrain-jwt-secret
