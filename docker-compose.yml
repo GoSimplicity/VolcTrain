@@ -50,26 +50,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: volctrain-api
-    environment:
-      # 数据库配置
-      MYSQL_HOST: mysql
-      MYSQL_PORT: 3306
-      MYSQL_USER: root
-      MYSQL_PASSWORD: root
-      MYSQL_DBNAME: volctraindb
-      # Redis配置
-      REDIS_HOST: redis
-      REDIS_PORT: 6379
-      REDIS_PASSWORD: ""
-      REDIS_DB: 0
-      # 服务配置
-      LOG_LEVEL: info
-      SERVICE_NAME: volctrain-api
-      PORT: 8888
-      # JWT配置
-      JWT_SECRET: volctrain_access_secret_key_minimum_64_characters_required_security
-      JWT_ACCESS_EXPIRE: 86400
-      JWT_REFRESH_EXPIRE: 604800
+    env_file:
+      - .env
     ports:
       - "8888:8888"
     depends_on:
