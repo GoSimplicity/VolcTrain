@@ -97,11 +97,21 @@ main() {
     case "$service_type" in
         api)
             echo "启动 API 服务..."
-            exec ./bin/api -f etc/config.yaml
+            # 使用环境变量来决定配置文件
+            if [ "$DEPLOY_ENV" = "production" ]; then
+                exec ./bin/api -f etc/config-production.yaml
+            else
+                exec ./bin/api -f etc/config-dev.yaml
+            fi
             ;;
         common)
             echo "启动 Common 服务..."
-            exec ./bin/common -f etc/common-api.yaml
+            # 使用环境变量来决定配置文件
+            if [ "$DEPLOY_ENV" = "production" ]; then
+                exec ./bin/common -f etc/config-production.yaml
+            else
+                exec ./bin/common -f etc/config-dev.yaml
+            fi
             ;;
         monitoring)
             echo "启动 Monitoring 服务..."

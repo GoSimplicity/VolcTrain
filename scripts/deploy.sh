@@ -56,23 +56,30 @@ check_requirements() {
 
 # 创建环境变量文件
 setup_environment() {
-    local env=${1:-production}
+    local env=${1:-dev}
     log_info "设置 ${env} 环境..."
     
-    if [ ! -f .env ]; then
-        if [ -f .env.example ]; then
-            cp .env.example .env
-            log_info "已从 .env.example 创建 .env 文件"
-            log_warning "请编辑 .env 文件配置你的环境变量"
-            
-            # 生成随机密码和密钥
-            generate_secrets
+    if [ "$env" = "dev" ]; then
+        if [ -f .env.development ]; then
+            cp .env.development .env
+            log_info "使用开发环境配置"
         else
-            log_error ".env.example 文件不存在"
-            exit 1
+            log_warning "开发环境配置文件不存在，创建默认配置"
+            cp .env.example .env
+            sed -i.bak 's/DEPLOY_ENV=production/DEPLOY_ENV=development/g' .env
+            rm .env.bak
+        fi
+    elif [ "$env" = "prod" ]; then
+        if [ -f .env.production ]; then
+            cp .env.production .env
+            log_info "使用生产环境配置"
+        else
+            log_warning "生产环境配置文件不存在，创建默认配置"
+            cp .env.example .env
         fi
     else
-        log_info ".env 文件已存在，跳过创建"
+        log_error "不支持的环境: $env (支持: dev, prod)"
+        exit 1
     fi
 }
 
@@ -118,15 +125,16 @@ cleanup() {
 
 # 构建服务
 build_services() {
+    local env=${1:-dev}
     log_info "构建服务镜像..."
     
-    # 构建后端服务
-    log_info "构建后端服务..."
-    docker-compose build backend-api backend-common backend-monitoring backend-training
-    
-    # 构建前端服务
-    log_info "构建前端服务..."
-    docker-compose build frontend
+    if [ "$env" = "dev" ]; then
+        # 开发环境只构建基础服务
+        docker-compose -f docker-compose.dev.yml build backend-api
+    else
+        # 生产环境构建所有服务
+        docker-compose build backend-api backend-common
+    fi
     
     log_success "服务构建完成"
 }
@@ -167,10 +175,16 @@ init_database() {
 
 # 启动服务
 start_services() {
+    local env=${1:-dev}
     log_info "启动所有服务..."
     
-    # 使用 docker-compose 启动所有服务
-    docker-compose up -d
+    if [ "$env" = "dev" ]; then
+        # 开发环境
+        docker-compose -f docker-compose.dev.yml up -d
+    else
+        # 生产环境
+        docker-compose up -d
+    fi
     
     log_success "服务启动完成"
 }
@@ -277,15 +291,14 @@ show_help() {
 # 主函数
 main() {
     local command=${1:-start}
-    local option=${2}
+    local env=${2:-dev}
     
     case $command in
         start)
             check_requirements
-            setup_environment
-            build_services
-            init_database
-            start_services
+            setup_environment "$env"
+            build_services "$env"
+            start_services "$env"
             sleep 10
             check_health
             show_deployment_info
@@ -298,20 +311,25 @@ main() {
             ;;
         build)
             check_requirements
-            if [ "$option" == "--no-cache" ]; then
-                docker-compose build --no-cache
-            else
-                build_services
-            fi
+            setup_environment "$env"
+            build_services "$env"
             ;;
         clean)
-            cleanup "$option"
+            cleanup "$env"
             ;;
         logs)
-            docker-compose logs -f
+            if [ "$env" = "dev" ]; then
+                docker-compose -f docker-compose.dev.yml logs -f
+            else
+                docker-compose logs -f
+            fi
             ;;
         status)
-            docker-compose ps
+            if [ "$env" = "dev" ]; then
+                docker-compose -f docker-compose.dev.yml ps
+            else
+                docker-compose ps
+            fi
             ;;
         help|--help|-h)
             show_help

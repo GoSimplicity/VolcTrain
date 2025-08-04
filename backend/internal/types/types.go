@@ -30,7 +30,9 @@ type RefreshTokenResp struct {
 
 type LogoutReq struct{}
 
-type LogoutResp struct{}
+type LogoutResp struct {
+	Message string `json:"message"`
+}
 
 type GetAccessCodesResp struct {
 	Codes []string `json:"codes"`

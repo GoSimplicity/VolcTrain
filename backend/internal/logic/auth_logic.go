@@ -116,6 +116,9 @@ func (l *RefreshTokenLogic) RefreshToken(req *types.RefreshTokenReq) (resp *type
 		return nil, errors.ErrUserDisabled
 	}
 
+	// TODO: 应该验证refresh token而不是access token
+	// 这里存在安全漏洞：刷新令牌和访问令牌使用相同的密钥
+	
 	// 生成新的token
 	accessToken, err := auth.GenerateToken(userID, l.svcCtx.Config.Auth.AccessSecret, l.svcCtx.Config.Auth.AccessExpire)
 	if err != nil {
@@ -152,11 +155,31 @@ func NewLogoutLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LogoutLogi
 }
 
 func (l *LogoutLogic) Logout(req *types.LogoutReq) (resp *types.LogoutResp, err error) {
-	// TODO: 实现token黑名单机制
-	// 这里可以将token添加到Redis黑名单中
+	// 从请求头获取token
+	// TODO: 从上下文或请求头获取当前用户的token
+	// 这里需要配合中间件来实现token黑名单功能
 	
-	l.Info("用户登出成功")
-	return &types.LogoutResp{}, nil
+	// 获取用户信息（用于日志记录）
+	userIDValue := l.ctx.Value("userId")
+	if userIDValue != nil {
+		l.Infof("用户登出: userID=%v", userIDValue)
+	} else {
+		l.Info("匿名用户登出")
+	}
+	
+	// TODO: 将token添加到Redis黑名单中
+	// if l.svcCtx.Redis != nil {
+	//     // 将当前token添加到黑名单
+	//     tokenString := getTokenFromContext(l.ctx)
+	//     if tokenString != "" {
+	//         expiration := getTokenExpiration(tokenString)
+	//         l.svcCtx.Redis.Set(l.ctx, "blacklist:"+tokenString, "1", expiration)
+	//     }
+	// }
+	
+	return &types.LogoutResp{
+		Message: "登出成功",
+	}, nil
 }
 
 type GetAccessCodesLogic struct {

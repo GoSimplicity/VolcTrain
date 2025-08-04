@@ -1,0 +1,76 @@
+Name: volctrain-api
+Host: 0.0.0.0
+Port: 8888
+Timeout: 30
+
+# 数据库配置
+MySQL:
+  Host: mysql
+  Port: 3306
+  User: root
+  Password: root
+  DBName: volctraindb
+  Charset: utf8mb4
+  ParseTime: true
+  Loc: "Asia/Shanghai"
+  MaxOpenConns: 50
+  MaxIdleConns: 10
+  MaxLifetime: 3600
+
+# Redis配置  
+Redis:
+  Host: redis
+  Port: 6379
+  Password: v6SxhWHyZC7S
+  DB: 0
+  PoolSize: 50
+  MinIdleConns: 5
+
+# 日志配置
+Log:
+  ServiceName: volctrain-api
+  Mode: console
+  Level: debug
+
+# JWT认证配置
+Auth:
+  AccessSecret: your_jwt_access_secret_here_minimum_64_characters_required_for_security
+  AccessExpire: 86400
+  RefreshExpire: 604800
+
+# 安全配置
+Security:
+  RateLimit:
+    Requests: 1000
+    Window: 3600
+  CORS:
+    AllowedOrigins: "http://localhost:3000,http://localhost:80,http://localhost:5173"
+    AllowedMethods: "GET,POST,PUT,DELETE,OPTIONS"
+    AllowedHeaders: "Content-Type,Authorization,X-Requested-With"
+    AllowCredentials: true
+
+# 存储配置
+Storage:
+  WorkspacePath: /data/workspace
+  DatasetPath: /data/datasets
+  ModelPath: /data/models
+  LogsPath: /data/logs
+  CheckpointPath: /data/checkpoints
+
+# K8s配置
+K8s:
+  ConfigPath: /path/to/kubeconfig
+  Namespace: volctrain
+  EnablePodMonitoring: true
+
+# 通知配置
+Notification:
+  Enabled: false
+  Email:
+    SMTPHost: smtp.gmail.com
+    SMTPPort: 587
+    Username: your_email@gmail.com
+    Password: your_app_password
+  DingTalk:
+    WebhookURL: https://oapi.dingtalk.com/robot/send?access_token=your_token
+    Secret: your_dingtalk_secret
