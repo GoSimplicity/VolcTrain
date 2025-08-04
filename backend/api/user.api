@@ -559,7 +559,7 @@ service common-api {
 
 @server(
     group: userRole
-    prefix: /api/v1/user-roles
+    prefix: /api/v1/user_roles
 )
 service common-api {
     @handler AssignUserRole
@@ -574,7 +574,7 @@ service common-api {
 
 @server(
     group: userDepartment
-    prefix: /api/v1/user-departments
+    prefix: /api/v1/user_departments
 )
 service common-api {
     @handler AssignUserDepartment
@@ -589,7 +589,7 @@ service common-api {
 
 @server(
     group: departmentManager
-    prefix: /api/v1/department-managers
+    prefix: /api/v1/department_managers
 )
 service common-api {
     @handler AssignDepartmentManager

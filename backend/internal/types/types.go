@@ -3,6 +3,55 @@
 
 package types
 
+// 认证相关类型定义
+type LoginReq struct {
+	Username string `json:"username" validate:"required"`
+	Password string `json:"password" validate:"required"`
+}
+
+type LoginResp struct {
+	AccessToken  string   `json:"accessToken"`
+	RefreshToken string   `json:"refreshToken"`
+	ExpiresIn    int64    `json:"expiresIn"`
+	TokenType    string   `json:"tokenType"`
+	UserInfo     UserInfo `json:"userInfo"`
+}
+
+type RefreshTokenReq struct {
+	RefreshToken string `json:"refreshToken" validate:"required"`
+}
+
+type RefreshTokenResp struct {
+	AccessToken  string `json:"accessToken"`
+	RefreshToken string `json:"refreshToken"`
+	ExpiresIn    int64  `json:"expiresIn"`
+	TokenType    string `json:"tokenType"`
+}
+
+type LogoutReq struct{}
+
+type LogoutResp struct{}
+
+type GetAccessCodesResp struct {
+	Codes []string `json:"codes"`
+}
+
+type GetUserInfoResp struct {
+	UserInfo UserInfo `json:"userInfo"`
+}
+
+type UserInfo struct {
+	ID         int64  `json:"id"`
+	Username   string `json:"username"`
+	Email      string `json:"email"`
+	RealName   string `json:"realName"`
+	Status     string `json:"status"`
+	UserType   string `json:"userType"`
+	Department string `json:"department"`
+	CreatedAt  string `json:"createdAt"`
+	UpdatedAt  string `json:"updatedAt"`
+}
+
 type AddDeviceToNodeReq struct {
 	NodeId        int64  `json:"node_id" validate:"required"`
 	DeviceIndex   int    `json:"device_index" validate:"required"`

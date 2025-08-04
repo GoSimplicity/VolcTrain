@@ -8,6 +8,52 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
+// 简化的JWT工具函数，用于快速集成
+
+// GenerateToken 生成JWT token
+func GenerateToken(userID int64, secret string, expire int64) (string, error) {
+	now := time.Now()
+	claims := jwt.MapClaims{
+		"userId": userID,
+		"iat":    now.Unix(),
+		"exp":    now.Add(time.Duration(expire) * time.Second).Unix(),
+		"iss":    "volctrain",
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(secret))
+}
+
+// ValidateToken 验证token并返回用户ID
+func ValidateToken(tokenString, secret string) (int64, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("无效的签名方法: %v", token.Header["alg"])
+		}
+		return []byte(secret), nil
+	})
+
+	if err != nil {
+		return 0, fmt.Errorf("token解析失败: %w", err)
+	}
+
+	if !token.Valid {
+		return 0, errors.New("token无效")
+	}
+
+	claims, ok := token.Claims.(jwt.MapClaims)
+	if !ok {
+		return 0, errors.New("无效的token声明")
+	}
+
+	userID, ok := claims["userId"].(float64)
+	if !ok {
+		return 0, errors.New("无效的用户ID")
+	}
+
+	return int64(userID), nil
+}
+
 // JWTClaims JWT声明
 type JWTClaims struct {
 	UserID      int64    `json:"userId"`

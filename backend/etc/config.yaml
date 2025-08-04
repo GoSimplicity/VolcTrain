@@ -1,15 +1,15 @@
-Name: volctrain
+Name: volctrain-api
 Host: 0.0.0.0
 Port: 8888
-Timeout: 0
+Timeout: 30
 
 # 数据库配置
 MySQL:
-  Host: ${DB_HOST:-localhost}
-  Port: ${DB_PORT:-3306}
-  User: ${DB_USER:-volctrain_app}
-  Password: ${DB_PASSWORD:-Abc@1234}
-  DBName: ${DB_NAME:-volctraindb}
+  Host: localhost
+  Port: 3306
+  User: root
+  Password: root
+  DBName: volctraindb
   Charset: utf8mb4
   ParseTime: true
   Loc: "Asia/Shanghai"
@@ -19,9 +19,9 @@ MySQL:
 
 # Redis配置  
 Redis:
-  Host: ${REDIS_HOST:-localhost}
-  Port: ${REDIS_PORT:-6379}
-  Password: ${REDIS_PASSWORD:-}
+  Host: localhost
+  Port: 6379
+  Password: 
   DB: 0
   PoolSize: 100
   MinIdleConns: 10
@@ -29,11 +29,48 @@ Redis:
 # 日志配置
 Log:
   ServiceName: volctrain-api
-  Mode: ${LOG_MODE:-console}
-  Level: ${LOG_LEVEL:-info}
+  Mode: console
+  Level: info
 
 # JWT配置
 Auth:
-  AccessSecret: ${JWT_ACCESS_SECRET:-volctrain-access-secret-key}
+  AccessSecret: volctrain_access_secret_key_minimum_64_characters_required_security
   AccessExpire: 86400
   RefreshExpire: 604800
+
+# 安全配置
+Security:
+  RateLimit:
+    Requests: 1000
+    Window: 3600
+  CORS:
+    AllowedOrigins: "http://localhost:3000,http://localhost:80,http://localhost:5173"
+    AllowedMethods: "GET,POST,PUT,DELETE,OPTIONS"
+    AllowedHeaders: "Content-Type,Authorization,X-Requested-With"
+    AllowCredentials: true
+
+# 文件存储配置
+Storage:
+  WorkspacePath: /data/workspace
+  DatasetPath: /data/datasets
+  ModelPath: /data/models
+  LogsPath: /data/logs
+  CheckpointPath: /data/checkpoints
+
+# K8s配置
+K8s:
+  ConfigPath: 
+  Namespace: default
+  EnablePodMonitoring: true
+
+# 通知配置
+Notification:
+  Enabled: false
+  Email:
+    SMTPHost: 
+    SMTPPort: 587
+    Username: 
+    Password: 
+  DingTalk:
+    WebhookURL: 
+    Secret:

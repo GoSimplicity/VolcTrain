@@ -10,4 +10,7 @@ import (
     "api/workspace.api"
     "api/monitor.api"
     "api/system.api"
+    "api/training.api"
+    "api/file.api"
+    "api/k8s.api"
 )

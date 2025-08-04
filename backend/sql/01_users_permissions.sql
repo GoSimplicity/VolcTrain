@@ -8,6 +8,7 @@ CREATE TABLE vt_users (
     salt VARCHAR(64) NOT NULL COMMENT '密码盐值',
     real_name VARCHAR(128) COMMENT '真实姓名',
     nickname VARCHAR(128) COMMENT '昵称',
+    department VARCHAR(128) COMMENT '部门',
     status ENUM('active', 'inactive', 'locked', 'pending') DEFAULT 'pending' COMMENT '用户状态',
     user_type ENUM('admin', 'user', 'service') DEFAULT 'user' COMMENT '用户类型',
     last_login_at TIMESTAMP NULL COMMENT '最后登录时间',
@@ -144,20 +145,42 @@ CREATE TABLE vt_user_departments (
     INDEX idx_join_date (join_date),
     INDEX idx_leave_date (leave_date)
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '用户部门关联表';
--- 部门管理者关联表
-CREATE TABLE vt_department_managers (
-    id BIGINT PRIMARY KEY AUTO_INCREMENT,
-    department_id BIGINT NOT NULL COMMENT '部门ID',
-    user_id BIGINT NOT NULL COMMENT '管理者用户ID',
-    manager_type ENUM('primary', 'deputy', 'assistant') DEFAULT 'primary' COMMENT '管理者类型',
-    start_date DATE COMMENT '开始日期',
-    end_date DATE COMMENT '结束日期',
-    status ENUM('active', 'inactive') DEFAULT 'active' COMMENT '状态',
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
-    UNIQUE KEY uk_dept_user_type (department_id, user_id, manager_type),
-    INDEX idx_department_id (department_id),
-    INDEX idx_user_id (user_id),
-    INDEX idx_manager_type (manager_type),
-    INDEX idx_status (status)
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COLLATE = utf8mb4_unicode_ci COMMENT = '部门管理者关联表';
+-- 插入初始数据
+-- 插入默认管理员用户（密码：admin123）
+INSERT INTO vt_users (username, email, password_hash, salt, real_name, nickname, department, status, user_type, email_verified) 
+VALUES ('admin', 'admin@volctrain.com', '$2a$10$N9qo8uLOickgx2ZMRZoMye.IcnhVkuF2lFhgq6pf9s8cPLHvQOj2O', 'default_salt', '系统管理员', '管理员', '技术部', 'active', 'admin', 1);
+
+-- 插入测试用户（密码：user123）
+INSERT INTO vt_users (username, email, password_hash, salt, real_name, nickname, department, status, user_type, email_verified) 
+VALUES ('testuser', 'user@volctrain.com', '$2a$10$XHpZc8gOCe9ZwGQYjmqAdeNKIqNhVF4gJcUFqFOhqpEE7aXGt4OIy', 'default_salt', '测试用户', '用户', '测试部', 'active', 'user', 1);
+
+-- 插入基础权限
+INSERT INTO vt_permissions (name, display_name, description, module, action, resource, permission_code) VALUES
+('training:job:read', '查看训练任务', '查看训练任务列表和详情', 'training', 'read', 'job', 'training.job.read'),
+('training:job:create', '创建训练任务', '创建新的训练任务', 'training', 'create', 'job', 'training.job.create'),
+('training:job:update', '更新训练任务', '修改训练任务配置', 'training', 'update', 'job', 'training.job.update'),
+('training:job:delete', '删除训练任务', '删除训练任务', 'training', 'delete', 'job', 'training.job.delete'),
+('training:queue:read', '查看训练队列', '查看训练队列信息', 'training', 'read', 'queue', 'training.queue.read'),
+('training:queue:create', '创建训练队列', '创建新的训练队列', 'training', 'create', 'queue', 'training.queue.create'),
+('gpu:device:read', '查看GPU设备', '查看GPU设备信息', 'gpu', 'read', 'device', 'gpu.device.read'),
+('gpu:device:manage', '管理GPU设备', '管理GPU设备分配', 'gpu', 'manage', 'device', 'gpu.device.manage'),
+('system:manage', '系统管理', '系统配置和管理', 'system', 'manage', '*', 'system.manage');
+
+-- 插入基础角色
+INSERT INTO vt_roles (name, display_name, description, role_code, role_type) VALUES
+('admin', '系统管理员', '拥有系统所有权限的管理员角色', 'ADMIN', 'system'),
+('user', '普通用户', '基础用户角色，具有基本的训练任务权限', 'USER', 'system'),
+('developer', '开发者', '开发者角色，具有更多权限', 'DEVELOPER', 'custom');
+
+-- 分配管理员权限（管理员拥有所有权限）
+INSERT INTO vt_role_permissions (role_id, permission_id) 
+SELECT 1, id FROM vt_permissions;
+
+-- 分配普通用户权限
+INSERT INTO vt_role_permissions (role_id, permission_id)
+SELECT 2, id FROM vt_permissions WHERE name IN ('training:job:read', 'training:job:create', 'training:queue:read', 'gpu:device:read');
+
+-- 分配用户角色
+INSERT INTO vt_user_roles (user_id, role_id, status) VALUES
+(1, 1, 'active'), -- admin用户分配管理员角色
+(2, 2, 'active'); -- testuser分配普通用户角色

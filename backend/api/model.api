@@ -629,7 +629,7 @@ service common-api {
 
 @server (
     group: model_version
-    prefix: /api/v1/model-versions
+    prefix: /api/v1/model_versions
 )
 service ModelVersionService {
     @doc "创建模型版本"
@@ -647,7 +647,7 @@ service ModelVersionService {
 
 @server (
     group: model_deployment
-    prefix: /api/v1/model-deployments
+    prefix: /api/v1/model_deployments
 )
 service ModelDeploymentService {
     @doc "创建模型部署"
@@ -681,7 +681,7 @@ service ModelDeploymentService {
 
 @server (
     group: model_inference
-    prefix: /api/v1/model-inference
+    prefix: /api/v1/model_inference
 )
 service ModelInferenceService {
     @doc "查询推理日志列表"
@@ -695,7 +695,7 @@ service ModelInferenceService {
 
 @server (
     group: model_relation
-    prefix: /api/v1/model-relations
+    prefix: /api/v1/model_relations
 )
 service ModelRelationService {
     @doc "创建模型关联关系"

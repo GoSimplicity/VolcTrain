@@ -1,10 +1,14 @@
 version: '3.8'
 
+# 简化的开发环境 Docker Compose 配置
+# 只启动核心服务：MySQL + Redis + API
+# 使用方法: docker-compose -f docker-compose.dev.yml up -d
+
 services:
   # MySQL数据库
   mysql:
     image: mysql:8.0
-    container_name: volctrain-mysql
+    container_name: volctrain-mysql-dev
     environment:
       MYSQL_ROOT_PASSWORD: root
       MYSQL_DATABASE: volctraindb
@@ -13,10 +17,10 @@ services:
     ports:
       - "3306:3306"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - mysql_dev_data:/var/lib/mysql
       - ./backend/sql:/docker-entrypoint-initdb.d:ro
     networks:
-      - volctrain-network
+      - volctrain-dev
     restart: unless-stopped
     command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --default-time-zone='+08:00'
     healthcheck:
@@ -28,16 +32,15 @@ services:
   # Redis缓存
   redis:
     image: redis:7-alpine
-    container_name: volctrain-redis
+    container_name: volctrain-redis-dev
     ports:
       - "6379:6379"
     volumes:
-      - redis_data:/data
-      - ./deploy/redis.conf:/usr/local/etc/redis/redis.conf:ro
+      - redis_dev_data:/data
     networks:
-      - volctrain-network
+      - volctrain-dev
     restart: unless-stopped
-    command: redis-server /usr/local/etc/redis/redis.conf
+    command: redis-server --appendonly yes --maxmemory 512mb --maxmemory-policy allkeys-lru
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 30s
@@ -49,7 +52,7 @@ services:
     build: 
       context: ./backend
       dockerfile: Dockerfile
-    container_name: volctrain-api
+    container_name: volctrain-api-dev
     environment:
       # 数据库配置
       MYSQL_HOST: mysql
@@ -63,13 +66,15 @@ services:
       REDIS_PASSWORD: ""
       REDIS_DB: 0
       # 服务配置
-      LOG_LEVEL: info
+      LOG_LEVEL: debug
       SERVICE_NAME: volctrain-api
       PORT: 8888
       # JWT配置
       JWT_SECRET: volctrain_access_secret_key_minimum_64_characters_required_security
       JWT_ACCESS_EXPIRE: 86400
       JWT_REFRESH_EXPIRE: 604800
+      # 开发模式
+      GO_ENV: development
     ports:
       - "8888:8888"
     depends_on:
@@ -78,7 +83,7 @@ services:
       redis:
         condition: service_healthy
     networks:
-      - volctrain-network
+      - volctrain-dev
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8888/health"]
@@ -88,51 +93,10 @@ services:
       start_period: 60s
     command: ["api"]
 
-  # Prometheus监控 (可选)
-  prometheus:
-    image: prom/prometheus:latest
-    container_name: volctrain-prometheus
-    ports:
-      - "9091:9090"
-    volumes:
-      - ./deploy/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-      - prometheus_data:/prometheus
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/etc/prometheus/console_libraries'
-      - '--web.console.templates=/etc/prometheus/consoles'
-      - '--storage.tsdb.retention.time=200h'
-      - '--web.enable-lifecycle'
-    networks:
-      - volctrain-network
-    restart: unless-stopped
-
-  # Grafana可视化 (可选)
-  grafana:
-    image: grafana/grafana:latest
-    container_name: volctrain-grafana
-    ports:
-      - "3000:3000"
-    environment:
-      GF_SECURITY_ADMIN_PASSWORD: admin123
-      GF_INSTALL_PLUGINS: grafana-clock-panel,grafana-simple-json-datasource
-    volumes:
-      - grafana_data:/var/lib/grafana
-      - ./deploy/grafana/dashboards:/etc/grafana/provisioning/dashboards:ro
-      - ./deploy/grafana/datasources:/etc/grafana/provisioning/datasources:ro
-    depends_on:
-      - prometheus
-    networks:
-      - volctrain-network
-    restart: unless-stopped
-
 volumes:
-  mysql_data:
-  redis_data:
-  prometheus_data:
-  grafana_data:
+  mysql_dev_data:
+  redis_dev_data:
 
 networks:
-  volctrain-network:
+  volctrain-dev:
     driver: bridge

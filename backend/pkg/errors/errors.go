@@ -206,10 +206,17 @@ func NewBusinessError(code int, message string) *BizError {
 	return NewBizError(code, message, ErrorTypeBusiness)
 }
 
-// NewSystemError 创建系统错误
-func NewSystemError(message string) *BizError {
-	return NewBizErrorWithStack(ErrCodeInternalError, message, ErrorTypeSystem)
+// NewInternalError 创建内部错误
+func NewInternalError(message string) *BizError {
+	return NewBizError(ErrCodeInternalError, message, ErrorTypeSystem)
 }
+
+// 快速错误定义
+var (
+	ErrInvalidPassword = NewBizError(ErrCodePasswordWrong, "密码错误", ErrorTypeAuth)
+	ErrUserDisabled    = NewBizError(ErrCodeAccountDisabled, "用户已被禁用", ErrorTypeAuth)
+	ErrInvalidToken    = NewBizError(ErrCodeTokenInvalid, "令牌无效", ErrorTypeAuth)
+)
 
 // getStack 获取调用堆栈
 func getStack() string {

@@ -1,6 +1,7 @@
 package model
 
 import (
+	"context"
 	"database/sql"
 	"time"
 )
@@ -11,13 +12,14 @@ type VtUsers struct {
 	Username          string     `db:"username" json:"username"`
 	Email             string     `db:"email" json:"email"`
 	Phone             string     `db:"phone" json:"phone"`
-	PasswordHash      string     `db:"password_hash" json:"-"` // 密码不返回给前端
+	Password          string     `db:"password_hash" json:"-"` // 密码不返回给前端，映射到password_hash字段
 	Salt              string     `db:"salt" json:"-"`          // 盐值不返回给前端
 	RealName          string     `db:"real_name" json:"realName"`
 	Nickname          string     `db:"nickname" json:"nickname"`
+	Department        string     `db:"department" json:"department"`
 	Status            string     `db:"status" json:"status"`      // active, inactive, locked, pending
 	UserType          string     `db:"user_type" json:"userType"` // admin, user, service
-	LastLoginAt       *time.Time `db:"last_login_at" json:"lastLoginAt"`
+	LastLoginAt       time.Time  `db:"last_login_at" json:"lastLoginAt"`
 	LastLoginIp       string     `db:"last_login_ip" json:"lastLoginIp"`
 	PasswordExpiresAt *time.Time `db:"password_expires_at" json:"passwordExpiresAt"`
 	LoginAttempts     int        `db:"login_attempts" json:"loginAttempts"`
@@ -33,13 +35,13 @@ type VtUsers struct {
 
 // VtUsersModel 用户模型操作接口
 type VtUsersModel interface {
-	Insert(data *VtUsers) (sql.Result, error)
-	FindOne(id int64) (*VtUsers, error)
-	FindOneByUsername(username string) (*VtUsers, error)
-	FindOneByEmail(email string) (*VtUsers, error)
-	Update(data *VtUsers) error
-	Delete(id int64) error
-	List(page, pageSize int, filters map[string]interface{}) ([]*VtUsers, int64, error)
+	Insert(ctx context.Context, data *VtUsers) (sql.Result, error)
+	FindOne(ctx context.Context, id int64) (*VtUsers, error)
+	FindByUsername(ctx context.Context, username string) (*VtUsers, error)
+	FindOneByEmail(ctx context.Context, email string) (*VtUsers, error)
+	Update(ctx context.Context, data *VtUsers) error
+	Delete(ctx context.Context, id int64) error
+	List(ctx context.Context, page, pageSize int, filters map[string]interface{}) ([]*VtUsers, int64, error)
 }
 
 // vtUsersModel 用户模型实现
@@ -55,18 +57,18 @@ func NewVtUsersModel(conn *sql.DB) VtUsersModel {
 }
 
 // Insert 插入用户记录
-func (m *vtUsersModel) Insert(data *VtUsers) (sql.Result, error) {
-	query := `INSERT INTO vt_users (username, email, phone, password_hash, salt, real_name, nickname, status, user_type, mfa_enabled, email_verified, phone_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
-	return m.conn.Exec(query, data.Username, data.Email, data.Phone, data.PasswordHash, data.Salt, data.RealName, data.Nickname, data.Status, data.UserType, data.MfaEnabled, data.EmailVerified, data.PhoneVerified)
+func (m *vtUsersModel) Insert(ctx context.Context, data *VtUsers) (sql.Result, error) {
+	query := `INSERT INTO vt_users (username, email, phone, password_hash, salt, real_name, nickname, department, status, user_type, mfa_enabled, email_verified, phone_verified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+	return m.conn.ExecContext(ctx, query, data.Username, data.Email, data.Phone, data.Password, data.Salt, data.RealName, data.Nickname, data.Department, data.Status, data.UserType, data.MfaEnabled, data.EmailVerified, data.PhoneVerified)
 }
 
 // FindOne 根据ID查找用户
-func (m *vtUsersModel) FindOne(id int64) (*VtUsers, error) {
+func (m *vtUsersModel) FindOne(ctx context.Context, id int64) (*VtUsers, error) {
 	var user VtUsers
-	query := `SELECT id, username, email, phone, password_hash, salt, real_name, nickname, status, user_type, last_login_at, last_login_ip, password_expires_at, login_attempts, locked_until, mfa_enabled, mfa_secret, email_verified, phone_verified, created_at, updated_at, deleted_at FROM vt_users WHERE id = ? AND deleted_at IS NULL`
-	err := m.conn.QueryRow(query, id).Scan(
-		&user.Id, &user.Username, &user.Email, &user.Phone, &user.PasswordHash, &user.Salt,
-		&user.RealName, &user.Nickname, &user.Status, &user.UserType, &user.LastLoginAt,
+	query := `SELECT id, username, email, phone, password_hash, salt, real_name, nickname, department, status, user_type, last_login_at, last_login_ip, password_expires_at, login_attempts, locked_until, mfa_enabled, mfa_secret, email_verified, phone_verified, created_at, updated_at, deleted_at FROM vt_users WHERE id = ? AND deleted_at IS NULL`
+	err := m.conn.QueryRowContext(ctx, query, id).Scan(
+		&user.Id, &user.Username, &user.Email, &user.Phone, &user.Password, &user.Salt,
+		&user.RealName, &user.Nickname, &user.Department, &user.Status, &user.UserType, &user.LastLoginAt,
 		&user.LastLoginIp, &user.PasswordExpiresAt, &user.LoginAttempts, &user.LockedUntil,
 		&user.MfaEnabled, &user.MfaSecret, &user.EmailVerified, &user.PhoneVerified,
 		&user.CreatedAt, &user.UpdatedAt, &user.DeletedAt,
@@ -77,13 +79,13 @@ func (m *vtUsersModel) FindOne(id int64) (*VtUsers, error) {
 	return &user, nil
 }
 
-// FindOneByUsername 根据用户名查找用户
-func (m *vtUsersModel) FindOneByUsername(username string) (*VtUsers, error) {
+// FindByUsername 根据用户名查找用户
+func (m *vtUsersModel) FindByUsername(ctx context.Context, username string) (*VtUsers, error) {
 	var user VtUsers
-	query := `SELECT id, username, email, phone, password_hash, salt, real_name, nickname, status, user_type, last_login_at, last_login_ip, password_expires_at, login_attempts, locked_until, mfa_enabled, mfa_secret, email_verified, phone_verified, created_at, updated_at, deleted_at FROM vt_users WHERE username = ? AND deleted_at IS NULL`
-	err := m.conn.QueryRow(query, username).Scan(
-		&user.Id, &user.Username, &user.Email, &user.Phone, &user.PasswordHash, &user.Salt,
-		&user.RealName, &user.Nickname, &user.Status, &user.UserType, &user.LastLoginAt,
+	query := `SELECT id, username, email, phone, password_hash, salt, real_name, nickname, department, status, user_type, last_login_at, last_login_ip, password_expires_at, login_attempts, locked_until, mfa_enabled, mfa_secret, email_verified, phone_verified, created_at, updated_at, deleted_at FROM vt_users WHERE username = ? AND deleted_at IS NULL`
+	err := m.conn.QueryRowContext(ctx, query, username).Scan(
+		&user.Id, &user.Username, &user.Email, &user.Phone, &user.Password, &user.Salt,
+		&user.RealName, &user.Nickname, &user.Department, &user.Status, &user.UserType, &user.LastLoginAt,
 		&user.LastLoginIp, &user.PasswordExpiresAt, &user.LoginAttempts, &user.LockedUntil,
 		&user.MfaEnabled, &user.MfaSecret, &user.EmailVerified, &user.PhoneVerified,
 		&user.CreatedAt, &user.UpdatedAt, &user.DeletedAt,
@@ -95,12 +97,12 @@ func (m *vtUsersModel) FindOneByUsername(username string) (*VtUsers, error) {
 }
 
 // FindOneByEmail 根据邮箱查找用户
-func (m *vtUsersModel) FindOneByEmail(email string) (*VtUsers, error) {
+func (m *vtUsersModel) FindOneByEmail(ctx context.Context, email string) (*VtUsers, error) {
 	var user VtUsers
-	query := `SELECT id, username, email, phone, password_hash, salt, real_name, nickname, status, user_type, last_login_at, last_login_ip, password_expires_at, login_attempts, locked_until, mfa_enabled, mfa_secret, email_verified, phone_verified, created_at, updated_at, deleted_at FROM vt_users WHERE email = ? AND deleted_at IS NULL`
-	err := m.conn.QueryRow(query, email).Scan(
-		&user.Id, &user.Username, &user.Email, &user.Phone, &user.PasswordHash, &user.Salt,
-		&user.RealName, &user.Nickname, &user.Status, &user.UserType, &user.LastLoginAt,
+	query := `SELECT id, username, email, phone, password_hash, salt, real_name, nickname, department, status, user_type, last_login_at, last_login_ip, password_expires_at, login_attempts, locked_until, mfa_enabled, mfa_secret, email_verified, phone_verified, created_at, updated_at, deleted_at FROM vt_users WHERE email = ? AND deleted_at IS NULL`
+	err := m.conn.QueryRowContext(ctx, query, email).Scan(
+		&user.Id, &user.Username, &user.Email, &user.Phone, &user.Password, &user.Salt,
+		&user.RealName, &user.Nickname, &user.Department, &user.Status, &user.UserType, &user.LastLoginAt,
 		&user.LastLoginIp, &user.PasswordExpiresAt, &user.LoginAttempts, &user.LockedUntil,
 		&user.MfaEnabled, &user.MfaSecret, &user.EmailVerified, &user.PhoneVerified,
 		&user.CreatedAt, &user.UpdatedAt, &user.DeletedAt,
@@ -112,21 +114,21 @@ func (m *vtUsersModel) FindOneByEmail(email string) (*VtUsers, error) {
 }
 
 // Update 更新用户信息
-func (m *vtUsersModel) Update(data *VtUsers) error {
-	query := `UPDATE vt_users SET email = ?, phone = ?, real_name = ?, nickname = ?, status = ?, user_type = ?, last_login_at = ?, last_login_ip = ?, login_attempts = ?, locked_until = ?, mfa_enabled = ?, email_verified = ?, phone_verified = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
-	_, err := m.conn.Exec(query, data.Email, data.Phone, data.RealName, data.Nickname, data.Status, data.UserType, data.LastLoginAt, data.LastLoginIp, data.LoginAttempts, data.LockedUntil, data.MfaEnabled, data.EmailVerified, data.PhoneVerified, data.Id)
+func (m *vtUsersModel) Update(ctx context.Context, data *VtUsers) error {
+	query := `UPDATE vt_users SET email = ?, phone = ?, real_name = ?, nickname = ?, department = ?, status = ?, user_type = ?, last_login_at = ?, last_login_ip = ?, login_attempts = ?, locked_until = ?, mfa_enabled = ?, email_verified = ?, phone_verified = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+	_, err := m.conn.ExecContext(ctx, query, data.Email, data.Phone, data.RealName, data.Nickname, data.Department, data.Status, data.UserType, data.LastLoginAt, data.LastLoginIp, data.LoginAttempts, data.LockedUntil, data.MfaEnabled, data.EmailVerified, data.PhoneVerified, data.Id)
 	return err
 }
 
 // Delete 软删除用户（设置deleted_at时间）
-func (m *vtUsersModel) Delete(id int64) error {
+func (m *vtUsersModel) Delete(ctx context.Context, id int64) error {
 	query := `UPDATE vt_users SET deleted_at = CURRENT_TIMESTAMP WHERE id = ?`
-	_, err := m.conn.Exec(query, id)
+	_, err := m.conn.ExecContext(ctx, query, id)
 	return err
 }
 
 // List 获取用户列表（支持分页和过滤）
-func (m *vtUsersModel) List(page, pageSize int, filters map[string]interface{}) ([]*VtUsers, int64, error) {
+func (m *vtUsersModel) List(ctx context.Context, page, pageSize int, filters map[string]interface{}) ([]*VtUsers, int64, error) {
 	offset := (page - 1) * pageSize
 
 	// 构建查询条件
@@ -152,16 +154,16 @@ func (m *vtUsersModel) List(page, pageSize int, filters map[string]interface{}) 
 	// 查询总数
 	countQuery := "SELECT COUNT(*) FROM vt_users " + whereClause
 	var total int64
-	err := m.conn.QueryRow(countQuery, args...).Scan(&total)
+	err := m.conn.QueryRowContext(ctx, countQuery, args...).Scan(&total)
 	if err != nil {
 		return nil, 0, err
 	}
 
 	// 查询数据列表
-	listQuery := `SELECT id, username, email, phone, real_name, nickname, status, user_type, last_login_at, last_login_ip, login_attempts, locked_until, mfa_enabled, email_verified, phone_verified, created_at, updated_at FROM vt_users ` + whereClause + ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
+	listQuery := `SELECT id, username, email, phone, real_name, nickname, department, status, user_type, last_login_at, last_login_ip, login_attempts, locked_until, mfa_enabled, email_verified, phone_verified, created_at, updated_at FROM vt_users ` + whereClause + ` ORDER BY created_at DESC LIMIT ? OFFSET ?`
 	listArgs := append(args, pageSize, offset)
 
-	rows, err := m.conn.Query(listQuery, listArgs...)
+	rows, err := m.conn.QueryContext(ctx, listQuery, listArgs...)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -172,7 +174,7 @@ func (m *vtUsersModel) List(page, pageSize int, filters map[string]interface{}) 
 		var user VtUsers
 		err := rows.Scan(
 			&user.Id, &user.Username, &user.Email, &user.Phone, &user.RealName,
-			&user.Nickname, &user.Status, &user.UserType, &user.LastLoginAt,
+			&user.Nickname, &user.Department, &user.Status, &user.UserType, &user.LastLoginAt,
 			&user.LastLoginIp, &user.LoginAttempts, &user.LockedUntil,
 			&user.MfaEnabled, &user.EmailVerified, &user.PhoneVerified,
 			&user.CreatedAt, &user.UpdatedAt,

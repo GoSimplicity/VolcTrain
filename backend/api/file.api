@@ -271,7 +271,7 @@ service common-api {
 
 @server(
 	group: file_relation
-	prefix: /api/v1/file-relations
+	prefix: /api/v1/file_relations
 )
 service common-api {
 	@doc "创建文件关联"
@@ -288,8 +288,8 @@ service common-api {
 }
 
 @server(
-	group: file_access_log
-	prefix: /api/v1/file-access-logs
+	group: fileAccessLog
+	prefix: /api/v1/file_access_logs
 )
 service common-api {
 	@doc "文件访问日志查询"

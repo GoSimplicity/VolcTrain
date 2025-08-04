@@ -1,57 +1,90 @@
+Name: volctrain-monitoring
+Host: 0.0.0.0
+Port: 8890
+Timeout: 30
+
 # 数据库配置
-database:
-  host: localhost
-  port: 3306
-  username: volctrain
-  password: volctrain123
-  database: volctrain
-  max_open_conns: 100
-  max_idle_conns: 10
+MySQL:
+  Host: mysql
+  Port: 3306
+  User: root
+  Password: root
+  DBName: volctraindb
+  Charset: utf8mb4
+  ParseTime: true
+  Loc: "Asia/Shanghai"
+  MaxOpenConns: 100
+  MaxIdleConns: 10
+  MaxLifetime: 3600
+
+# Redis配置  
+Redis:
+  Host: redis
+  Port: 6379
+  Password: ""
+  DB: 0
+  PoolSize: 100
+  MinIdleConns: 10
+
+# 日志配置
+Log:
+  ServiceName: volctrain-monitoring
+  Mode: console
+  Level: info
+
+# JWT配置
+Auth:
+  AccessSecret: volctrain_access_secret_key_minimum_64_characters_required_security
+  AccessExpire: 86400
+  RefreshExpire: 604800
 
 # 监控服务配置
-monitoring:
+Monitoring:
   # 指标收集配置
-  metrics:
-    prometheus_url: "http://localhost:9090"
-    collect_interval: "30s"
-    system_metrics_enabled: true
-    business_metrics_enabled: true
-    prometheus_enabled: true
-    metrics_port: 9091
-    enable_builtin_metrics: true
-    max_retries: 3
-    timeout: "30s"
+  Metrics:
+    PrometheusURL: http://prometheus:9090
+    CollectInterval: 30s
+    SystemMetricsEnabled: true
+    BusinessMetricsEnabled: true
+    PrometheusEnabled: true
+    MetricsPort: 9090
+    EnableBuiltinMetrics: true
+    MaxRetries: 3
+    Timeout: 30s
 
   # 告警引擎配置
-  alerts:
-    evaluation_interval: "30s"
-    max_concurrent_rules: 10
-    alert_retention_days: 30
-    enable_grouping: true
-    enable_suppression: true
-    default_throttle_minutes: 5
-    anomaly_detection_enabled: true
+  Alerts:
+    EvaluationInterval: 30s
+    MaxConcurrentRules: 10
+    AlertRetentionDays: 30
+    EnableGrouping: true
+    EnableSuppression: true
+    DefaultThrottleMinutes: 5
+    AnomalyDetectionEnabled: true
 
   # 通知管理配置
-  notifications:
-    max_queue_size: 1000
-    max_concurrent_senders: 5
-    retry_max_attempts: 3
-    retry_backoff_seconds: 5
-    rate_limit_per_minute: 60
-    timeout_seconds: 30
-    failed_retention_days: 7
-    enable_deduplication: true
-    deduplication_window: "5m"
+  Notifications:
+    MaxQueueSize: 1000
+    MaxConcurrentSenders: 5
+    RetryMaxAttempts: 3
+    RetryBackoffSeconds: 5
+    RateLimitPerMinute: 60
+    TimeoutSeconds: 30
+    FailedRetentionDays: 7
+    EnableDeduplication: true
+    DeduplicationWindow: 5m
 
   # 系统配置
-  system:
-    enable_metrics: true
-    enable_alerts: true
-    enable_notifications: true
-    health_check_interval: "30s"
-    auto_restart: true
-    max_restart_attempts: 3
+  System:
+    EnableMetrics: true
+    EnableAlerts: true
+    EnableNotifications: true
+    HealthCheckInterval: 30s
+    AutoRestart: true
+    MaxRestartAttempts: 3
 
-# 服务端口
-port: 8080
+# Prometheus服务器配置
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9091
+  Path: /metrics

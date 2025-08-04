@@ -1,3 +1,45 @@
-Name: common-api
+Name: volctrain-common
 Host: 0.0.0.0
-Port: 8888
+Port: 8889
+Timeout: 30
+
+# 数据库配置
+MySQL:
+  Host: mysql
+  Port: 3306
+  User: root
+  Password: root
+  DBName: volctraindb
+  Charset: utf8mb4
+  ParseTime: true
+  Loc: "Asia/Shanghai"
+  MaxOpenConns: 100
+  MaxIdleConns: 10
+  MaxLifetime: 3600
+
+# Redis配置  
+Redis:
+  Host: redis
+  Port: 6379
+  Password: ""
+  DB: 0
+  PoolSize: 100
+  MinIdleConns: 10
+
+# 日志配置
+Log:
+  ServiceName: volctrain-common
+  Mode: console
+  Level: info
+
+# JWT配置
+Auth:
+  AccessSecret: volctrain_access_secret_key_minimum_64_characters_required_security
+  AccessExpire: 86400
+  RefreshExpire: 604800
+
+# 监控配置
+Prometheus:
+  Host: 0.0.0.0
+  Port: 9090
+  Path: /metrics

@@ -10,6 +10,32 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// 简化的密码工具函数，用于快速集成
+
+// HashPassword 加密密码
+func HashPassword(password string) (string, error) {
+	if password == "" {
+		return "", fmt.Errorf("密码不能为空")
+	}
+
+	hashedBytes, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return "", fmt.Errorf("密码加密失败: %w", err)
+	}
+
+	return string(hashedBytes), nil
+}
+
+// CheckPassword 验证密码
+func CheckPassword(password, hashedPassword string) bool {
+	if hashedPassword == "" || password == "" {
+		return false
+	}
+
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return err == nil
+}
+
 const (
 	// 默认加密成本
 	DefaultCost = bcrypt.DefaultCost

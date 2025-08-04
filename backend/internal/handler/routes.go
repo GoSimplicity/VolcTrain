@@ -10,16 +10,17 @@ import (
 	gpu_device "api/internal/handler/gpu_device"
 	gpu_node "api/internal/handler/gpu_node"
 	gpu_usage "api/internal/handler/gpu_usage"
+	"api/internal/handler/training"
 	"api/internal/svc"
 
 	"github.com/zeromicro/go-zero/rest"
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	// 健康检查
 	server.AddRoutes(
 		[]rest.Route{
 			{
-				// 健康检查
 				Method:  http.MethodGet,
 				Path:    "/health",
 				Handler: healthCheckHandler(serverCtx),
@@ -27,6 +28,176 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 		},
 	)
 
+	// 认证相关路由（不需要认证中间件）
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/login",
+				Handler: loginHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/refresh",
+				Handler: refreshTokenHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/auth"),
+	)
+
+	// 需要认证的路由
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/logout",
+				Handler: logoutHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/codes",
+				Handler: getAccessCodesHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/auth"),
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+	)
+
+	// 用户相关路由（需要认证）
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodGet,
+				Path:    "/info",
+				Handler: getUserInfoHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/user"),
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+	)
+
+	// 训练任务路由（需要认证）
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/",
+				Handler: training.CreateTrainingJobHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/",
+				Handler: training.ListTrainingJobsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:id",
+				Handler: training.GetTrainingJobHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/:id",
+				Handler: training.UpdateTrainingJobHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/:id",
+				Handler: training.DeleteTrainingJobHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/:id/cancel",
+				Handler: training.CancelTrainingJobHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/:id/restart",
+				Handler: training.RestartTrainingJobHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/:id/resume",
+				Handler: training.ResumeTrainingJobHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPost,
+				Path:    "/:id/suspend",
+				Handler: training.SuspendTrainingJobHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:jobId/checkpoints",
+				Handler: training.GetJobCheckpointsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:jobId/instances",
+				Handler: training.GetJobInstancesHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:jobId/logs",
+				Handler: training.GetJobLogsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:jobId/metrics",
+				Handler: training.GetJobMetricsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:jobId/relations",
+				Handler: training.GetJobRelationsHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/options",
+				Handler: training.GetJobOptionsHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/training/jobs"),
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+	)
+
+	// 训练队列路由（需要认证）
+	server.AddRoutes(
+		[]rest.Route{
+			{
+				Method:  http.MethodPost,
+				Path:    "/",
+				Handler: training.CreateTrainingQueueHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/",
+				Handler: training.ListTrainingQueuesHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/:id",
+				Handler: training.GetTrainingQueueHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodPut,
+				Path:    "/:id",
+				Handler: training.UpdateTrainingQueueHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodDelete,
+				Path:    "/:id",
+				Handler: training.DeleteTrainingQueueHandler(serverCtx),
+			},
+			{
+				Method:  http.MethodGet,
+				Path:    "/options",
+				Handler: training.GetQueueOptionsHandler(serverCtx),
+			},
+		},
+		rest.WithPrefix("/api/v1/training/queues"),
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+	)
+
+	// GPU集群路由（需要认证）
 	server.AddRoutes(
 		[]rest.Route{
 			{
@@ -71,8 +242,10 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/gpuclusters"),
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)
 
+	// GPU设备路由（需要认证）
 	server.AddRoutes(
 		[]rest.Route{
 			{
@@ -117,8 +290,10 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/gpudevices"),
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)
 
+	// GPU节点路由（需要认证）
 	server.AddRoutes(
 		[]rest.Route{
 			{
@@ -163,8 +338,10 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/gpunodes"),
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)
 
+	// GPU使用记录路由（需要认证）
 	server.AddRoutes(
 		[]rest.Route{
 			{
@@ -204,5 +381,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/gpuusage"),
+		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)
 }
