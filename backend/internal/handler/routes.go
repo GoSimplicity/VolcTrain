@@ -5,6 +5,7 @@ package handler
 
 import (
 	"net/http"
+	"time"
 
 	gpu_cluster "api/internal/handler/gpu_cluster"
 	gpu_device "api/internal/handler/gpu_device"
@@ -22,8 +23,12 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 	jwtAuthMiddleware := middleware.NewJWTAuthMiddleware(serverCtx.JWTService, serverCtx.TokenBlacklist)
 
 	// 注册全局中间件
-	server.Use(middleware.ErrorHandlerMiddleware())
-	server.Use(middleware.RequestLogMiddleware())
+	server.Use(middleware.ErrorHandlerMiddleware)
+	server.Use(middleware.RequestLogMiddleware)
+	// 限流（如果 Redis 可用），每 IP 每 1s 允许 50 请求，可按需读取配置
+	server.Use(middleware.NewRateLimitMiddleware(serverCtx.Redis, 50, time.Second))
+	server.Use(middleware.NewIdempotencyMiddleware(serverCtx.Redis, 2*time.Minute))
+	server.Use(jwtAuthMiddleware.Handler())
 	// 健康检查
 	server.AddRoutes(
 		[]rest.Route{
@@ -67,7 +72,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/auth"),
-		rest.WithMiddlewares(jwtAuthMiddleware.Handler()),
 	)
 
 	// 用户相关路由（需要认证）
@@ -80,7 +84,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/user"),
-		rest.WithMiddlewares(jwtAuthMiddleware.Handler()),
 	)
 
 	// 训练任务路由（需要认证）
@@ -163,7 +166,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/training/jobs"),
-		rest.WithMiddlewares(jwtAuthMiddleware.Handler()),
 	)
 
 	// 训练队列路由（需要认证）
@@ -201,7 +203,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/training/queues"),
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)
 
 	// GPU集群路由（需要认证）
@@ -249,7 +250,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/gpuclusters"),
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)
 
 	// GPU设备路由（需要认证）
@@ -297,7 +297,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/gpudevices"),
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)
 
 	// GPU节点路由（需要认证）
@@ -345,7 +344,6 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/gpunodes"),
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)
 
 	// GPU使用记录路由（需要认证）
@@ -388,6 +386,5 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/gpuusage"),
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
 	)
 }

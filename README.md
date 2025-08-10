@@ -12,6 +12,7 @@ VolcTrain 是一个企业级AI训练平台，提供GPU资源管理、训练任�
 - **认证**: JWT Token
 - **文档**: Swagger/OpenAPI
 - **容器**: Docker & Docker Compose
+- **调度**: Valcano
 
 ## 功能特性
 
@@ -96,7 +97,7 @@ open http://localhost:8888/swagger
 
 ## 项目结构
 
-```
+```text
 VolcTrain/
 ├── backend/
 │   ├── cmd/

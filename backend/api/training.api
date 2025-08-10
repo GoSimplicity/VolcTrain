@@ -9,60 +9,441 @@ type LabelValue {
 	Value string `json:"value"`
 }
 
+// Volcano调度相关类型定义
+type VolcanoJobSpec {
+	Name                  string                 `json:"name" validate:"required"`
+	Namespace             string                 `json:"namespace" validate:"required"`
+	MinAvailable          int32                  `json:"minAvailable" validate:"required"`
+	Queue                 string                 `json:"queue" validate:"required"`
+	PriorityClassName     string                 `json:"priorityClassName,optional"`
+	MaxRetry              int32                  `json:"maxRetry,default=3"`
+	TTLSecondsAfterFinished *int32               `json:"ttlSecondsAfterFinished,optional"`
+	SchedulerName         string                 `json:"schedulerName,default=volcano"`
+	Tasks                 []VolcanoTaskSpec      `json:"tasks" validate:"required"`
+	Plugins               map[string]interface{} `json:"plugins,optional"`
+	JobType               string                 `json:"jobType" validate:"required"` // TensorFlow, PyTorch, MPI, etc.
+	RunPolicy             RunPolicy              `json:"runPolicy,optional"`
+}
+
+type VolcanoTaskSpec {
+	Name         string                 `json:"name" validate:"required"`
+	Replicas     int32                  `json:"replicas" validate:"required"`
+	Template     PodTemplateSpec        `json:"template" validate:"required"`
+	Policies     []TaskPolicy           `json:"policies,optional"`
+	MinAvailable *int32                 `json:"minAvailable,optional"`
+	MaxRetry     *int32                 `json:"maxRetry,optional"`
+}
+
+type PodTemplateSpec {
+	Metadata        ObjectMeta              `json:"metadata,optional"`
+	Spec            PodSpec                 `json:"spec" validate:"required"`
+	Affinity        *Affinity              `json:"affinity,optional"`
+	NodeSelector    map[string]string       `json:"nodeSelector,optional"`
+	Tolerations     []Toleration           `json:"tolerations,optional"`
+	PriorityClass   string                 `json:"priorityClass,optional"`
+}
+
+type ObjectMeta {
+	Name        string            `json:"name,optional"`
+	Labels      map[string]string `json:"labels,optional"`
+	Annotations map[string]string `json:"annotations,optional"`
+}
+
+type PodSpec {
+	Containers        []Container      `json:"containers" validate:"required"`
+	InitContainers    []Container      `json:"initContainers,optional"`
+	Volumes           []Volume         `json:"volumes,optional"`
+	ServiceAccount    string           `json:"serviceAccount,optional"`
+	RestartPolicy     string           `json:"restartPolicy,default=Never"`
+	HostNetwork       bool             `json:"hostNetwork,default=false"`
+	SecurityContext   *SecurityContext `json:"securityContext,optional"`
+}
+
+type Container {
+	Name            string                 `json:"name" validate:"required"`
+	Image           string                 `json:"image" validate:"required"`
+	Command         []string               `json:"command,optional"`
+	Args            []string               `json:"args,optional"`
+	WorkingDir      string                 `json:"workingDir,optional"`
+	Ports           []ContainerPort        `json:"ports,optional"`
+	Env             []EnvVar               `json:"env,optional"`
+	Resources       ResourceRequirements   `json:"resources,optional"`
+	VolumeMounts    []VolumeMount          `json:"volumeMounts,optional"`
+	LivenessProbe   *Probe                 `json:"livenessProbe,optional"`
+	ReadinessProbe  *Probe                 `json:"readinessProbe,optional"`
+	ImagePullPolicy string                 `json:"imagePullPolicy,default=IfNotPresent"`
+	SecurityContext *ContainerSecurityContext `json:"securityContext,optional"`
+}
+
+type ResourceRequirements {
+	Limits   map[string]string `json:"limits,optional"`
+	Requests map[string]string `json:"requests,optional"`
+}
+
+type EnvVar {
+	Name      string         `json:"name" validate:"required"`
+	Value     string         `json:"value,optional"`
+	ValueFrom *EnvVarSource  `json:"valueFrom,optional"`
+}
+
+type EnvVarSource {
+	FieldRef         *ObjectFieldSelector   `json:"fieldRef,optional"`
+	ResourceFieldRef *ResourceFieldSelector `json:"resourceFieldRef,optional"`
+	ConfigMapKeyRef  *ConfigMapKeySelector  `json:"configMapKeyRef,optional"`
+	SecretKeyRef     *SecretKeySelector     `json:"secretKeyRef,optional"`
+}
+
+type VolumeMount {
+	Name        string `json:"name" validate:"required"`
+	MountPath   string `json:"mountPath" validate:"required"`
+	SubPath     string `json:"subPath,optional"`
+	ReadOnly    bool   `json:"readOnly,default=false"`
+	MountPropagation *string `json:"mountPropagation,optional"`
+}
+
+type Volume {
+	Name         string        `json:"name" validate:"required"`
+	VolumeSource VolumeSource  `json:",inline"`
+}
+
+type VolumeSource {
+	HostPath              *HostPathVolumeSource              `json:"hostPath,optional"`
+	EmptyDir              *EmptyDirVolumeSource              `json:"emptyDir,optional"`
+	PersistentVolumeClaim *PersistentVolumeClaimVolumeSource `json:"persistentVolumeClaim,optional"`
+	ConfigMap             *ConfigMapVolumeSource             `json:"configMap,optional"`
+	Secret                *SecretVolumeSource                `json:"secret,optional"`
+	NFS                   *NFSVolumeSource                   `json:"nfs,optional"`
+}
+
+type RunPolicy {
+	CleanPodPolicy          *string `json:"cleanPodPolicy,optional"`
+	TTLSecondsAfterFinished *int32  `json:"ttlSecondsAfterFinished,optional"`
+	ActiveDeadlineSeconds   *int64  `json:"activeDeadlineSeconds,optional"`
+	BackoffLimit            *int32  `json:"backoffLimit,optional"`
+	SchedulingTimeoutSeconds *int32  `json:"schedulingTimeoutSeconds,optional"`
+}
+
+type TaskPolicy {
+	Event  string `json:"event" validate:"required"`
+	Action string `json:"action" validate:"required"`
+}
+
+// 补充缺失的类型定义
+type ContainerPort {
+	Name          string `json:"name,optional"`
+	ContainerPort int32  `json:"containerPort" validate:"required"`
+	Protocol      string `json:"protocol,default=TCP"`
+	HostPort      int32  `json:"hostPort,optional"`
+	HostIP        string `json:"hostIP,optional"`
+}
+
+type Probe {
+	Handler             Handler `json:",inline"`
+	InitialDelaySeconds int32   `json:"initialDelaySeconds,default=0"`
+	TimeoutSeconds      int32   `json:"timeoutSeconds,default=1"`
+	PeriodSeconds       int32   `json:"periodSeconds,default=10"`
+	SuccessThreshold    int32   `json:"successThreshold,default=1"`
+	FailureThreshold    int32   `json:"failureThreshold,default=3"`
+}
+
+type Handler {
+	Exec      *ExecAction      `json:"exec,optional"`
+	HTTPGet   *HTTPGetAction   `json:"httpGet,optional"`
+	TCPSocket *TCPSocketAction `json:"tcpSocket,optional"`
+}
+
+type ExecAction {
+	Command []string `json:"command,optional"`
+}
+
+type HTTPGetAction {
+	Path        string `json:"path,optional"`
+	Port        string `json:"port" validate:"required"`
+	Host        string `json:"host,optional"`
+	Scheme      string `json:"scheme,default=HTTP"`
+	HTTPHeaders []HTTPHeader `json:"httpHeaders,optional"`
+}
+
+type HTTPHeader {
+	Name  string `json:"name" validate:"required"`
+	Value string `json:"value" validate:"required"`
+}
+
+type TCPSocketAction {
+	Port string `json:"port" validate:"required"`
+	Host string `json:"host,optional"`
+}
+
+type SecurityContext {
+	RunAsUser    *int64 `json:"runAsUser,optional"`
+	RunAsGroup   *int64 `json:"runAsGroup,optional"`
+	RunAsNonRoot *bool  `json:"runAsNonRoot,optional"`
+	FSGroup      *int64 `json:"fsGroup,optional"`
+}
+
+type ContainerSecurityContext {
+	Capabilities             *Capabilities `json:"capabilities,optional"`
+	Privileged               *bool         `json:"privileged,optional"`
+	SELinuxOptions           *SELinuxOptions `json:"seLinuxOptions,optional"`
+	RunAsUser                *int64        `json:"runAsUser,optional"`
+	RunAsGroup               *int64        `json:"runAsGroup,optional"`
+	RunAsNonRoot             *bool         `json:"runAsNonRoot,optional"`
+	ReadOnlyRootFilesystem   *bool         `json:"readOnlyRootFilesystem,optional"`
+	AllowPrivilegeEscalation *bool         `json:"allowPrivilegeEscalation,optional"`
+}
+
+type Capabilities {
+	Add  []string `json:"add,optional"`
+	Drop []string `json:"drop,optional"`
+}
+
+type SELinuxOptions {
+	User  string `json:"user,optional"`
+	Role  string `json:"role,optional"`
+	Type  string `json:"type,optional"`
+	Level string `json:"level,optional"`
+}
+
+type ObjectFieldSelector {
+	APIVersion string `json:"apiVersion,default=v1"`
+	FieldPath  string `json:"fieldPath" validate:"required"`
+}
+
+type ResourceFieldSelector {
+	ContainerName string `json:"containerName,optional"`
+	Resource      string `json:"resource" validate:"required"`
+	Divisor       string `json:"divisor,optional"`
+}
+
+type ConfigMapKeySelector {
+	Name     string `json:"name" validate:"required"`
+	Key      string `json:"key" validate:"required"`
+	Optional *bool  `json:"optional,optional"`
+}
+
+type SecretKeySelector {
+	Name     string `json:"name" validate:"required"`
+	Key      string `json:"key" validate:"required"`
+	Optional *bool  `json:"optional,optional"`
+}
+
+type HostPathVolumeSource {
+	Path string `json:"path" validate:"required"`
+	Type string `json:"type,optional"`
+}
+
+type EmptyDirVolumeSource {
+	Medium    string `json:"medium,optional"`
+	SizeLimit string `json:"sizeLimit,optional"`
+}
+
+type PersistentVolumeClaimVolumeSource {
+	ClaimName string `json:"claimName" validate:"required"`
+	ReadOnly  bool   `json:"readOnly,default=false"`
+}
+
+type ConfigMapVolumeSource {
+	Name        string             `json:"name" validate:"required"`
+	Items       []KeyToPath        `json:"items,optional"`
+	DefaultMode *int32             `json:"defaultMode,optional"`
+	Optional    *bool              `json:"optional,optional"`
+}
+
+type SecretVolumeSource {
+	SecretName  string      `json:"secretName" validate:"required"`
+	Items       []KeyToPath `json:"items,optional"`
+	DefaultMode *int32      `json:"defaultMode,optional"`
+	Optional    *bool       `json:"optional,optional"`
+}
+
+type NFSVolumeSource {
+	Server   string `json:"server" validate:"required"`
+	Path     string `json:"path" validate:"required"`
+	ReadOnly bool   `json:"readOnly,default=false"`
+}
+
+type KeyToPath {
+	Key  string `json:"key" validate:"required"`
+	Path string `json:"path" validate:"required"`
+	Mode *int32 `json:"mode,optional"`
+}
+
+type Affinity {
+	NodeAffinity    *NodeAffinity    `json:"nodeAffinity,optional"`
+	PodAffinity     *PodAffinity     `json:"podAffinity,optional"`
+	PodAntiAffinity *PodAntiAffinity `json:"podAntiAffinity,optional"`
+}
+
+type NodeAffinity {
+	RequiredDuringSchedulingIgnoredDuringExecution  *NodeSelector   `json:"requiredDuringSchedulingIgnoredDuringExecution,optional"`
+	PreferredDuringSchedulingIgnoredDuringExecution []PreferredSchedulingTerm `json:"preferredDuringSchedulingIgnoredDuringExecution,optional"`
+}
+
+type NodeSelector {
+	NodeSelectorTerms []NodeSelectorTerm `json:"nodeSelectorTerms" validate:"required"`
+}
+
+type NodeSelectorTerm {
+	MatchExpressions []NodeSelectorRequirement `json:"matchExpressions,optional"`
+	MatchFields      []NodeSelectorRequirement `json:"matchFields,optional"`
+}
+
+type NodeSelectorRequirement {
+	Key      string   `json:"key" validate:"required"`
+	Operator string   `json:"operator" validate:"required"`
+	Values   []string `json:"values,optional"`
+}
+
+type PreferredSchedulingTerm {
+	Weight     int32        `json:"weight" validate:"required"`
+	Preference NodeSelectorTerm `json:"preference" validate:"required"`
+}
+
+type PodAffinity {
+	RequiredDuringSchedulingIgnoredDuringExecution  []PodAffinityTerm         `json:"requiredDuringSchedulingIgnoredDuringExecution,optional"`
+	PreferredDuringSchedulingIgnoredDuringExecution []WeightedPodAffinityTerm `json:"preferredDuringSchedulingIgnoredDuringExecution,optional"`
+}
+
+type PodAntiAffinity {
+	RequiredDuringSchedulingIgnoredDuringExecution  []PodAffinityTerm         `json:"requiredDuringSchedulingIgnoredDuringExecution,optional"`
+	PreferredDuringSchedulingIgnoredDuringExecution []WeightedPodAffinityTerm `json:"preferredDuringSchedulingIgnoredDuringExecution,optional"`
+}
+
+type PodAffinityTerm {
+	LabelSelector *LabelSelector `json:"labelSelector,optional"`
+	Namespaces    []string       `json:"namespaces,optional"`
+	TopologyKey   string         `json:"topologyKey" validate:"required"`
+}
+
+type WeightedPodAffinityTerm {
+	Weight          int32           `json:"weight" validate:"required"`
+	PodAffinityTerm PodAffinityTerm `json:"podAffinityTerm" validate:"required"`
+}
+
+type LabelSelector {
+	MatchLabels      map[string]string          `json:"matchLabels,optional"`
+	MatchExpressions []LabelSelectorRequirement `json:"matchExpressions,optional"`
+}
+
+type LabelSelectorRequirement {
+	Key      string   `json:"key" validate:"required"`
+	Operator string   `json:"operator" validate:"required"`
+	Values   []string `json:"values,optional"`
+}
+
+type Toleration {
+	Key               string `json:"key,optional"`
+	Operator          string `json:"operator,default=Equal"`
+	Value             string `json:"value,optional"`
+	Effect            string `json:"effect,optional"`
+	TolerationSeconds *int64 `json:"tolerationSeconds,optional"`
+}
+
+// 扩展原有的训练队列定义，支持Volcano特性
+
 type TrainingQueueInfo {
-	Id                  int64  `json:"id"`
-	Name                string `json:"name"`
-	DisplayName         string `json:"displayName,optional"`
-	Description         string `json:"description,optional"`
-	QueueType           string `json:"queueType"`
-	Priority            int64  `json:"priority"`
-	MaxConcurrentJobs   int64  `json:"maxConcurrentJobs"`
-	MaxQueueSize        int64  `json:"maxQueueSize"`
-	MaxJobDurationHours int64  `json:"maxJobDurationHours"`
-	ResourceQuota       string `json:"resourceQuota,optional"`
-	GpuQuota            int64  `json:"gpuQuota,optional"`
-	CpuQuota            string `json:"cpuQuota,optional"`
-	MemoryQuotaGb       int64  `json:"memoryQuotaGb,optional"`
-	StorageQuotaGb      int64  `json:"storageQuotaGb,optional"`
-	SchedulingPolicy    string `json:"schedulingPolicy"`
-	PreemptionEnabled   bool   `json:"preemptionEnabled"`
-	GangScheduling      bool   `json:"gangScheduling"`
-	WorkspaceIds        string `json:"workspaceIds,optional"`
-	UserIds             string `json:"userIds,optional"`
-	DepartmentIds       string `json:"departmentIds,optional"`
-	ClusterIds          string `json:"clusterIds,optional"`
-	NodeSelector        string `json:"nodeSelector,optional"`
-	Tolerations         string `json:"tolerations,optional"`
-	Status              string `json:"status"`
-	CurrentJobs         int64  `json:"currentJobs"`
-	PendingJobs         int64  `json:"pendingJobs"`
-	CreatedAt           string `json:"createdAt"`
-	UpdatedAt           string `json:"updatedAt"`
+	Id                      int64                  `json:"id"`
+	Name                    string                 `json:"name"`
+	DisplayName             string                 `json:"displayName,optional"`
+	Description             string                 `json:"description,optional"`
+	QueueType               string                 `json:"queueType"` // volcano, capacity, fair
+	Weight                  int32                  `json:"weight,default=1"`
+	Priority                int64                  `json:"priority"`
+	MaxConcurrentJobs       int64                  `json:"maxConcurrentJobs"`
+	MaxQueueSize            int64                  `json:"maxQueueSize"`
+	MaxJobDurationHours     int64                  `json:"maxJobDurationHours"`
+	
+	// Volcano队列特性
+	Capability              map[string]interface{} `json:"capability,optional"` // 队列能力
+	GuaranteedResource      map[string]string      `json:"guaranteedResource,optional"` // 保证资源
+	MaxResource             map[string]string      `json:"maxResource,optional"` // 最大资源
+	DeservedResource        map[string]string      `json:"deservedResource,optional"` // 期望资源
+	AllocatedResource       map[string]string      `json:"allocatedResource,optional"` // 已分配资源
+	ShareWeight             float64                `json:"shareWeight,default=1.0"` // 共享权重
+	
+	// 资源配额
+	ResourceQuota           string                 `json:"resourceQuota,optional"`
+	GpuQuota                int64                  `json:"gpuQuota,optional"`
+	CpuQuota                string                 `json:"cpuQuota,optional"`
+	MemoryQuotaGb           int64                  `json:"memoryQuotaGb,optional"`
+	StorageQuotaGb          int64                  `json:"storageQuotaGb,optional"`
+	
+	// 调度策略
+	SchedulingPolicy        string                 `json:"schedulingPolicy"` // proportion, drf, fcfs
+	ReclaimablePolicy       string                 `json:"reclaimablePolicy,default=none"` // none, preempt
+	PreemptionEnabled       bool                   `json:"preemptionEnabled"`
+	PreemptionPolicy        string                 `json:"preemptionPolicy,default=LeastOccupied"`
+	GangScheduling          bool                   `json:"gangScheduling"`
+	
+	// 准入控制
+	HierarchyEnabled        bool                   `json:"hierarchyEnabled,default=false"`
+	ParentQueue             string                 `json:"parentQueue,optional"`
+	WorkspaceIds            string                 `json:"workspaceIds,optional"`
+	UserIds                 string                 `json:"userIds,optional"`
+	DepartmentIds           string                 `json:"departmentIds,optional"`
+	ClusterIds              string                 `json:"clusterIds,optional"`
+	
+	// 节点调度
+	NodeSelector            string                 `json:"nodeSelector,optional"`
+	Tolerations             string                 `json:"tolerations,optional"`
+	Affinity                string                 `json:"affinity,optional"`
+	
+	// 状态信息
+	State                   string                 `json:"state"` // Open, Closed, Draining
+	Status                  string                 `json:"status"` // active, inactive, maintenance
+	CurrentJobs             int64                  `json:"currentJobs"`
+	PendingJobs             int64                  `json:"pendingJobs"`
+	RunningJobs             int64                  `json:"runningJobs"`
+	CompletedJobs           int64                  `json:"completedJobs"`
+	FailedJobs              int64                  `json:"failedJobs"`
+	
+	CreatedAt               string                 `json:"createdAt"`
+	UpdatedAt               string                 `json:"updatedAt"`
 }
 
 type CreateTrainingQueueReq {
-	Name                string `json:"name"`
-	DisplayName         string `json:"displayName,optional"`
-	Description         string `json:"description,optional"`
-	QueueType           string `json:"queueType,default=default"`
-	Priority            int64  `json:"priority,default=0"`
-	MaxConcurrentJobs   int64  `json:"maxConcurrentJobs,default=10"`
-	MaxQueueSize        int64  `json:"maxQueueSize,default=100"`
-	MaxJobDurationHours int64  `json:"maxJobDurationHours,default=168"`
-	ResourceQuota       string `json:"resourceQuota,optional"`
-	GpuQuota            int64  `json:"gpuQuota,optional"`
-	CpuQuota            string `json:"cpuQuota,optional"`
-	MemoryQuotaGb       int64  `json:"memoryQuotaGb,optional"`
-	StorageQuotaGb      int64  `json:"storageQuotaGb,optional"`
-	SchedulingPolicy    string `json:"schedulingPolicy,default=fifo"`
-	PreemptionEnabled   bool   `json:"preemptionEnabled,default=false"`
-	GangScheduling      bool   `json:"gangScheduling,default=false"`
-	WorkspaceIds        string `json:"workspaceIds,optional"`
-	UserIds             string `json:"userIds,optional"`
-	DepartmentIds       string `json:"departmentIds,optional"`
-	ClusterIds          string `json:"clusterIds,optional"`
-	NodeSelector        string `json:"nodeSelector,optional"`
-	Tolerations         string `json:"tolerations,optional"`
+	Name                    string                 `json:"name"`
+	DisplayName             string                 `json:"displayName,optional"`
+	Description             string                 `json:"description,optional"`
+	QueueType               string                 `json:"queueType,default=volcano"`
+	Weight                  int32                  `json:"weight,default=1"`
+	Priority                int64                  `json:"priority,default=0"`
+	MaxConcurrentJobs       int64                  `json:"maxConcurrentJobs,default=10"`
+	MaxQueueSize            int64                  `json:"maxQueueSize,default=100"`
+	MaxJobDurationHours     int64                  `json:"maxJobDurationHours,default=168"`
+	
+	// Volcano队列特性
+	Capability              map[string]interface{} `json:"capability,optional"`
+	GuaranteedResource      map[string]string      `json:"guaranteedResource,optional"`
+	MaxResource             map[string]string      `json:"maxResource,optional"`
+	ShareWeight             float64                `json:"shareWeight,default=1.0"`
+	
+	// 资源配额
+	ResourceQuota           string                 `json:"resourceQuota,optional"`
+	GpuQuota                int64                  `json:"gpuQuota,optional"`
+	CpuQuota                string                 `json:"cpuQuota,optional"`
+	MemoryQuotaGb           int64                  `json:"memoryQuotaGb,optional"`
+	StorageQuotaGb          int64                  `json:"storageQuotaGb,optional"`
+	
+	// 调度策略
+	SchedulingPolicy        string                 `json:"schedulingPolicy,default=proportion"`
+	ReclaimablePolicy       string                 `json:"reclaimablePolicy,default=none"`
+	PreemptionEnabled       bool                   `json:"preemptionEnabled,default=false"`
+	PreemptionPolicy        string                 `json:"preemptionPolicy,default=LeastOccupied"`
+	GangScheduling          bool                   `json:"gangScheduling,default=false"`
+	
+	// 准入控制
+	HierarchyEnabled        bool                   `json:"hierarchyEnabled,default=false"`
+	ParentQueue             string                 `json:"parentQueue,optional"`
+	WorkspaceIds            string                 `json:"workspaceIds,optional"`
+	UserIds                 string                 `json:"userIds,optional"`
+	DepartmentIds           string                 `json:"departmentIds,optional"`
+	ClusterIds              string                 `json:"clusterIds,optional"`
+	
+	// 节点调度
+	NodeSelector            string                 `json:"nodeSelector,optional"`
+	Tolerations             string                 `json:"tolerations,optional"`
+	Affinity                string                 `json:"affinity,optional"`
 }
 
 type CreateTrainingQueueResp {
@@ -126,27 +507,39 @@ type GetQueueOptionsResp {
 	StatusOptions      []LabelValue `json:"statusOptions"`
 }
 
+// 增强的训练作业信息，支持Volcano特性
 type TrainingJobInfo {
 	Id                        int64  `json:"id"`
 	Name                      string `json:"name"`
 	DisplayName               string `json:"displayName,optional"`
 	Description               string `json:"description,optional"`
-	JobType                   string `json:"jobType"`
+	
+	// 作业类型和框架
+	JobType                   string `json:"jobType"` // pytorch, tensorflow, mpi, paddle, etc.
 	Framework                 string `json:"framework"`
 	FrameworkVersion          string `json:"frameworkVersion,optional"`
 	PythonVersion             string `json:"pythonVersion"`
+	
+	// 代码和数据源
 	CodeSourceType            string `json:"codeSourceType"`
 	CodeSourceConfig          string `json:"codeSourceConfig,optional"`
 	EntryPoint                string `json:"entryPoint"`
 	WorkingDir                string `json:"workingDir"`
-	Image                     string `json:"image"`
-	ImagePullPolicy           string `json:"imagePullPolicy"`
-	ImagePullSecrets          string `json:"imagePullSecrets,optional"`
 	DatasetMountConfigs       string `json:"datasetMountConfigs,optional"`
 	DataSourceConfig          string `json:"dataSourceConfig,optional"`
+	
+	// 模型配置
 	ModelConfig               string `json:"modelConfig,optional"`
 	OutputModelName           string `json:"outputModelName,optional"`
 	ModelSaveStrategy         string `json:"modelSaveStrategy"`
+	CheckpointPath            string `json:"checkpointPath,optional"`
+	
+	// Volcano作业规格
+	VolcanoJobSpec            VolcanoJobSpec `json:"volcanoJobSpec"`
+	VolcanoJobName            string         `json:"volcanoJobName,optional"`
+	VolcanoJobUID             string         `json:"volcanoJobUID,optional"`
+	
+	// 资源配置
 	CpuCores                  string `json:"cpuCores,optional"`
 	MemoryGb                  string `json:"memoryGb,optional"`
 	GpuCount                  int64  `json:"gpuCount"`
@@ -154,58 +547,85 @@ type TrainingJobInfo {
 	GpuMemoryGb               string `json:"gpuMemoryGb,optional"`
 	StorageGb                 string `json:"storageGb,optional"`
 	SharedMemoryGb            string `json:"sharedMemoryGb,optional"`
+	
+	// 分布式训练配置
 	WorkerCount               int64  `json:"workerCount"`
 	PsCount                   int64  `json:"psCount"`
 	MasterCount               int64  `json:"masterCount"`
+	MinAvailable              int64  `json:"minAvailable"`
+	
+	// 环境配置
+	Image                     string `json:"image"`
+	ImagePullPolicy           string `json:"imagePullPolicy"`
+	ImagePullSecrets          string `json:"imagePullSecrets,optional"`
 	EnvVars                   string `json:"envVars,optional"`
 	CommandArgs               string `json:"commandArgs,optional"`
 	Secrets                   string `json:"secrets,optional"`
 	ConfigMaps                string `json:"configMaps,optional"`
 	VolumeMounts              string `json:"volumeMounts,optional"`
+	
+	// 队列和调度
 	QueueName                 string `json:"queueName"`
 	Priority                  int64  `json:"priority"`
+	PriorityClassName         string `json:"priorityClassName,optional"`
 	NodeSelector              string `json:"nodeSelector,optional"`
 	Tolerations               string `json:"tolerations,optional"`
 	Affinity                  string `json:"affinity,optional"`
+	
+	// 策略配置
 	MaxRuntimeSeconds         int64  `json:"maxRuntimeSeconds"`
 	MaxIdleSeconds            int64  `json:"maxIdleSeconds"`
 	AutoRestart               bool   `json:"autoRestart"`
 	MaxRetryCount             int64  `json:"maxRetryCount"`
-	VolcanoJobName            string `json:"volcanoJobName,optional"`
-	VolcanoQueue              string `json:"volcanoQueue,optional"`
-	MinAvailable              int64  `json:"minAvailable"`
+	PreemptionPolicy          string `json:"preemptionPolicy,optional"`
+	
+	// 状态信息
 	Status                    string `json:"status"`
 	Phase                     string `json:"phase"`
+	State                     string `json:"state"` // Pending, Running, Succeeded, Failed, Terminating
+	Reason                    string `json:"reason,optional"`
+	Message                   string `json:"message,optional"`
 	Namespace                 string `json:"namespace,optional"`
 	ClusterName               string `json:"clusterName,optional"`
 	ErrorMessage              string `json:"errorMessage,optional"`
 	ErrorCode                 string `json:"errorCode,optional"`
 	ExitCode                  int64  `json:"exitCode,optional"`
 	FailureReason             string `json:"failureReason,optional"`
+	
+	// 时间信息
 	SubmittedAt               string `json:"submittedAt"`
 	QueuedAt                  string `json:"queuedAt,optional"`
 	ScheduledAt               string `json:"scheduledAt,optional"`
 	StartTime                 string `json:"startTime,optional"`
 	EndTime                   string `json:"endTime,optional"`
 	DurationSeconds           int64  `json:"durationSeconds,optional"`
+	
+	// 资源使用统计
 	ActualCpuUsage            string `json:"actualCpuUsage,optional"`
 	ActualMemoryUsageGb       string `json:"actualMemoryUsageGb,optional"`
 	ActualGpuUsage            string `json:"actualGpuUsage,optional"`
 	PeakMemoryUsageGb         string `json:"peakMemoryUsageGb,optional"`
 	TotalGpuHours             string `json:"totalGpuHours,optional"`
+	
+	// 路径配置
 	WorkspacePath             string `json:"workspacePath,optional"`
 	LogsPath                  string `json:"logsPath,optional"`
 	OutputPath                string `json:"outputPath,optional"`
-	CheckpointPath            string `json:"checkpointPath,optional"`
 	TensorboardPath           string `json:"tensorboardPath,optional"`
+	
+	// 训练配置
 	Hyperparameters           string `json:"hyperparameters,optional"`
 	TrainingConfig            string `json:"trainingConfig,optional"`
 	OptimizerConfig           string `json:"optimizerConfig,optional"`
 	SchedulerConfig           string `json:"schedulerConfig,optional"`
+	
+	// 监控配置
 	EnableTensorboard         bool   `json:"enableTensorboard"`
 	EnableProfiling           bool   `json:"enableProfiling"`
 	MetricsCollectionInterval int64  `json:"metricsCollectionInterval"`
 	NotificationConfig        string `json:"notificationConfig,optional"`
+	
+	// 元数据
 	Tags                      string `json:"tags,optional"`
 	Annotations               string `json:"annotations,optional"`
 	Metadata                  string `json:"metadata,optional"`
@@ -213,62 +633,105 @@ type TrainingJobInfo {
 	UpdatedAt                 string `json:"updatedAt"`
 }
 
+// 增强的创建训练作业请求，支持Volcano特性
 type CreateTrainingJobReq {
-	Name                      string `json:"name"`
-	DisplayName               string `json:"displayName,optional"`
-	Description               string `json:"description,optional"`
-	JobType                   string `json:"jobType,default=single"`
-	Framework                 string `json:"framework"`
-	FrameworkVersion          string `json:"frameworkVersion,optional"`
-	PythonVersion             string `json:"pythonVersion,default=3.8"`
-	CodeSourceType            string `json:"codeSourceType,default=upload"`
-	CodeSourceConfig          string `json:"codeSourceConfig,optional"`
-	EntryPoint                string `json:"entryPoint"`
-	WorkingDir                string `json:"workingDir,default=/workspace"`
-	Image                     string `json:"image"`
-	ImagePullPolicy           string `json:"imagePullPolicy,default=IfNotPresent"`
-	ImagePullSecrets          string `json:"imagePullSecrets,optional"`
-	DatasetMountConfigs       string `json:"datasetMountConfigs,optional"`
-	DataSourceConfig          string `json:"dataSourceConfig,optional"`
-	ModelConfig               string `json:"modelConfig,optional"`
-	OutputModelName           string `json:"outputModelName,optional"`
-	ModelSaveStrategy         string `json:"modelSaveStrategy,default=best"`
-	CpuCores                  string `json:"cpuCores,optional"`
-	MemoryGb                  string `json:"memoryGb,optional"`
-	GpuCount                  int64  `json:"gpuCount,default=0"`
-	GpuType                   string `json:"gpuType,optional"`
-	GpuMemoryGb               string `json:"gpuMemoryGb,optional"`
-	StorageGb                 string `json:"storageGb,optional"`
-	SharedMemoryGb            string `json:"sharedMemoryGb,optional"`
-	WorkerCount               int64  `json:"workerCount,default=1"`
-	PsCount                   int64  `json:"psCount,default=0"`
-	MasterCount               int64  `json:"masterCount,default=1"`
-	EnvVars                   string `json:"envVars,optional"`
-	CommandArgs               string `json:"commandArgs,optional"`
-	Secrets                   string `json:"secrets,optional"`
-	ConfigMaps                string `json:"configMaps,optional"`
-	VolumeMounts              string `json:"volumeMounts,optional"`
-	QueueName                 string `json:"queueName,default=default"`
-	Priority                  int64  `json:"priority,default=0"`
-	NodeSelector              string `json:"nodeSelector,optional"`
-	Tolerations               string `json:"tolerations,optional"`
-	Affinity                  string `json:"affinity,optional"`
-	MaxRuntimeSeconds         int64  `json:"maxRuntimeSeconds,default=86400"`
-	MaxIdleSeconds            int64  `json:"maxIdleSeconds,default=3600"`
-	AutoRestart               bool   `json:"autoRestart,default=false"`
-	MaxRetryCount             int64  `json:"maxRetryCount,default=3"`
-	MinAvailable              int64  `json:"minAvailable,default=1"`
-	Hyperparameters           string `json:"hyperparameters,optional"`
-	TrainingConfig            string `json:"trainingConfig,optional"`
-	OptimizerConfig           string `json:"optimizerConfig,optional"`
-	SchedulerConfig           string `json:"schedulerConfig,optional"`
-	EnableTensorboard         bool   `json:"enableTensorboard,default=true"`
-	EnableProfiling           bool   `json:"enableProfiling,default=false"`
-	MetricsCollectionInterval int64  `json:"metricsCollectionInterval,default=60"`
-	NotificationConfig        string `json:"notificationConfig,optional"`
-	Tags                      string `json:"tags,optional"`
-	Annotations               string `json:"annotations,optional"`
-	Metadata                  string `json:"metadata,optional"`
+	Name                      string         `json:"name"`
+	DisplayName               string         `json:"displayName,optional"`
+	Description               string         `json:"description,optional"`
+	
+	// 作业类型和框架
+	JobType                   string         `json:"jobType,default=pytorch"` // pytorch, tensorflow, mpi, paddle
+	Framework                 string         `json:"framework"`
+	FrameworkVersion          string         `json:"frameworkVersion,optional"`
+	PythonVersion             string         `json:"pythonVersion,default=3.8"`
+	
+	// 代码和数据源
+	CodeSourceType            string         `json:"codeSourceType,default=upload"`
+	CodeSourceConfig          string         `json:"codeSourceConfig,optional"`
+	EntryPoint                string         `json:"entryPoint"`
+	WorkingDir                string         `json:"workingDir,default=/workspace"`
+	DatasetMountConfigs       string         `json:"datasetMountConfigs,optional"`
+	DataSourceConfig          string         `json:"dataSourceConfig,optional"`
+	
+	// 模型配置
+	ModelConfig               string         `json:"modelConfig,optional"`
+	OutputModelName           string         `json:"outputModelName,optional"`
+	ModelSaveStrategy         string         `json:"modelSaveStrategy,default=best"`
+	
+	// Volcano作业规格（简化版，用于创建时指定）
+	VolcanoJobSpec            VolcanoJobSpec `json:"volcanoJobSpec"`
+	
+	// 基础配置（兼容性）
+	Image                     string         `json:"image"`
+	ImagePullPolicy           string         `json:"imagePullPolicy,default=IfNotPresent"`
+	ImagePullSecrets          string         `json:"imagePullSecrets,optional"`
+	CpuCores                  string         `json:"cpuCores,optional"`
+	MemoryGb                  string         `json:"memoryGb,optional"`
+	GpuCount                  int64          `json:"gpuCount,default=0"`
+	GpuType                   string         `json:"gpuType,optional"`
+	GpuMemoryGb               string         `json:"gpuMemoryGb,optional"`
+	StorageGb                 string         `json:"storageGb,optional"`
+	SharedMemoryGb            string         `json:"sharedMemoryGb,optional"`
+	
+	// 分布式训练配置
+	WorkerCount               int64          `json:"workerCount,default=1"`
+	PsCount                   int64          `json:"psCount,default=0"`
+	MasterCount               int64          `json:"masterCount,default=1"`
+	MinAvailable              int64          `json:"minAvailable,default=1"`
+	
+	// 环境配置
+	EnvVars                   string         `json:"envVars,optional"`
+	CommandArgs               string         `json:"commandArgs,optional"`
+	Secrets                   string         `json:"secrets,optional"`
+	ConfigMaps                string         `json:"configMaps,optional"`
+	VolumeMounts              string         `json:"volumeMounts,optional"`
+	
+	// 队列和调度
+	QueueName                 string         `json:"queueName,default=default"`
+	Priority                  int64          `json:"priority,default=0"`
+	PriorityClassName         string         `json:"priorityClassName,optional"`
+	NodeSelector              string         `json:"nodeSelector,optional"`
+	Tolerations               string         `json:"tolerations,optional"`
+	Affinity                  string         `json:"affinity,optional"`
+	
+	// 策略配置
+	MaxRuntimeSeconds         int64          `json:"maxRuntimeSeconds,default=86400"`
+	MaxIdleSeconds            int64          `json:"maxIdleSeconds,default=3600"`
+	AutoRestart               bool           `json:"autoRestart,default=false"`
+	MaxRetryCount             int64          `json:"maxRetryCount,default=3"`
+	PreemptionPolicy          string         `json:"preemptionPolicy,optional"`
+	
+	// 训练配置
+	Hyperparameters           string         `json:"hyperparameters,optional"`
+	TrainingConfig            string         `json:"trainingConfig,optional"`
+	OptimizerConfig           string         `json:"optimizerConfig,optional"`
+	SchedulerConfig           string         `json:"schedulerConfig,optional"`
+	
+	// 监控配置
+	EnableTensorboard         bool           `json:"enableTensorboard,default=true"`
+	EnableProfiling           bool           `json:"enableProfiling,default=false"`
+	MetricsCollectionInterval int64          `json:"metricsCollectionInterval,default=60"`
+	NotificationConfig        string         `json:"notificationConfig,optional"`
+	
+	// 元数据
+	Tags                      string         `json:"tags,optional"`
+	Annotations               string         `json:"annotations,optional"`
+	Metadata                  string         `json:"metadata,optional"`
+}
+
+// 新增的作业扩缩容请求
+type ScaleTrainingJobReq {
+	Id                        int64          `path:"id"`
+	Tasks                     []TaskScaleSpec `json:"tasks" validate:"required"`
+}
+
+type TaskScaleSpec {
+	Name     string `json:"name" validate:"required"`
+	Replicas int32  `json:"replicas" validate:"required"`
+}
+
+type ScaleTrainingJobResp {
+	Message string `json:"message"`
 }
 
 type CreateTrainingJobResp {
@@ -810,5 +1273,167 @@ service TrainingService {
 	@doc "删除作业关联关系"
 	@handler deleteJobRelation
 	delete /relations/:id (DeleteJobRelationReq) returns (EmptyResp)
+
+	// Volcano扩展API
+	@doc "扩缩容训练作业"
+	@handler scaleTrainingJob
+	post /jobs/:id/scale (ScaleTrainingJobReq) returns (ScaleTrainingJobResp)
+
+	@doc "获取作业Volcano状态"
+	@handler getJobVolcanoStatus
+	get /jobs/:id/volcano-status (GetTrainingJobReq) returns (GetJobVolcanoStatusResp)
+
+	@doc "重新调度作业"
+	@handler rescheduleTrainingJob
+	post /jobs/:id/reschedule (GetTrainingJobReq) returns (EmptyResp)
+
+	@doc "获取队列资源使用情况"
+	@handler getQueueResourceUsage
+	get /queues/:id/resources (GetTrainingQueueReq) returns (GetQueueResourceUsageResp)
+
+	@doc "获取集群调度信息"
+	@handler getClusterSchedulingInfo
+	get /scheduling/clusters/:clusterId (GetClusterSchedulingInfoReq) returns (GetClusterSchedulingInfoResp)
+
+	@doc "获取作业调度历史"
+	@handler getJobSchedulingHistory
+	get /jobs/:id/scheduling-history (GetJobSchedulingHistoryReq) returns (GetJobSchedulingHistoryResp)
+}
+
+// 新增的响应类型定义
+type GetJobVolcanoStatusResp {
+	VolcanoJobName   string                 `json:"volcanoJobName"`
+	VolcanoJobUID    string                 `json:"volcanoJobUID"`
+	Phase            string                 `json:"phase"`
+	State            string                 `json:"state"`
+	MinAvailable     int32                  `json:"minAvailable"`
+	Succeeded        int32                  `json:"succeeded"`
+	Failed           int32                  `json:"failed"`
+	Running          int32                  `json:"running"`
+	Pending          int32                  `json:"pending"`
+	TaskStatuses     []VolcanoTaskStatus    `json:"taskStatuses"`
+	Conditions       []VolcanoJobCondition  `json:"conditions"`
+	RetryCount       int32                  `json:"retryCount"`
+	CreationTime     string                 `json:"creationTime"`
+	CompletionTime   string                 `json:"completionTime,optional"`
+	ControlledResources []VolcanoResource   `json:"controlledResources"`
+}
+
+type VolcanoTaskStatus {
+	Name         string                    `json:"name"`
+	Phase        string                    `json:"phase"`
+	Replicas     int32                     `json:"replicas"`
+	Running      int32                     `json:"running"`
+	Succeeded    int32                     `json:"succeeded"`
+	Failed       int32                     `json:"failed"`
+	Pending      int32                     `json:"pending"`
+	MinAvailable *int32                    `json:"minAvailable,optional"`
+}
+
+type VolcanoJobCondition {
+	Type               string `json:"type"`
+	Status             string `json:"status"`
+	LastTransitionTime string `json:"lastTransitionTime"`
+	LastUpdateTime     string `json:"lastUpdateTime"`
+	Reason             string `json:"reason"`
+	Message            string `json:"message"`
+}
+
+type VolcanoResource {
+	APIVersion string `json:"apiVersion"`
+	Kind       string `json:"kind"`
+	Name       string `json:"name"`
+	UID        string `json:"uid"`
+}
+
+type GetQueueResourceUsageResp {
+	QueueName         string            `json:"queueName"`
+	Allocated         map[string]string `json:"allocated"`
+	Used              map[string]string `json:"used"`
+	Pending           map[string]string `json:"pending"`
+	Share             float64           `json:"share"`
+	Weight            int32             `json:"weight"`
+	GuaranteedResource map[string]string `json:"guaranteedResource"`
+	MaxResource       map[string]string `json:"maxResource"`
+	Capacity          map[string]string `json:"capacity"`
+	Inqueue           int32             `json:"inqueue"`
+	Running           int32             `json:"running"`
+}
+
+type GetClusterSchedulingInfoReq {
+	ClusterId int64 `path:"clusterId" validate:"required"`
+}
+
+type GetClusterSchedulingInfoResp {
+	ClusterName       string                      `json:"clusterName"`
+	SchedulerName     string                      `json:"schedulerName"`
+	Queues            []QueueSchedulingInfo       `json:"queues"`
+	Nodes             []NodeSchedulingInfo        `json:"nodes"`
+	TotalResources    map[string]string           `json:"totalResources"`
+	AllocatedResources map[string]string          `json:"allocatedResources"`
+	AvailableResources map[string]string          `json:"availableResources"`
+	PendingJobs       int32                       `json:"pendingJobs"`
+	RunningJobs       int32                       `json:"runningJobs"`
+	SchedulingActions []SchedulingActionInfo      `json:"schedulingActions"`
+}
+
+type QueueSchedulingInfo {
+	Name              string            `json:"name"`
+	Weight            int32             `json:"weight"`
+	Share             float64           `json:"share"`
+	GuaranteedResource map[string]string `json:"guaranteedResource"`
+	AllocatedResource map[string]string `json:"allocatedResource"`
+	PendingJobs       int32             `json:"pendingJobs"`
+	RunningJobs       int32             `json:"runningJobs"`
+}
+
+type NodeSchedulingInfo {
+	Name              string            `json:"name"`
+	Ready             bool              `json:"ready"`
+	Schedulable       bool              `json:"schedulable"`
+	TotalResources    map[string]string `json:"totalResources"`
+	AllocatedResources map[string]string `json:"allocatedResources"`
+	AvailableResources map[string]string `json:"availableResources"`
+	Taints            []string          `json:"taints"`
+	Labels            map[string]string `json:"labels"`
+}
+
+type SchedulingActionInfo {
+	Action        string `json:"action"`
+	JobName       string `json:"jobName"`
+	Queue         string `json:"queue"`
+	TaskName      string `json:"taskName"`
+	NodeName      string `json:"nodeName"`
+	Reason        string `json:"reason"`
+	Timestamp     string `json:"timestamp"`
+	ResourceUsage map[string]string `json:"resourceUsage"`
+}
+
+type GetJobSchedulingHistoryReq {
+	Id       int64  `path:"id"`
+	Page     int    `form:"page,default=1"`
+	PageSize int    `form:"pageSize,default=20"`
+	Action   string `form:"action,optional"`
+}
+
+type GetJobSchedulingHistoryResp {
+	Total   int64                    `json:"total"`
+	History []JobSchedulingHistory   `json:"history"`
+}
+
+type JobSchedulingHistory {
+	Id            int64             `json:"id"`
+	JobId         int64             `json:"jobId"`
+	JobName       string            `json:"jobName"`
+	Action        string            `json:"action"` // scheduled, preempted, rescheduled, failed
+	Reason        string            `json:"reason"`
+	Message       string            `json:"message"`
+	PreviousNode  string            `json:"previousNode,optional"`
+	CurrentNode   string            `json:"currentNode,optional"`
+	ResourceUsage map[string]string `json:"resourceUsage,optional"`
+	Queue         string            `json:"queue"`
+	Priority      int64             `json:"priority"`
+	Timestamp     string            `json:"timestamp"`
+	Duration      int64             `json:"duration,optional"`
 }
 

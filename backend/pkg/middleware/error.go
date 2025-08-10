@@ -10,27 +10,25 @@ import (
 )
 
 // ErrorHandlerMiddleware 统一错误处理中间件
-func ErrorHandlerMiddleware() func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			// 使用recover捕获panic
-			defer func() {
-				if err := recover(); err != nil {
-					log.Printf("Panic recovered: %v", err)
+func ErrorHandlerMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// 使用recover捕获panic
+		defer func() {
+			if err := recover(); err != nil {
+				log.Printf("Panic recovered: %v", err)
 
-					// 记录panic详细信息
-					log.Printf("Request: %s %s", r.Method, r.URL.Path)
-					log.Printf("Remote Addr: %s", r.RemoteAddr)
-					log.Printf("User Agent: %s", r.UserAgent())
+				// 记录panic详细信息
+				log.Printf("Request: %s %s", r.Method, r.URL.Path)
+				log.Printf("Remote Addr: %s", r.RemoteAddr)
+				log.Printf("User Agent: %s", r.UserAgent())
 
-					// 返回500错误
-					response.InternalServerError(w, "服务器内部错误")
-				}
-			}()
+				// 返回500错误
+				response.InternalServerError(w, "服务器内部错误")
+			}
+		}()
 
-			// 继续处理请求
-			next.ServeHTTP(w, r)
-		})
+		// 继续处理请求
+		next(w, r)
 	}
 }
 
@@ -64,39 +62,41 @@ func (w *ErrorResponseWriter) Write(data []byte) (int, error) {
 }
 
 // RequestLogMiddleware 请求日志中间件
-func RequestLogMiddleware() func(next http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-			start := time.Now()
+func RequestLogMiddleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
 
-			// 包装ResponseWriter以获取状态码
-			wrappedWriter := NewErrorResponseWriter(w)
+		// 包装ResponseWriter以获取状态码
+		wrappedWriter := NewErrorResponseWriter(w)
 
-			// 生成请求ID
-			requestID := generateRequestID()
+		// 生成请求ID
+		requestID := generateRequestID()
 
-			// 将请求ID添加到响应头
-			wrappedWriter.Header().Set("X-Request-ID", requestID)
+		// 将请求ID添加到响应头
+		wrappedWriter.Header().Set("X-Request-ID", requestID)
 
-			// 记录请求开始
-			log.Printf("[%s] %s %s - Start", requestID, r.Method, r.URL.Path)
+		// 将请求ID写入上下文
+		ctx := WithValue(r.Context(), CtxKeyRequestID, requestID)
+		r = r.WithContext(ctx)
 
-			// 处理请求
-			next.ServeHTTP(wrappedWriter, r)
+		// 记录请求开始
+		log.Printf("[%s] %s %s - Start", requestID, r.Method, r.URL.Path)
 
-			// 计算处理时间
-			duration := time.Since(start)
+		// 处理请求
+		next(wrappedWriter, r)
 
-			// 记录请求结束
-			log.Printf("[%s] %s %s - %d - %v",
-				requestID, r.Method, r.URL.Path, wrappedWriter.statusCode, duration)
+		// 计算处理时间
+		duration := time.Since(start)
 
-			// 如果是错误状态码，记录更多信息
-			if wrappedWriter.statusCode >= 400 {
-				log.Printf("[%s] Error Response - Status: %d, RemoteAddr: %s, UserAgent: %s",
-					requestID, wrappedWriter.statusCode, r.RemoteAddr, r.UserAgent())
-			}
-		})
+		// 记录请求结束
+		log.Printf("[%s] %s %s - %d - %v",
+			requestID, r.Method, r.URL.Path, wrappedWriter.statusCode, duration)
+
+		// 如果是错误状态码，记录更多信息
+		if wrappedWriter.statusCode >= 400 {
+			log.Printf("[%s] Error Response - Status: %d, RemoteAddr: %s, UserAgent: %s",
+				requestID, wrappedWriter.statusCode, r.RemoteAddr, r.UserAgent())
+		}
 	}
 }
 

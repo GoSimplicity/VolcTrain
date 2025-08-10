@@ -8,15 +8,16 @@ import (
 	"api/model"
 	"api/pkg/auth"
 	"api/pkg/database"
+
 	"github.com/redis/go-redis/v9"
 )
 
 type ServiceContext struct {
-	Config      config.Config
-	DB          *sql.DB
-	DBManager   *database.MySQLManager
-	Redis       *redis.Client
-	Cache       *database.RedisCache
+	Config    config.Config
+	DB        *sql.DB
+	DBManager *database.MySQLManager
+	Redis     *redis.Client
+	Cache     *database.RedisCache
 
 	// 认证相关服务
 	JWTService     *auth.JWTService
@@ -37,11 +38,11 @@ type ServiceContext struct {
 	VtGpuDevicesModel  model.VtGpuDevicesModel
 
 	// 监控相关模型
-	VtMonitorDataModel         model.VtMonitorDataModel
-	VtMonitorMetricsModel      model.VtMonitorMetricsModel
-	VtAlertRecordsModel        model.VtAlertRecordsModel
-	VtAlertRulesModel          model.VtAlertRulesModel
-	VtNotificationChannelsModel model.VtNotificationChannelsModel
+	VtMonitorDataModel           model.VtMonitorDataModel
+	VtMonitorMetricsModel        model.VtMonitorMetricsModel
+	VtAlertRecordsModel          model.VtAlertRecordsModel
+	VtAlertRulesModel            model.VtAlertRulesModel
+	VtNotificationChannelsModel  model.VtNotificationChannelsModel
 	VtNotificationTemplatesModel model.VtNotificationTemplatesModel
 }
 
@@ -73,8 +74,8 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		tokenBlacklist = auth.NewRedisTokenBlacklist(rdb)
 	}
 
-	// 初始化JWT服务
-	jwtService := auth.NewJWTService(c.Auth.AccessSecret, c.Auth.RefreshSecret)
+	// 初始化JWT服务（go-zero 项目下本仓库提供的实现需要 4 个参数）
+	jwtService := auth.NewJWTService(c.Auth.AccessSecret, c.Auth.RefreshSecret, c.Auth.AccessExpire, c.Auth.RefreshExpire)
 
 	return &ServiceContext{
 		Config:         c,

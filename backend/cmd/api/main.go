@@ -22,7 +22,7 @@ func getConfigFile() string {
 	if *configFile != "" {
 		return *configFile
 	}
-	
+
 	// 根据 DEPLOY_ENV 环境变量决定配置文件
 	deployEnv := os.Getenv("DEPLOY_ENV")
 	switch deployEnv {
@@ -40,6 +40,8 @@ func main() {
 	var c config.Config
 	conf.MustLoad(configPath, &c)
 
+	// 可在此加入 go-zero CORS 选项
+	// 例如: rest.WithCors()
 	server := rest.MustNewServer(c.RestConf)
 	defer server.Stop()
 

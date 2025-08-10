@@ -29,6 +29,8 @@ func NewJWTAuthMiddleware(jwtService *auth.JWTService, redisBlacklist *auth.Redi
 			"/health",
 			"/ready",
 			"/metrics",
+			"/swagger",
+			"/docs",
 		},
 	}
 }
@@ -39,12 +41,12 @@ func (j *JWTAuthMiddleware) AddSkipPath(path string) {
 }
 
 // Handler 中间件处理函数
-func (j *JWTAuthMiddleware) Handler() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (j *JWTAuthMiddleware) Handler() func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
 			// 检查是否需要跳过认证
 			if j.shouldSkip(r.URL.Path) {
-				next.ServeHTTP(w, r)
+				next(w, r)
 				return
 			}
 
@@ -75,16 +77,17 @@ func (j *JWTAuthMiddleware) Handler() func(http.Handler) http.Handler {
 			}
 
 			// 将用户信息添加到请求上下文
-			ctx := context.WithValue(r.Context(), "user", claims)
-			ctx = context.WithValue(ctx, "userID", claims.UserID)
-			ctx = context.WithValue(ctx, "username", claims.Username)
-			ctx = context.WithValue(ctx, "roles", claims.Roles)
-			ctx = context.WithValue(ctx, "permissions", claims.Permissions)
-			ctx = context.WithValue(ctx, "token", tokenString) // 添加token到上下文，用于登出
+			// 类型化上下文键注入
+			ctx := WithValue(r.Context(), CtxKeyUser, claims)
+			ctx = WithValue(ctx, CtxKeyUserID, claims.UserID)
+			ctx = WithValue(ctx, CtxKeyUsername, claims.Username)
+			ctx = WithValue(ctx, CtxKeyRoles, claims.Roles)
+			ctx = WithValue(ctx, CtxKeyPerms, claims.Permissions)
+			ctx = WithValue(ctx, CtxKeyToken, tokenString)
 
 			// 继续处理请求
-			next.ServeHTTP(w, r.WithContext(ctx))
-		})
+			next(w, r.WithContext(ctx))
+		}
 	}
 }
 
@@ -128,7 +131,7 @@ func (j *JWTAuthMiddleware) extractToken(r *http.Request) string {
 
 // GetUserFromContext 从上下文获取用户信息
 func GetUserFromContext(ctx context.Context) *auth.JWTClaims {
-	user, ok := ctx.Value("user").(*auth.JWTClaims)
+	user, ok := Value[*auth.JWTClaims](ctx, CtxKeyUser)
 	if !ok {
 		return nil
 	}
@@ -137,7 +140,7 @@ func GetUserFromContext(ctx context.Context) *auth.JWTClaims {
 
 // GetUserIDFromContext 从上下文获取用户ID
 func GetUserIDFromContext(ctx context.Context) int64 {
-	userID, ok := ctx.Value("userID").(int64)
+	userID, ok := Value[int64](ctx, CtxKeyUserID)
 	if !ok {
 		return 0
 	}
@@ -146,7 +149,7 @@ func GetUserIDFromContext(ctx context.Context) int64 {
 
 // GetUsernameFromContext 从上下文获取用户名
 func GetUsernameFromContext(ctx context.Context) string {
-	username, ok := ctx.Value("username").(string)
+	username, ok := Value[string](ctx, CtxKeyUsername)
 	if !ok {
 		return ""
 	}
@@ -155,7 +158,7 @@ func GetUsernameFromContext(ctx context.Context) string {
 
 // GetRolesFromContext 从上下文获取角色列表
 func GetRolesFromContext(ctx context.Context) []string {
-	roles, ok := ctx.Value("roles").([]string)
+	roles, ok := Value[[]string](ctx, CtxKeyRoles)
 	if !ok {
 		return []string{}
 	}
@@ -164,7 +167,7 @@ func GetRolesFromContext(ctx context.Context) []string {
 
 // GetPermissionsFromContext 从上下文获取权限列表
 func GetPermissionsFromContext(ctx context.Context) []string {
-	permissions, ok := ctx.Value("permissions").([]string)
+	permissions, ok := Value[[]string](ctx, CtxKeyPerms)
 	if !ok {
 		return []string{}
 	}
@@ -172,9 +175,9 @@ func GetPermissionsFromContext(ctx context.Context) []string {
 }
 
 // RequirePermission 权限检查中间件
-func RequirePermission(permission string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func RequirePermission(permission string) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
 			permissions := GetPermissionsFromContext(r.Context())
 
 			// 检查是否有所需权限
@@ -183,15 +186,15 @@ func RequirePermission(permission string) func(http.Handler) http.Handler {
 				return
 			}
 
-			next.ServeHTTP(w, r)
-		})
+			next(w, r)
+		}
 	}
 }
 
 // RequireRole 角色检查中间件
-func RequireRole(role string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func RequireRole(role string) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
 			roles := GetRolesFromContext(r.Context())
 
 			// 检查是否有所需角色
@@ -200,15 +203,15 @@ func RequireRole(role string) func(http.Handler) http.Handler {
 				return
 			}
 
-			next.ServeHTTP(w, r)
-		})
+			next(w, r)
+		}
 	}
 }
 
 // RequireAnyPermission 任一权限检查中间件
-func RequireAnyPermission(permissions ...string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func RequireAnyPermission(permissions ...string) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
 			userPermissions := GetPermissionsFromContext(r.Context())
 
 			// 检查是否有任一所需权限
@@ -225,15 +228,15 @@ func RequireAnyPermission(permissions ...string) func(http.Handler) http.Handler
 				return
 			}
 
-			next.ServeHTTP(w, r)
-		})
+			next(w, r)
+		}
 	}
 }
 
 // RequireAnyRole 任一角色检查中间件
-func RequireAnyRole(roles ...string) func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func RequireAnyRole(roles ...string) func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
 			userRoles := GetRolesFromContext(r.Context())
 
 			// 检查是否有任一所需角色
@@ -250,8 +253,8 @@ func RequireAnyRole(roles ...string) func(http.Handler) http.Handler {
 				return
 			}
 
-			next.ServeHTTP(w, r)
-		})
+			next(w, r)
+		}
 	}
 }
 
@@ -276,9 +279,9 @@ func containsRole(roles []string, role string) bool {
 }
 
 // OptionalAuth 可选认证中间件（不强制要求认证，但如果有Token会解析）
-func (j *JWTAuthMiddleware) OptionalAuth() func(http.Handler) http.Handler {
-	return func(next http.Handler) http.Handler {
-		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+func (j *JWTAuthMiddleware) OptionalAuth() func(http.HandlerFunc) http.HandlerFunc {
+	return func(next http.HandlerFunc) http.HandlerFunc {
+		return func(w http.ResponseWriter, r *http.Request) {
 			// 尝试获取Token
 			tokenString := j.extractToken(r)
 			if tokenString != "" {
@@ -292,26 +295,26 @@ func (j *JWTAuthMiddleware) OptionalAuth() func(http.Handler) http.Handler {
 							log.Printf("检查Token黑名单失败: %v", err)
 						} else if !isBlacklisted {
 							// 将用户信息添加到上下文
-							ctx := context.WithValue(r.Context(), "user", claims)
-							ctx = context.WithValue(ctx, "userID", claims.UserID)
-							ctx = context.WithValue(ctx, "username", claims.Username)
-							ctx = context.WithValue(ctx, "roles", claims.Roles)
-							ctx = context.WithValue(ctx, "permissions", claims.Permissions)
+							ctx := WithValue(r.Context(), CtxKeyUser, claims)
+							ctx = WithValue(ctx, CtxKeyUserID, claims.UserID)
+							ctx = WithValue(ctx, CtxKeyUsername, claims.Username)
+							ctx = WithValue(ctx, CtxKeyRoles, claims.Roles)
+							ctx = WithValue(ctx, CtxKeyPerms, claims.Permissions)
 							r = r.WithContext(ctx)
 						}
 					} else {
 						// 没有Redis黑名单服务，直接将用户信息添加到上下文
-						ctx := context.WithValue(r.Context(), "user", claims)
-						ctx = context.WithValue(ctx, "userID", claims.UserID)
-						ctx = context.WithValue(ctx, "username", claims.Username)
-						ctx = context.WithValue(ctx, "roles", claims.Roles)
-						ctx = context.WithValue(ctx, "permissions", claims.Permissions)
+						ctx := WithValue(r.Context(), CtxKeyUser, claims)
+						ctx = WithValue(ctx, CtxKeyUserID, claims.UserID)
+						ctx = WithValue(ctx, CtxKeyUsername, claims.Username)
+						ctx = WithValue(ctx, CtxKeyRoles, claims.Roles)
+						ctx = WithValue(ctx, CtxKeyPerms, claims.Permissions)
 						r = r.WithContext(ctx)
 					}
 				}
 			}
 
-			next.ServeHTTP(w, r)
-		})
+			next(w, r)
+		}
 	}
 }

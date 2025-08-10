@@ -3,10 +3,8 @@ module api
 go 1.23.6
 
 require (
-	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/go-sql-driver/mysql v1.9.0
 	github.com/golang-jwt/jwt/v4 v4.5.2
-	github.com/golang/mock v1.6.0
 	github.com/redis/go-redis/v9 v9.10.0
 	// 测试依赖
 	github.com/stretchr/testify v1.10.0
@@ -15,12 +13,11 @@ require (
 	k8s.io/api v0.31.4
 	k8s.io/apimachinery v0.31.4
 	k8s.io/client-go v0.31.4
+	// Volcano相关依赖
+	volcano.sh/apis v1.8.2
 )
 
-require (
-	github.com/prometheus/client_golang v1.21.1
-	go.uber.org/mock v0.5.2
-)
+require github.com/prometheus/client_golang v1.21.1
 
 require (
 	filippo.io/edwards25519 v1.1.0 // indirect
@@ -64,7 +61,6 @@ require (
 	github.com/prometheus/procfs v0.15.1 // indirect
 	github.com/spaolacci/murmur3 v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	github.com/stretchr/objx v0.5.2 // indirect
 	github.com/x448/float16 v0.8.4 // indirect
 	go.opentelemetry.io/otel v1.29.0 // indirect
 	go.opentelemetry.io/otel/exporters/jaeger v1.17.0 // indirect

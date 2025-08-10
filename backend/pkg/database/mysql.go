@@ -5,9 +5,11 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"net/url"
 	"time"
 
 	"api/internal/config"
+
 	_ "github.com/go-sql-driver/mysql"
 )
 
@@ -20,8 +22,10 @@ type MySQLManager struct {
 // NewMySQLConnection 创建MySQL数据库连接
 func NewMySQLConnection(c config.MySQLConfig) (*sql.DB, error) {
 	// 构建DSN连接字符串，添加更多配置参数优化连接
+	// loc 需要进行 URL 转义，例如 Asia/Shanghai => Asia%2FShanghai
+	escapedLoc := url.QueryEscape(c.Loc)
 	dsn := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=%t&loc=%s&timeout=30s&readTimeout=30s&writeTimeout=30s&interpolateParams=true",
-		c.User, c.Password, c.Host, c.Port, c.DBName, c.Charset, c.ParseTime, c.Loc)
+		c.User, c.Password, c.Host, c.Port, c.DBName, c.Charset, c.ParseTime, escapedLoc)
 
 	// 创建数据库连接
 	db, err := sql.Open("mysql", dsn)
@@ -97,8 +101,9 @@ func (m *MySQLManager) HealthCheck(ctx context.Context) error {
 
 // GetDSN 获取MySQL连接DSN字符串
 func GetDSN(c config.MySQLConfig) string {
+	escapedLoc := url.QueryEscape(c.Loc)
 	return fmt.Sprintf("%s:%s@tcp(%s:%d)/%s?charset=%s&parseTime=%t&loc=%s",
-		c.User, c.Password, c.Host, c.Port, c.DBName, c.Charset, c.ParseTime, c.Loc)
+		c.User, c.Password, c.Host, c.Port, c.DBName, c.Charset, c.ParseTime, escapedLoc)
 }
 
 // DBTransaction 数据库事务封装
