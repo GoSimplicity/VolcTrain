@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"strings"
 
@@ -11,19 +12,19 @@ import (
 
 // JWTAuthMiddleware JWT认证中间件
 type JWTAuthMiddleware struct {
-	jwtService *auth.JWTService
-	blacklist  *auth.TokenBlacklist
-	skipPaths  []string // 跳过认证的路径
+	jwtService     *auth.JWTService
+	redisBlacklist *auth.RedisTokenBlacklist
+	skipPaths      []string // 跳过认证的路径
 }
 
 // NewJWTAuthMiddleware 创建JWT认证中间件
-func NewJWTAuthMiddleware(jwtService *auth.JWTService, blacklist *auth.TokenBlacklist) *JWTAuthMiddleware {
+func NewJWTAuthMiddleware(jwtService *auth.JWTService, redisBlacklist *auth.RedisTokenBlacklist) *JWTAuthMiddleware {
 	return &JWTAuthMiddleware{
-		jwtService: jwtService,
-		blacklist:  blacklist,
+		jwtService:     jwtService,
+		redisBlacklist: redisBlacklist,
 		skipPaths: []string{
-			"/api/v1/users/login",
-			"/api/v1/users/register",
+			"/api/v1/auth/login",
+			"/api/v1/auth/refresh",
 			"/api/v1/health",
 			"/health",
 			"/ready",
@@ -54,10 +55,16 @@ func (j *JWTAuthMiddleware) Handler() func(http.Handler) http.Handler {
 				return
 			}
 
-			// 检查Token是否在黑名单中
-			if j.blacklist != nil && j.blacklist.IsBlacklisted(tokenString) {
-				response.Unauthorized(w, "Token已失效")
-				return
+			// 检查Token是否在Redis黑名单中
+			if j.redisBlacklist != nil {
+				isBlacklisted, err := j.redisBlacklist.IsBlacklisted(r.Context(), tokenString)
+				if err != nil {
+					// Redis错误不影响认证流程，只记录日志
+					log.Printf("检查Token黑名单失败: %v", err)
+				} else if isBlacklisted {
+					response.Unauthorized(w, "Token已失效")
+					return
+				}
 			}
 
 			// 解析和验证Token
@@ -73,6 +80,7 @@ func (j *JWTAuthMiddleware) Handler() func(http.Handler) http.Handler {
 			ctx = context.WithValue(ctx, "username", claims.Username)
 			ctx = context.WithValue(ctx, "roles", claims.Roles)
 			ctx = context.WithValue(ctx, "permissions", claims.Permissions)
+			ctx = context.WithValue(ctx, "token", tokenString) // 添加token到上下文，用于登出
 
 			// 继续处理请求
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -276,9 +284,23 @@ func (j *JWTAuthMiddleware) OptionalAuth() func(http.Handler) http.Handler {
 			if tokenString != "" {
 				// 如果有Token，尝试解析
 				if claims, err := j.jwtService.ParseAccessToken(tokenString); err == nil {
-					// 检查Token是否在黑名单中
-					if j.blacklist == nil || !j.blacklist.IsBlacklisted(tokenString) {
-						// 将用户信息添加到上下文
+					// 检查Token是否在Redis黑名单中
+					if j.redisBlacklist != nil {
+						isBlacklisted, err := j.redisBlacklist.IsBlacklisted(r.Context(), tokenString)
+						if err != nil {
+							// Redis错误不影响认证流程，只记录日志
+							log.Printf("检查Token黑名单失败: %v", err)
+						} else if !isBlacklisted {
+							// 将用户信息添加到上下文
+							ctx := context.WithValue(r.Context(), "user", claims)
+							ctx = context.WithValue(ctx, "userID", claims.UserID)
+							ctx = context.WithValue(ctx, "username", claims.Username)
+							ctx = context.WithValue(ctx, "roles", claims.Roles)
+							ctx = context.WithValue(ctx, "permissions", claims.Permissions)
+							r = r.WithContext(ctx)
+						}
+					} else {
+						// 没有Redis黑名单服务，直接将用户信息添加到上下文
 						ctx := context.WithValue(r.Context(), "user", claims)
 						ctx = context.WithValue(ctx, "userID", claims.UserID)
 						ctx = context.WithValue(ctx, "username", claims.Username)

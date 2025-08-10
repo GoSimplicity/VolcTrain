@@ -3,12 +3,16 @@ package logic
 import (
 	"context"
 	"encoding/json"
+	"fmt"
+	"strings"
 	"time"
 
 	"api/internal/svc"
 	"api/internal/types"
+	"api/model"
 	"api/pkg/auth"
 	"api/pkg/errors"
+	"api/pkg/validation"
 
 	"github.com/zeromicro/go-zero/core/logx"
 )
@@ -27,7 +31,73 @@ func NewLoginLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LoginLogic 
 	}
 }
 
+// validateJWTSecret 验证JWT密钥长度和复杂度
+func (l *LoginLogic) validateJWTSecret(secret, secretType string) error {
+	if len(secret) < 32 {
+		l.Errorf("%s密钥长度不足，至少需要32个字符，当前长度: %d", secretType, len(secret))
+		return errors.NewInternalError(fmt.Sprintf("%s密钥长度不足", secretType))
+	}
+	
+	// 检查密钥复杂度
+	hasUpper := false
+	hasLower := false
+	hasDigit := false
+	hasSpecial := false
+	
+	for _, char := range secret {
+		switch {
+		case char >= 'A' && char <= 'Z':
+			hasUpper = true
+		case char >= 'a' && char <= 'z':
+			hasLower = true
+		case char >= '0' && char <= '9':
+			hasDigit = true
+		case char >= '!' && char <= '/' || char >= ':' && char <= '@' || char >= '[' && char <= '`' || char >= '{' && char <= '~':
+			hasSpecial = true
+		}
+	}
+	
+	// 至少包含三种字符类型
+	complexityCount := 0
+	if hasUpper {
+		complexityCount++
+	}
+	if hasLower {
+		complexityCount++
+	}
+	if hasDigit {
+		complexityCount++
+	}
+	if hasSpecial {
+		complexityCount++
+	}
+	
+	if complexityCount < 3 {
+		l.Errorf("%s密钥复杂度不足，至少需要包含三种字符类型（大写字母、小写字母、数字、特殊字符）", secretType)
+		return errors.NewInternalError(fmt.Sprintf("%s密钥复杂度不足", secretType))
+	}
+	
+	return nil
+}
+
 func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, err error) {
+	// 输入验证
+	vr := validation.NewValidationResult()
+	
+	// 验证用户名
+	vr.ValidateUsername(req.Username, "用户名")
+	
+	// 验证密码
+	vr.ValidatePassword(req.Password, "密码")
+	
+	// 验证防止SQL注入
+	vr.ValidateNoSQLInjection(req.Username, "用户名")
+	vr.ValidateNoSQLInjection(req.Password, "密码")
+	
+	if !vr.IsValid {
+		return nil, errors.NewValidationError(strings.Join(vr.Errors, "; "))
+	}
+
 	// 查找用户
 	user, err := l.svcCtx.VtUsersModel.FindByUsername(l.ctx, req.Username)
 	if err != nil {
@@ -44,13 +114,22 @@ func (l *LoginLogic) Login(req *types.LoginReq) (resp *types.LoginResp, err erro
 		return nil, errors.ErrUserDisabled
 	}
 
+	// 验证JWT密钥长度和复杂度
+	if err := l.validateJWTSecret(l.svcCtx.Config.Auth.AccessSecret, "访问令牌"); err != nil {
+		return nil, err
+	}
+	if err := l.validateJWTSecret(l.svcCtx.Config.Auth.RefreshSecret, "刷新令牌"); err != nil {
+		return nil, err
+	}
+
 	// 生成JWT token
 	accessToken, err := auth.GenerateToken(user.Id, l.svcCtx.Config.Auth.AccessSecret, l.svcCtx.Config.Auth.AccessExpire)
 	if err != nil {
 		return nil, errors.NewInternalError("生成访问令牌失败")
 	}
 
-	refreshToken, err := auth.GenerateToken(user.Id, l.svcCtx.Config.Auth.AccessSecret, l.svcCtx.Config.Auth.RefreshExpire)
+	// 生成刷新令牌
+	refreshToken, err := auth.GenerateToken(user.Id, l.svcCtx.Config.Auth.RefreshSecret, l.svcCtx.Config.Auth.RefreshExpire)
 	if err != nil {
 		return nil, errors.NewInternalError("生成刷新令牌失败")
 	}
@@ -98,9 +177,66 @@ func NewRefreshTokenLogic(ctx context.Context, svcCtx *svc.ServiceContext) *Refr
 	}
 }
 
+// validateJWTSecret 验证JWT密钥长度和复杂度
+func (l *RefreshTokenLogic) validateJWTSecret(secret, secretType string) error {
+	if len(secret) < 32 {
+		l.Errorf("%s密钥长度不足，至少需要32个字符，当前长度: %d", secretType, len(secret))
+		return errors.NewInternalError(fmt.Sprintf("%s密钥长度不足", secretType))
+	}
+	
+	// 检查密钥复杂度
+	hasUpper := false
+	hasLower := false
+	hasDigit := false
+	hasSpecial := false
+	
+	for _, char := range secret {
+		switch {
+		case char >= 'A' && char <= 'Z':
+			hasUpper = true
+		case char >= 'a' && char <= 'z':
+			hasLower = true
+		case char >= '0' && char <= '9':
+			hasDigit = true
+		case char >= '!' && char <= '/' || char >= ':' && char <= '@' || char >= '[' && char <= '`' || char >= '{' && char <= '~':
+			hasSpecial = true
+		}
+	}
+	
+	// 至少包含三种字符类型
+	complexityCount := 0
+	if hasUpper {
+		complexityCount++
+	}
+	if hasLower {
+		complexityCount++
+	}
+	if hasDigit {
+		complexityCount++
+	}
+	if hasSpecial {
+		complexityCount++
+	}
+	
+	if complexityCount < 3 {
+		l.Errorf("%s密钥复杂度不足，至少需要包含三种字符类型（大写字母、小写字母、数字、特殊字符）", secretType)
+		return errors.NewInternalError(fmt.Sprintf("%s密钥复杂度不足", secretType))
+	}
+	
+	return nil
+}
+
 func (l *RefreshTokenLogic) RefreshToken(req *types.RefreshTokenReq) (resp *types.RefreshTokenResp, err error) {
-	// 验证刷新令牌
-	userID, err := auth.ValidateToken(req.RefreshToken, l.svcCtx.Config.Auth.AccessSecret)
+	// 验证JWT密钥长度和复杂度
+	if err := l.validateJWTSecret(l.svcCtx.Config.Auth.AccessSecret, "访问令牌"); err != nil {
+		return nil, err
+	}
+	if err := l.validateJWTSecret(l.svcCtx.Config.Auth.RefreshSecret, "刷新令牌"); err != nil {
+		return nil, err
+	}
+	
+	// 使用刷新令牌密钥验证刷新令牌
+	userID, err := auth.ValidateToken(req.RefreshToken, l.svcCtx.Config.Auth.RefreshSecret)
 	if err != nil {
 		return nil, errors.ErrInvalidToken
 	}
@@ -116,16 +252,13 @@ func (l *RefreshTokenLogic) RefreshToken(req *types.RefreshTokenReq) (resp *type
 		return nil, errors.ErrUserDisabled
 	}
 
-	// TODO: 应该验证refresh token而不是access token
-	// 这里存在安全漏洞：刷新令牌和访问令牌使用相同的密钥
-	
-	// 生成新的token
+	// 生成新的token对（使用各自的密钥）
 	accessToken, err := auth.GenerateToken(userID, l.svcCtx.Config.Auth.AccessSecret, l.svcCtx.Config.Auth.AccessExpire)
 	if err != nil {
 		return nil, errors.NewInternalError("生成访问令牌失败")
 	}
 
-	refreshToken, err := auth.GenerateToken(userID, l.svcCtx.Config.Auth.AccessSecret, l.svcCtx.Config.Auth.RefreshExpire)
+	refreshToken, err := auth.GenerateToken(userID, l.svcCtx.Config.Auth.RefreshSecret, l.svcCtx.Config.Auth.RefreshExpire)
 	if err != nil {
 		return nil, errors.NewInternalError("生成刷新令牌失败")
 	}
@@ -155,10 +288,13 @@ func NewLogoutLogic(ctx context.Context, svcCtx *svc.ServiceContext) *LogoutLogi
 }
 
 func (l *LogoutLogic) Logout(req *types.LogoutReq) (resp *types.LogoutResp, err error) {
-	// 从请求头获取token
-	// TODO: 从上下文或请求头获取当前用户的token
-	// 这里需要配合中间件来实现token黑名单功能
-	
+	// 从Authorization头获取token
+	tokenString := l.extractTokenFromRequest()
+	if tokenString == "" {
+		l.Errorf("登出请求中未找到Token")
+		return &types.LogoutResp{Message: "登出成功"}, nil
+	}
+
 	// 获取用户信息（用于日志记录）
 	userIDValue := l.ctx.Value("userId")
 	if userIDValue != nil {
@@ -166,20 +302,100 @@ func (l *LogoutLogic) Logout(req *types.LogoutReq) (resp *types.LogoutResp, err 
 	} else {
 		l.Info("匿名用户登出")
 	}
-	
-	// TODO: 将token添加到Redis黑名单中
-	// if l.svcCtx.Redis != nil {
-	//     // 将当前token添加到黑名单
-	//     tokenString := getTokenFromContext(l.ctx)
-	//     if tokenString != "" {
-	//         expiration := getTokenExpiration(tokenString)
-	//         l.svcCtx.Redis.Set(l.ctx, "blacklist:"+tokenString, "1", expiration)
-	//     }
-	// }
+
+	// 将token添加到Redis黑名单中
+	if l.svcCtx.Redis != nil {
+		// 创建token黑名单服务
+		blacklist := auth.NewRedisTokenBlacklist(l.svcCtx.Redis)
+		
+		// 解析token获取过期时间
+		_, err := auth.ValidateToken(tokenString, l.svcCtx.Config.Auth.AccessSecret)
+		if err == nil {
+			// 如果是有效的访问token，将其加入黑名单直到过期
+			expireAt := time.Now().Add(time.Duration(l.svcCtx.Config.Auth.AccessExpire) * time.Second)
+			err = blacklist.AddToken(l.ctx, tokenString, expireAt)
+			if err != nil {
+				l.Errorf("将Token加入黑名单失败: %v", err)
+			} else {
+				l.Info("Token已加入黑名单")
+			}
+		} else {
+			// 尝试解析为刷新token
+			if l.svcCtx.Config.Auth.RefreshSecret != "" {
+				_, err := auth.ValidateToken(tokenString, l.svcCtx.Config.Auth.RefreshSecret)
+				if err == nil {
+					// 如果是有效的刷新token，将其加入黑名单直到过期
+					expireAt := time.Now().Add(time.Duration(l.svcCtx.Config.Auth.RefreshExpire) * time.Second)
+					err = blacklist.AddToken(l.ctx, tokenString, expireAt)
+					if err != nil {
+						l.Errorf("将刷新Token加入黑名单失败: %v", err)
+					} else {
+						l.Info("刷新Token已加入黑名单")
+					}
+				}
+			}
+		}
+	} else {
+		l.Errorf("Redis未连接，无法将Token加入黑名单")
+	}
 	
 	return &types.LogoutResp{
 		Message: "登出成功",
 	}, nil
+}
+
+// getUserPermissions 获取用户权限列表
+func (l *GetAccessCodesLogic) getUserPermissions(user *model.VtUsersSimple) []string {
+	// 基础权限
+	basePermissions := []string{
+		"training:job:read",
+		"user:profile:read",
+	}
+	
+	// 根据用户类型添加权限
+	switch user.UserType {
+	case "admin":
+		// 管理员拥有所有权限
+		return []string{"*"}
+	case "user":
+		// 普通用户权限
+		userPermissions := []string{
+			"training:job:create",
+			"training:job:update",
+			"training:job:cancel",
+			"training:queue:read",
+			"gpu:device:read",
+			"model:read",
+			"dataset:read",
+			"workspace:read",
+		}
+		return append(basePermissions, userPermissions...)
+	case "service":
+		// 服务账户权限
+		servicePermissions := []string{
+			"training:job:read",
+			"training:job:update:status",
+			"gpu:device:read",
+			"monitoring:read",
+		}
+		return append(basePermissions, servicePermissions...)
+	default:
+		// 未知用户类型，只给基础权限
+		return basePermissions
+	}
+}
+
+// extractTokenFromRequest 从请求中提取token
+func (l *LogoutLogic) extractTokenFromRequest() string {
+	// 从中间件注入的上下文中获取token
+	tokenValue := l.ctx.Value("token")
+	if tokenValue != nil {
+		if token, ok := tokenValue.(string); ok {
+			return token
+		}
+	}
+	
+	return ""
 }
 
 type GetAccessCodesLogic struct {
@@ -219,23 +435,8 @@ func (l *GetAccessCodesLogic) GetAccessCodes(req *types.EmptyReq) (resp *types.G
 		return nil, errors.ErrUserNotFound
 	}
 
-	// TODO: 根据用户角色获取权限码
-	// 这里简化实现，实际应该根据用户角色查询权限表
-	codes := make([]string, 0)
-	
-	switch user.UserType {
-	case "admin":
-		codes = []string{"*"} // 管理员拥有所有权限
-	case "user":
-		codes = []string{
-			"training:job:read",
-			"training:job:create",
-			"training:queue:read",
-			"gpu:device:read",
-		}
-	default:
-		codes = []string{"training:job:read"}
-	}
+	// 根据用户角色获取权限码
+	codes := l.getUserPermissions(user)
 
 	resp = &types.GetAccessCodesResp{
 		Codes: codes,

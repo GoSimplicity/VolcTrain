@@ -46,6 +46,23 @@ func (l *CreateTrainingJobLogic) CreateTrainingJob(req *types.CreateTrainingJobR
 		return nil, fmt.Errorf("训练作业名称 '%s' 已存在", req.Name)
 	}
 
+	// 创建数据库事务
+	tx, err := l.svcCtx.DBManager.NewTransaction(l.ctx)
+	if err != nil {
+		l.Logger.Errorf("创建数据库事务失败: %v", err)
+		return nil, fmt.Errorf("创建数据库事务失败: %w", err)
+	}
+	
+	// 确保事务在函数结束时正确处理
+	defer func() {
+		if err != nil {
+			// 如果有错误，回滚事务
+			if rollbackErr := tx.Rollback(); rollbackErr != nil {
+				l.Logger.Errorf("回滚事务失败: %v", rollbackErr)
+			}
+		}
+	}()
+
 	// 创建训练作业模型
 	trainingJob := &model.VtTrainingJobs{
 		Name:                req.Name,
@@ -92,8 +109,23 @@ func (l *CreateTrainingJobLogic) CreateTrainingJob(req *types.CreateTrainingJobR
 		SubmittedAt:         time.Now(),
 	}
 
-	// 保存到数据库
-	result, err := l.svcCtx.VtTrainingJobsModel.Insert(trainingJob)
+	// 保存到数据库（使用事务）
+	result, err := tx.Exec(
+		`INSERT INTO vt_training_jobs (name, display_name, description, job_type, framework, framework_version, python_version, code_source_type, code_source_config, entry_point, working_dir, image, image_pull_policy, image_pull_secrets, dataset_mount_configs, data_source_config, model_config, output_model_name, model_save_strategy, cpu_cores, memory_gb, gpu_count, gpu_type, gpu_memory_gb, storage_gb, shared_memory_gb, worker_count, ps_count, master_count, env_vars, command_args, secrets, config_maps, volume_mounts, queue_name, priority, node_selector, tolerations, affinity, max_runtime_seconds, status, submitted_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		trainingJob.Name, trainingJob.DisplayName, trainingJob.Description, trainingJob.JobType, 
+		trainingJob.Framework, trainingJob.FrameworkVersion, trainingJob.PythonVersion, 
+		trainingJob.CodeSourceType, trainingJob.CodeSourceConfig, trainingJob.EntryPoint, 
+		trainingJob.WorkingDir, trainingJob.Image, trainingJob.ImagePullPolicy, 
+		trainingJob.ImagePullSecrets, trainingJob.DatasetMountConfigs, trainingJob.DataSourceConfig, 
+		trainingJob.ModelConfig, trainingJob.OutputModelName, trainingJob.ModelSaveStrategy, 
+		trainingJob.CpuCores, trainingJob.MemoryGb, trainingJob.GpuCount, trainingJob.GpuType, 
+		trainingJob.GpuMemoryGb, trainingJob.StorageGb, trainingJob.SharedMemoryGb, 
+		trainingJob.WorkerCount, trainingJob.PsCount, trainingJob.MasterCount, 
+		trainingJob.EnvVars, trainingJob.CommandArgs, trainingJob.Secrets, trainingJob.ConfigMaps, 
+		trainingJob.VolumeMounts, trainingJob.QueueName, trainingJob.Priority, 
+		trainingJob.NodeSelector, trainingJob.Tolerations, trainingJob.Affinity, 
+		trainingJob.MaxRuntimeSeconds, trainingJob.Status, trainingJob.SubmittedAt,
+	)
 	if err != nil {
 		l.Logger.Errorf("保存训练作业失败: %v", err)
 		return nil, fmt.Errorf("保存训练作业失败: %w", err)
@@ -118,6 +150,12 @@ func (l *CreateTrainingJobLogic) CreateTrainingJob(req *types.CreateTrainingJobR
 	if err = l.submitToScheduleQueue(jobID, req); err != nil {
 		l.Logger.Errorf("提交作业到调度队列失败: %v", err)
 		// 不返回错误，作业已创建，可以后续重新调度
+	}
+
+	// 提交事务
+	if err = tx.Commit(); err != nil {
+		l.Logger.Errorf("提交事务失败: %v", err)
+		return nil, fmt.Errorf("提交事务失败: %w", err)
 	}
 
 	l.Logger.Infof("训练作业创建成功: ID=%d, Name=%s", jobID, req.Name)

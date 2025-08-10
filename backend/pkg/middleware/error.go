@@ -10,7 +10,7 @@ import (
 )
 
 // ErrorHandlerMiddleware 统一错误处理中间件
-func ErrorHandlerMiddleware() func(http.Handler) http.Handler {
+func ErrorHandlerMiddleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// 使用recover捕获panic
@@ -64,7 +64,7 @@ func (w *ErrorResponseWriter) Write(data []byte) (int, error) {
 }
 
 // RequestLogMiddleware 请求日志中间件
-func RequestLogMiddleware() func(http.Handler) http.Handler {
+func RequestLogMiddleware() func(next http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			start := time.Now()

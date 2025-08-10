@@ -12,11 +12,18 @@ import (
 	gpu_usage "api/internal/handler/gpu_usage"
 	"api/internal/handler/training"
 	"api/internal/svc"
+	"api/pkg/middleware"
 
 	"github.com/zeromicro/go-zero/rest"
 )
 
 func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
+	// 初始化自定义JWT认证中间件
+	jwtAuthMiddleware := middleware.NewJWTAuthMiddleware(serverCtx.JWTService, serverCtx.TokenBlacklist)
+
+	// 注册全局中间件
+	server.Use(middleware.ErrorHandlerMiddleware())
+	server.Use(middleware.RequestLogMiddleware())
 	// 健康检查
 	server.AddRoutes(
 		[]rest.Route{
@@ -60,7 +67,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/auth"),
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithMiddlewares(jwtAuthMiddleware.Handler()),
 	)
 
 	// 用户相关路由（需要认证）
@@ -73,7 +80,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/user"),
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithMiddlewares(jwtAuthMiddleware.Handler()),
 	)
 
 	// 训练任务路由（需要认证）
@@ -156,7 +163,7 @@ func RegisterHandlers(server *rest.Server, serverCtx *svc.ServiceContext) {
 			},
 		},
 		rest.WithPrefix("/api/v1/training/jobs"),
-		rest.WithJwt(serverCtx.Config.Auth.AccessSecret),
+		rest.WithMiddlewares(jwtAuthMiddleware.Handler()),
 	)
 
 	// 训练队列路由（需要认证）

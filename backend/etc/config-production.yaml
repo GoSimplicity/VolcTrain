@@ -5,11 +5,11 @@ Timeout: 30
 
 # 数据库配置
 MySQL:
-  Host: mysql
-  Port: 3306
-  User: root
-  Password: root
-  DBName: volctraindb
+  Host: ${MYSQL_HOST:mysql}
+  Port: ${MYSQL_PORT:3306}
+  User: ${MYSQL_USER:root}
+  Password: ${MYSQL_PASSWORD:}
+  DBName: ${MYSQL_DBNAME:volctraindb}
   Charset: utf8mb4
   ParseTime: true
   Loc: "Asia/Shanghai"
@@ -19,10 +19,10 @@ MySQL:
 
 # Redis配置  
 Redis:
-  Host: redis
-  Port: 6379
-  Password: v6SxhWHyZC7S
-  DB: 0
+  Host: ${REDIS_HOST:redis}
+  Port: ${REDIS_PORT:6379}
+  Password: ${REDIS_PASSWORD:}
+  DB: ${REDIS_DB:0}
   PoolSize: 100
   MinIdleConns: 10
 
@@ -34,7 +34,8 @@ Log:
 
 # JWT认证配置
 Auth:
-  AccessSecret: your_jwt_access_secret_here_minimum_64_characters_required_for_security
+  AccessSecret: ${JWT_ACCESS_SECRET:your_jwt_access_secret_here_minimum_64_characters_required_for_security}
+  RefreshSecret: ${JWT_REFRESH_SECRET:your_jwt_refresh_secret_here_minimum_64_characters_required_for_security}
   AccessExpire: 86400
   RefreshExpire: 604800
 
@@ -65,12 +66,12 @@ K8s:
 
 # 通知配置
 Notification:
-  Enabled: true
+  Enabled: ${NOTIFICATION_ENABLED:false}
   Email:
-    SMTPHost: smtp.gmail.com
-    SMTPPort: 587
-    Username: your_email@gmail.com
-    Password: your_app_password
+    SMTPHost: ${EMAIL_SMTP_HOST:smtp.gmail.com}
+    SMTPPort: ${EMAIL_SMTP_PORT:587}
+    Username: ${EMAIL_USERNAME:}
+    Password: ${EMAIL_PASSWORD:}
   DingTalk:
-    WebhookURL: https://oapi.dingtalk.com/robot/send?access_token=your_token
-    Secret: your_dingtalk_secret
+    WebhookURL: ${DINGTALK_WEBHOOK_URL:}
+    Secret: ${DINGTALK_SECRET:}

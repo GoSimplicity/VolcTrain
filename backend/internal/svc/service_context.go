@@ -6,15 +6,21 @@ import (
 
 	"api/internal/config"
 	"api/model"
+	"api/pkg/auth"
 	"api/pkg/database"
 	"github.com/redis/go-redis/v9"
 )
 
 type ServiceContext struct {
-	Config config.Config
-	DB     *sql.DB
-	Redis  *redis.Client
-	Cache  *database.RedisCache
+	Config      config.Config
+	DB          *sql.DB
+	DBManager   *database.MySQLManager
+	Redis       *redis.Client
+	Cache       *database.RedisCache
+
+	// 认证相关服务
+	JWTService     *auth.JWTService
+	TokenBlacklist *auth.RedisTokenBlacklist
 
 	// 用户相关模型
 	VtUsersModel       model.VtUsersSimpleModel
@@ -46,6 +52,12 @@ func NewServiceContext(c config.Config) *ServiceContext {
 		log.Fatalf("Failed to connect to MySQL: %v", err)
 	}
 
+	// 初始化MySQL管理器
+	dbManager, err := database.NewMySQLManager(c.MySQL)
+	if err != nil {
+		log.Fatalf("Failed to create MySQL manager: %v", err)
+	}
+
 	// 初始化Redis连接
 	rdb, err := database.NewRedisClient(c.Redis)
 	if err != nil {
@@ -55,15 +67,23 @@ func NewServiceContext(c config.Config) *ServiceContext {
 
 	// 创建Redis缓存（如果Redis可用的话）
 	var cache *database.RedisCache
+	var tokenBlacklist *auth.RedisTokenBlacklist
 	if rdb != nil {
 		cache = database.NewRedisCache(rdb)
+		tokenBlacklist = auth.NewRedisTokenBlacklist(rdb)
 	}
 
+	// 初始化JWT服务
+	jwtService := auth.NewJWTService(c.Auth.AccessSecret, c.Auth.RefreshSecret)
+
 	return &ServiceContext{
-		Config: c,
-		DB:     db,
-		Redis:  rdb,
-		Cache:  cache,
+		Config:         c,
+		DB:             db,
+		DBManager:      dbManager,
+		Redis:          rdb,
+		Cache:          cache,
+		JWTService:     jwtService,
+		TokenBlacklist: tokenBlacklist,
 
 		// 初始化所有模型
 		VtUsersModel:       model.NewVtUsersSimpleModel(db),

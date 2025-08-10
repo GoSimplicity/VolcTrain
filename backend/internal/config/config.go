@@ -43,6 +43,7 @@ type RedisConfig struct {
 // JWT认证配置
 type AuthConfig struct {
 	AccessSecret  string `json:",optional"`
+	RefreshSecret string `json:",optional"`
 	AccessExpire  int64  `json:",default=86400"`
 	RefreshExpire int64  `json:",default=604800"`
 }
@@ -92,9 +93,9 @@ type K8sConfig struct {
 
 // 通知配置
 type NotificationConfig struct {
-	Enabled  bool              `json:",default=false"`
-	Email    EmailConfig       `json:",optional"`
-	DingTalk DingTalkConfig    `json:",optional"`
+	Enabled  bool           `json:",default=false"`
+	Email    EmailConfig    `json:",optional"`
+	DingTalk DingTalkConfig `json:",optional"`
 }
 
 // 邮件配置
