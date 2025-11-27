@@ -19,7 +19,8 @@ import { useAuthStore } from '#/store';
 
 import { refreshTokenApi } from './core';
 
-const { apiURL } = useAppConfig(import.meta.env, import.meta.env.PROD);
+// 从环境变量或配置中获取API基础URL，默认为后端开发服务器地址
+const apiURL = import.meta.env.VITE_API_URL || 'http://localhost:8888';
 
 function createRequestClient(baseURL: string, options?: RequestClientOptions) {
   const client = new RequestClient({

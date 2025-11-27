@@ -8,9 +8,8 @@ export default defineConfig(async () => {
         proxy: {
           '/api': {
             changeOrigin: true,
-            rewrite: (path) => path.replace(/^\/api/, ''),
-            // mock代理目标地址
-            target: 'http://localhost:8345/api',
+            // 代理到后端API服务器
+            target: 'http://localhost:8888',
             ws: true,
           },
         },
